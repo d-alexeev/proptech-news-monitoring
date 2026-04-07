@@ -1,0 +1,27 @@
+fixture_id: scrape_and_enrich_non_shortlisted_guard
+mode_id: scrape_and_enrich
+
+inputs:
+  run_id: scrape_and_enrich__20260408T061500Z__daily_core
+  run_date: 2026-04-08
+  shortlist_shard:
+    path: ./.state/shortlists/2026-04-08/monitor_sources__20260408T060000Z__daily_core.json
+    items:
+      - source_id: zillow_newsroom
+        url: https://www.zillow.com/news/example-product-feature/
+        canonical_url: https://www.zillow.com/news/example-product-feature/
+        triage_decision: shortlist
+        fetch_strategy: html_scrape
+  raw_candidates_not_shortlisted:
+    - source_id: redfin_news
+      url: https://www.redfin.com/news/market-note/
+      canonical_url: https://www.redfin.com/news/market-note/
+      title: Weekly housing market note
+      reason_not_shortlisted: low-signal market commentary
+
+expected:
+  fetch_queue_urls:
+    - https://www.zillow.com/news/example-product-feature/
+  forbidden_fetch_urls:
+    - https://www.redfin.com/news/market-note/
+  excluded_reason: non_shortlisted_candidates_do_not_trigger_body_fetch

@@ -1,0 +1,62 @@
+mode_id: scrape_and_enrich
+
+purpose:
+  - accept only shortlisted items as eligible full-text fetch inputs
+  - resolve source adapters from actually encountered shortlist source IDs
+  - build the fetch queue for later enrichment stages
+
+shared_context:
+  briefs:
+    - ./cowork/shared/mission_brief.md
+    - ./cowork/shared/taxonomy_and_scoring.md
+    - ./cowork/shared/contracts.md
+  adapter_source_map: ./cowork/adapters/source_map.md
+
+upstream_gate:
+  allowed_collection: shortlists
+  allowed_schema: shortlisted_item[]
+  allowed_item_conditions:
+    - triage_decision == shortlist
+    - item exists in the shortlist shard for the current run
+  forbidden_fetch_initiators:
+    - ./.state/raw/
+    - dropped or filtered monitor_sources candidates
+    - digest markdown files
+    - story index entries without shortlist membership
+
+allowed_runtime_inputs:
+  - shortlist shard for the current run
+  - shared briefs
+  - source map
+  - only adapters resolved from source IDs present in the shortlist shard
+
+forbidden_runtime_inputs:
+  - ./.state/raw/
+  - non-shortlisted raw candidates
+  - digest archive
+  - stakeholder profiles
+  - whole adapter directory
+
+adapter_resolution:
+  source_map: ./cowork/adapters/source_map.md
+  steps:
+    - collect unique source_id values from shortlisted items only
+    - resolve each source_id through the source map
+    - skip adapter loading for source IDs mapped to none
+    - load each non-none adapter at most once per run
+    - surface a contract error if a shortlisted source_id has no resolution entry
+  expected_outputs:
+    - fetch_queue_urls
+    - resolved_adapter_files
+    - baseline_source_ids
+
+gate_outcome:
+  fetch_queue_scope:
+    description: only shortlisted items become eligible for body fetch
+  excluded_scope:
+    description: noisy or irrelevant candidates stay outside the fetch queue
+
+non_goals:
+  - no enrichment output contract
+  - no article markdown storage format
+  - no evidence extraction policy

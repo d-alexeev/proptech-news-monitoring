@@ -1,0 +1,32 @@
+fixture_id: scrape_and_enrich_adapter_resolution
+mode_id: scrape_and_enrich
+
+inputs:
+  run_id: scrape_and_enrich__20260408T061500Z__daily_core
+  run_date: 2026-04-08
+  shortlist_shard:
+    path: ./.state/shortlists/2026-04-08/monitor_sources__20260408T060000Z__daily_core.json
+    items:
+      - source_id: zillow_newsroom
+        url: https://www.zillow.com/news/example-product-feature/
+        canonical_url: https://www.zillow.com/news/example-product-feature/
+        triage_decision: shortlist
+        fetch_strategy: html_scrape
+      - source_id: redfin_news
+        url: https://www.redfin.com/news/product-story/
+        canonical_url: https://www.redfin.com/news/product-story/
+        triage_decision: shortlist
+        fetch_strategy: rss
+  raw_candidates_not_shortlisted:
+    - source_id: mike_delprete
+      url: https://library.mikedp.com/example-analysis
+      canonical_url: https://library.mikedp.com/example-analysis
+      reason_not_shortlisted: not selected in monitor_sources
+
+expected:
+  resolved_adapter_files:
+    - cowork/adapters/zillow_newsroom_html.md
+  baseline_source_ids:
+    - redfin_news
+  ignored_non_shortlisted_source_ids:
+    - mike_delprete

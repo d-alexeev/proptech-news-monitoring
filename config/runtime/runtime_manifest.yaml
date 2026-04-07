@@ -37,8 +37,11 @@ files:
     rollback_checklist: ./config/runtime/migration-fixtures/rollback_checklist.yaml
   mode_contracts:
     monitor_sources: ./config/runtime/mode-contracts/monitor_sources.yaml
+    scrape_and_enrich_gate: ./config/runtime/mode-contracts/scrape_and_enrich_gate.yaml
   mode_fixtures:
     monitor_sources_shortlist: ./config/runtime/mode-fixtures/monitor_sources_shortlist.yaml
     monitor_sources_duplicate_story: ./config/runtime/mode-fixtures/monitor_sources_duplicate_story.yaml
+    scrape_and_enrich_non_shortlisted_guard: ./config/runtime/mode-fixtures/scrape_and_enrich_non_shortlisted_guard.yaml
+    scrape_and_enrich_adapter_resolution: ./config/runtime/mode-fixtures/scrape_and_enrich_adapter_resolution.yaml
   stakeholder_profiles_index: ./config/runtime/stakeholder-profiles/index.yaml
   stakeholder_profiles_dir: ./config/runtime/stakeholder-profiles

@@ -24,9 +24,12 @@ Forbidden inputs:
 - long-form human reference material
 - evaluation datasets and goldens
 - full raw source universe beyond shortlist
+- `./.state/raw/`
 - digest archive
 - stakeholder profiles
 
 This is the only mode allowed to treat full article text as a primary working input.
+Begin the fetch queue only from `shortlisted_item` entries with `triage_decision = shortlist`.
+Candidates dropped or never emitted into the shortlist shard must never trigger body fetch.
 Do not preload the whole adapter directory; resolve `source_id -> adapter` first.
 Do not assemble daily, weekly, or stakeholder digests here.

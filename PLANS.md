@@ -76,7 +76,8 @@
 | M6 | completed |
 | M7 | completed |
 | M8 | completed |
-| M9-M19 | pending |
+| M9 | completed |
+| M10-M19 | pending |
 
 ## Shared Milestone Review Template
 
