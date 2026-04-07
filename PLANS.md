@@ -69,7 +69,9 @@
 | --- | --- |
 | M0 | completed |
 | M1 | completed |
-| M2-M19 | pending |
+| M2 | completed |
+| M3 | completed |
+| M4-M19 | pending |
 
 ## Shared Milestone Review Template
 
@@ -106,6 +108,18 @@ Milestone считается independently reviewable только если вы
 - Перед началом implementation milestone должна существовать понятная точка rollback через git history.
 - `.env`, `.state/`, системные и machine-local файлы не должны попадать в version control по умолчанию.
 - Если milestone меняет state shape, prompt contracts или runtime config, это должно быть видно в diff как отдельный reviewable change set.
+
+## Claude Cowork Job Matrix
+
+| Job | Trigger / Schedule | Planned Entry Instruction | Allowed Inputs | Forbidden Inputs | Outputs | Downstream Handoff |
+| --- | --- | --- | --- | --- | --- | --- |
+| `monitor_sources` | Start of `weekday_digest`, `weekly_digest`, `breaking_alert`; also manual source checks | `cowork/modes/monitor_sources.md` | source-group config, runtime thresholds, last checkpoint, recent story index, shared mission/taxonomy brief | `README`, `docs/*`, `benchmark/*`, full article bodies, stakeholder profiles, whole digest archive | raw candidate shard, shortlist shard, run manifest | feeds `scrape_and_enrich` |
+| `scrape_and_enrich` | Immediately after `monitor_sources` for shortlisted items in the same run | `cowork/modes/scrape_and_enrich.md` | shortlist shard, required source adapters, shared mission/taxonomy/contracts brief | `README`, `docs/*`, `benchmark/*`, full raw source universe beyond shortlist, digest archive, stakeholder profiles | article files, enriched item shard, updated story briefs, run manifest | feeds `build_daily_digest`, `build_weekly_digest`, `breaking_alert` |
+| `build_daily_digest` | Weekdays at `09:00 Europe/Moscow`; manual daily reruns | `cowork/modes/build_daily_digest.md` | enriched items for daily window, recent story briefs, recent daily briefs, shared mission/taxonomy brief | raw candidates, full article bodies, `README`, `docs/*`, `benchmark/*`, stakeholder profiles, weekly archive beyond compact refs | daily digest markdown, daily brief, delivery payload, run manifest | feeds `review_digest`, optional `stakeholder_fanout` |
+| `review_digest` | Immediately after `build_daily_digest` or `build_weekly_digest`; manual QA reruns | `cowork/modes/review_digest.md` | digest markdown, kept/dropped compact artifacts, daily or weekly brief, run manifest | raw candidates, full article bodies, source adapters, `README`, `docs/*`, `benchmark/*` | QA review report | feeds operator review and future tuning loop |
+| `build_weekly_digest` | Fridays at `17:00 Europe/Moscow`; manual weekly reruns | `cowork/modes/build_weekly_digest.md` | current-week daily briefs, prior weekly briefs, shared mission/taxonomy brief | raw candidates, full article bodies, full digest archive, `README`, `docs/*`, `benchmark/*`, stakeholder profiles | weekly digest markdown, weekly brief, delivery payload, run manifest | feeds `review_digest`, optional `stakeholder_fanout` |
+| `breaking_alert` | Every `60 minutes`; manual alert checks | `cowork/modes/breaking_alert.md` | recent enriched items, recent story briefs, alert thresholds, shared mission/taxonomy brief | raw candidates, full article bodies, whole daily/weekly archive, `README`, `docs/*`, `benchmark/*`, stakeholder profiles | alert payload, run manifest | terminal delivery step; optional operator follow-up |
+| `stakeholder_fanout` | Downstream after daily or weekly brief generation when personalization is enabled; manual per-profile reruns | `cowork/modes/stakeholder_fanout.md` | one `daily_brief` or `weekly_brief`, one stakeholder profile, shared mission brief | raw candidates, full article bodies, source adapters, whole profile set at once, `README`, `docs/*`, `benchmark/*` | one profile-specific digest, run manifest | terminal delivery step per profile |
 
 ## Milestone Overview
 
