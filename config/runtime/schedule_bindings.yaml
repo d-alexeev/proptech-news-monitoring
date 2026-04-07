@@ -1,0 +1,51 @@
+weekday_digest:
+  enabled: true
+  days: [MON, TUE, WED, THU, FRI]
+  time: "09:00"
+  source_groups: [daily_core]
+  delivery_profile: telegram_digest
+
+weekly_digest:
+  enabled: true
+  days: [FRI]
+  time: "17:00"
+  source_groups: [daily_core, weekly_context]
+  delivery_profile: telegram_weekly_digest
+
+breaking_alert:
+  enabled: true
+  check_every_minutes: 60
+  source_groups: [daily_core, weekly_context]
+  delivery_profile: telegram_alert
+
+delivery_profiles:
+  telegram_digest:
+    enabled: true
+    bot_token_env: TELEGRAM_BOT_TOKEN
+    chat_id_env: TELEGRAM_CHAT_ID
+    message_thread_id_env: TELEGRAM_MESSAGE_THREAD_ID
+    parse_mode: Markdown
+    disable_web_page_preview: true
+    split_long_messages: true
+    max_message_length: 3800
+    title_template: "PropTech Monitor | {date}"
+  telegram_weekly_digest:
+    enabled: true
+    bot_token_env: TELEGRAM_BOT_TOKEN
+    chat_id_env: TELEGRAM_CHAT_ID
+    message_thread_id_env: TELEGRAM_MESSAGE_THREAD_ID
+    parse_mode: Markdown
+    disable_web_page_preview: true
+    split_long_messages: true
+    max_message_length: 3800
+    title_template: "PropTech Weekly | {date}"
+  telegram_alert:
+    enabled: true
+    bot_token_env: TELEGRAM_BOT_TOKEN
+    chat_id_env: TELEGRAM_CHAT_ID
+    message_thread_id_env: TELEGRAM_MESSAGE_THREAD_ID
+    parse_mode: Markdown
+    disable_web_page_preview: true
+    split_long_messages: false
+    max_message_length: 2500
+    title_template: "PropTech Alert | {date}"

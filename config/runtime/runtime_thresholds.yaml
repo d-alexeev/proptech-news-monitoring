@@ -1,0 +1,86 @@
+timezone: Europe/Moscow
+language: ru
+
+ingestion_defaults:
+  lookback_hours: 36
+  max_items_per_source: 10
+  fetch_strategy: html_discovery
+  trust_primary_sources_more: true
+  dedupe:
+    by_canonical_url: true
+    by_title_similarity: true
+    title_similarity_threshold: 0.9
+    semantic_dedup: true
+    semantic_dedup_prompt_path: ./prompts/semantic_deduplicator.md
+
+search:
+  enabled: true
+  queries:
+    - "proptech AI search listings marketplace"
+    - "real estate portal product launch AI"
+    - "property marketplace monetization promoted listings"
+    - "real estate portal verified listings fraud trust safety"
+    - "rentals marketplace new feature portal"
+    - "developer tools property portal new homes"
+
+selection:
+  tracked_companies:
+    - Zillow
+    - Homes.com
+    - CoStar
+    - Redfin
+    - Rightmove
+    - REA Group
+    - Domain
+    - PropertyGuru
+    - Realtor.com
+    - Opendoor
+    - Compass
+  tracked_regions:
+    - US
+    - UK
+    - Australia
+    - Southeast Asia
+    - APAC
+    - Europe
+  hard_filters:
+    min_priority_for_digest: 55
+    max_top_items: 5
+    max_weak_signals: 4
+    min_confidence: 0.55
+  escalation_rules:
+    - "Escalate news affecting search UX, recommendations, or conversational discovery."
+    - "Escalate verified listings, trust and safety, or fraud control changes."
+    - "Escalate monetization changes in paid visibility, subscriptions, or bundled services."
+    - "Escalate new rental marketplace patterns and developer workflow tooling."
+
+scoring:
+  weights:
+    marketplace_relevance: 0.35
+    event_scale: 0.25
+    portability_to_avito: 0.20
+    urgency: 0.10
+    novelty: 0.10
+  boost_topics:
+    - ai_search
+    - recommendations
+    - paid_visibility
+    - verified_listings
+    - lead_qualification
+    - rentals
+    - developer_workflows
+  required_output_fields:
+    - company_or_source
+    - country_or_region
+    - date
+    - signal_type
+    - headline
+    - summary_bullets
+    - why_it_matters_for_peer_intelligence
+    - possible_implication_for_avito_like_marketplace
+    - source_url
+    - confidence
+
+alerts:
+  breaking_alert:
+    min_priority_score: 85

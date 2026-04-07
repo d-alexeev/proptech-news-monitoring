@@ -1,0 +1,74 @@
+group_id: weekly_context
+description: "Contextual and weaker signals for the Friday digest"
+lookback_hours: 168
+max_items_per_source: 6
+
+sources:
+  - id: property_portal_watch
+    source_name: "Property Portal Watch"
+    source_type: conference_and_insights
+    priority: 2
+    cadence_hint: weekly
+    fetch_strategy: chrome_scrape
+    landing_urls:
+      - https://www.onlinemarketplaces.com/topic/videos-vodcasts-interviews/conference/
+
+  - id: inman_tech_innovation
+    source_name: "Inman - Technology & Innovation"
+    source_type: trade_media
+    priority: 3
+    cadence_hint: twice_weekly
+    fetch_strategy: rss
+    rss_feed: https://feeds.feedburner.com/inmannews
+    landing_urls:
+      - https://www.inman.com/access-channel/technology-and-innovation/
+
+  - id: similarweb_country_real_estate
+    source_name: "Similarweb - Country Real Estate Rankings"
+    source_type: behavioral_signal_source
+    priority: 3
+    cadence_hint: monthly
+    fetch_strategy: chrome_scrape
+    landing_urls:
+      - https://www.similarweb.com/website/propertyguru.com.sg/#overview
+      - https://www.similarweb.com/website/realestate.com.au/#overview
+      - https://www.similarweb.com/website/immobilienscout24.de/#overview
+      - https://www.similarweb.com/website/leboncoin.fr/#overview
+
+  - id: zillow_ios
+    source_name: "Zillow - Apple App Store"
+    source_type: mobile_product_signal
+    priority: 2
+    cadence_hint: weekly
+    fetch_strategy: itunes_api
+    itunes_api_url: https://itunes.apple.com/lookup?id=310738695&country=us
+    landing_urls:
+      - https://apps.apple.com/us/app/zillow-real-estate-rentals/id310738695
+
+  - id: zillow_android
+    source_name: "Zillow - Google Play"
+    source_type: mobile_product_signal
+    priority: 2
+    cadence_hint: weekly
+    fetch_strategy: chrome_scrape
+    landing_urls:
+      - https://play.google.com/store/apps/details?id=com.zillow.android.zillowmap
+
+  - id: rightmove_ios
+    source_name: "Rightmove - Apple App Store"
+    source_type: mobile_product_signal
+    priority: 2
+    cadence_hint: weekly
+    fetch_strategy: itunes_api
+    itunes_api_url: https://itunes.apple.com/lookup?id=323822803&country=gb
+    landing_urls:
+      - https://apps.apple.com/gb/app/rightmove-property-search/id323822803
+
+  - id: rightmove_android
+    source_name: "Rightmove - Google Play"
+    source_type: mobile_product_signal
+    priority: 2
+    cadence_hint: weekly
+    fetch_strategy: chrome_scrape
+    landing_urls:
+      - https://play.google.com/store/apps/details?id=com.rightmove.android

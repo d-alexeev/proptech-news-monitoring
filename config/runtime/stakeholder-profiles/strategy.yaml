@@ -1,0 +1,48 @@
+profile_id: strategy
+profile:
+  name: "PropTech Monitor | Стратегия"
+  description: >
+    Фокус на M&A, рыночных сдвигах, конкурентных угрозах,
+    регуляторных изменениях и глобальных трендах.
+    Краткий формат, стратегические выводы без деталей UX.
+  audience_hint: "Strategy, Business Development, Leadership"
+  min_priority_score: 65
+  max_top_items: 4
+  max_weak_signals: 2
+  topic_filter:
+    include:
+      - m_and_a
+      - competitive_move
+      - market_dynamics
+      - regulation
+      - funding
+      - listing_war
+      - monetization
+      - subscriptions
+      - agent_relations
+      - consumer_behaviour
+      - macro_market
+    exclude:
+      - mobile_product
+      - talent_leadership
+  lens_weights:
+    marketplace_relevance: 0.30
+    event_scale: 0.35
+    portability_to_avito: 0.20
+    urgency: 0.10
+    novelty: 0.05
+  format:
+    avito_section_label: "Стратегический вывод для Авито"
+    include_sections:
+      - top_news
+      - strategic_implications
+      - what_to_watch
+    detail_level: brief
+    max_chars_per_item: 400
+    extra_instructions: >
+      В блоке «Стратегический вывод для Авито» давай конкретное утверждение:
+      - угроза / возможность / нейтрально
+      - горизонт: немедленно / 6-12 мес / 1-3 года
+      - рекомендация: watch / act / ignore
+  delivery:
+    telegram_profile: telegram_digest

@@ -1,0 +1,49 @@
+profile_id: product
+profile:
+  name: "PropTech Monitor | Продукт"
+  description: >
+    Фокус на продуктовых запусках, UX-паттернах, AI-функциях,
+    качестве листингов и инструментах для агентов.
+    Углублённая секция «Что попробовать прямо сейчас».
+  audience_hint: "Product, Design, UX"
+  min_priority_score: 50
+  max_top_items: 5
+  max_weak_signals: 3
+  topic_filter:
+    include:
+      - product_launch
+      - product_update
+      - ai_search
+      - recommendations
+      - listing_quality
+      - pre_market_listings
+      - mobile_product
+      - lead_qualification
+      - trust_safety
+      - ai_ml
+    exclude:
+      - earnings_report
+      - leadership_change
+      - market_data_release
+  lens_weights:
+    marketplace_relevance: 0.30
+    event_scale: 0.15
+    portability_to_avito: 0.35
+    urgency: 0.10
+    novelty: 0.10
+  format:
+    avito_section_label: "Для команды продукта"
+    include_sections:
+      - top_news
+      - try_now
+      - what_to_watch
+      - weak_signals
+    detail_level: detailed
+    max_chars_per_item: 800
+    extra_instructions: >
+      В блоке «Для команды продукта» давай конкретный action:
+      - если продукт live — ссылку для теста
+      - если есть видео/скриншот — упомяни
+      - если есть UX-паттерн применимый для Авито — назови конкретную фичу/экран
+  delivery:
+    telegram_profile: telegram_digest

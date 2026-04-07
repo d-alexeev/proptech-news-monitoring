@@ -1,0 +1,92 @@
+group_id: daily_core
+description: "High-signal daily monitoring for peer product and business moves"
+
+sources:
+  - id: aim_group_real_estate_intelligence
+    source_name: "AIM Group - Real Estate Intelligence"
+    source_type: industry_analysis
+    priority: 1
+    cadence_hint: daily
+    fetch_strategy: rss
+    rss_feed: https://aimgroup.com/feed/
+    landing_urls:
+      - https://aimgroup.com/real-estate-intelligence/
+      - https://aimgroup.com/real-estate/
+
+  - id: onlinemarketplaces
+    source_name: "OnlineMarketplaces"
+    source_type: industry_analysis
+    priority: 1
+    cadence_hint: daily
+    fetch_strategy: chrome_scrape
+    landing_urls:
+      - https://www.onlinemarketplaces.com/property-portal-insights/
+
+  - id: mike_delprete
+    source_name: "Mike DelPrete"
+    source_type: independent_expert_analysis
+    priority: 1
+    cadence_hint: twice_weekly
+    fetch_strategy: chrome_scrape
+    landing_urls:
+      - https://library.mikedp.com/
+
+  - id: zillow_newsroom
+    source_name: "Zillow Newsroom — Product Innovation"
+    source_type: company_primary_source
+    priority: 1
+    cadence_hint: "2-3_times_per_week"
+    fetch_strategy: html_scrape
+    landing_urls:
+      - https://www.zillow.com/news/category/product-innovation/
+
+  - id: costar_homes
+    source_name: "CoStar Group / Homes.com"
+    source_type: company_primary_source
+    priority: 1
+    cadence_hint: weekly_and_on_news
+    fetch_strategy: rss
+    rss_feed: https://investors.costargroup.com/rss/news-releases.xml
+    landing_urls:
+      - https://investors.costargroup.com/news-releases
+      - https://www.costargroup.com/press-room
+
+  - id: redfin_news
+    source_name: "Redfin News"
+    source_type: company_primary_source
+    priority: 1
+    cadence_hint: "2-3_times_per_week"
+    fetch_strategy: rss
+    rss_feed: https://www.redfin.com/news/feed/
+    landing_urls:
+      - https://www.redfin.com/news/
+      - https://investors.redfin.com/news-events/press-releases/default.aspx
+
+  - id: rea_group_investor_centre
+    source_name: "REA Group Investor Centre"
+    source_type: company_primary_source
+    priority: 1
+    cadence_hint: weekly_and_on_results
+    fetch_strategy: blocked
+    landing_urls:
+      - https://www.rea-group.com/investor-centre/
+
+  - id: rightmove_plc
+    source_name: "Rightmove PLC"
+    source_type: company_primary_source
+    priority: 2
+    cadence_hint: weekly_and_on_results
+    fetch_strategy: chrome_scrape
+    landing_urls:
+      - https://plc.rightmove.co.uk/
+
+  - id: similarweb_global_real_estate
+    source_name: "Similarweb - Global Real Estate Rankings"
+    source_type: behavioral_signal_source
+    priority: 2
+    cadence_hint: weekly
+    fetch_strategy: chrome_scrape
+    landing_urls:
+      - https://www.similarweb.com/website/zillow.com/#overview
+      - https://www.similarweb.com/website/rightmove.co.uk/#overview
+      - https://www.similarweb.com/website/homes.com/#overview

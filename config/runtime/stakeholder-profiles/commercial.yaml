@@ -1,0 +1,47 @@
+profile_id: commercial
+profile:
+  name: "PropTech Monitor | Коммерция"
+  description: >
+    Фокус на новых форматах монетизации, моделях подписки,
+    paid visibility продуктах, динамике отношений с агентами и ARPU.
+  audience_hint: "Monetization, Sales, Agent Relations, Revenue"
+  min_priority_score: 55
+  max_top_items: 4
+  max_weak_signals: 3
+  topic_filter:
+    include:
+      - monetization
+      - paid_visibility
+      - subscriptions
+      - agent_relations
+      - lead_qualification
+      - listing_war
+      - funding
+      - m_and_a
+      - transaction_tech
+    exclude:
+      - mobile_product
+      - macro_market
+      - talent_leadership
+  lens_weights:
+    marketplace_relevance: 0.40
+    event_scale: 0.20
+    portability_to_avito: 0.25
+    urgency: 0.10
+    novelty: 0.05
+  format:
+    avito_section_label: "Для коммерческой команды"
+    include_sections:
+      - top_news
+      - monetization_signals
+      - what_to_watch
+      - weak_signals
+    detail_level: standard
+    max_chars_per_item: 500
+    extra_instructions: >
+      В блоке «Для коммерческой команды» выделяй:
+      - конкретные форматы (Showcase, Premier Agent, Enhanced Markets и аналоги)
+      - ценовые диапазоны и ARPU-эффекты, если известны
+      - что агенты принимают охотно, а что отвергают
+  delivery:
+    telegram_profile: telegram_digest

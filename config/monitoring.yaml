@@ -1,15 +1,18 @@
+# Legacy compatibility aggregate.
+# Runtime source of truth for Claude Cowork split config lives under config/runtime/.
 project:
   name: proptech-news-monitor
   timezone: Europe/Moscow
   audience: "Avito Real Estate"
   language: ru
-  monitor_list_path: ./monitor-list.json
+  monitor_list_path: ./monitor-list.json  # catalog/export only; not runtime source of truth
+  runtime_config_manifest_path: ./config/runtime/runtime_manifest.yaml
   analyst_prompt_path: ./prompts/news_analyst.md
   deduplicator_prompt_path: ./prompts/semantic_deduplicator.md
   contextualizer_prompt_path: ./prompts/contextualizer.md
   trend_synthesizer_prompt_path: ./prompts/trend_synthesizer.md
   digest_personalizer_prompt_path: ./prompts/digest_personalizer.md
-  stakeholders_config_path: ./config/stakeholders.yaml
+  stakeholders_config_path: ./config/stakeholders.yaml  # legacy aggregate; split profiles live under config/runtime/stakeholder-profiles/
 
 runtime:
   state_dir: ./.state

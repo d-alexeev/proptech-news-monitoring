@@ -1,0 +1,27 @@
+profile_id: default
+profile:
+  name: "PropTech Monitor (базовый)"
+  description: >
+    Стандартный дайджест для команды Авито Недвижимость.
+    Охватывает все темы, полная аналитика, без фильтрации по аудитории.
+  audience_hint: "Все подписчики"
+  min_priority_score: 55
+  max_top_items: 5
+  max_weak_signals: 4
+  topic_filter: []
+  lens_weights:
+    marketplace_relevance: 0.35
+    event_scale: 0.25
+    portability_to_avito: 0.20
+    urgency: 0.10
+    novelty: 0.10
+  format:
+    avito_section_label: "Для Авито"
+    include_sections:
+      - top_news
+      - what_to_watch
+      - weak_signals
+    detail_level: standard
+    max_chars_per_item: 600
+  delivery:
+    telegram_profile: telegram_digest

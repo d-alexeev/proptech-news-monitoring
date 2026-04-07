@@ -1,3 +1,5 @@
+# Legacy compatibility aggregate.
+# Runtime source of truth for stakeholder profiles lives under config/runtime/stakeholder-profiles/.
 # Stakeholder profiles for digest personalization
 # ─────────────────────────────────────────────────────────────────────
 # Each profile defines: who gets this digest, what they care about,

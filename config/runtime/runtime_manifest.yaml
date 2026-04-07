@@ -1,0 +1,30 @@
+version: 1
+runtime_source_of_truth: true
+
+description: >
+  Split runtime config for Claude Cowork jobs. Files under config/runtime/
+  are the canonical runtime source of truth for source groups, thresholds,
+  delivery bindings, and stakeholder profile definitions.
+
+catalogs:
+  monitor_list:
+    path: ./monitor-list.json
+    role: human_readable_catalog_export
+    runtime_source_of_truth: false
+
+legacy_bridges:
+  monitoring_yaml:
+    path: ./config/monitoring.yaml
+    role: legacy_aggregate_reference
+  stakeholders_yaml:
+    path: ./config/stakeholders.yaml
+    role: legacy_aggregate_reference
+
+files:
+  source_groups:
+    daily_core: ./config/runtime/source-groups/daily_core.yaml
+    weekly_context: ./config/runtime/source-groups/weekly_context.yaml
+  thresholds: ./config/runtime/runtime_thresholds.yaml
+  schedule_bindings: ./config/runtime/schedule_bindings.yaml
+  stakeholder_profiles_index: ./config/runtime/stakeholder-profiles/index.yaml
+  stakeholder_profiles_dir: ./config/runtime/stakeholder-profiles

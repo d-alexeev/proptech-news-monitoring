@@ -1,0 +1,47 @@
+profile_id: tech
+profile:
+  name: "PropTech Monitor | Технологии"
+  description: >
+    Фокус на AI/ML подходах, поисковых архитектурах, качестве данных,
+    API-паттернах, антифроде и tech-стеке конкурентов.
+  audience_hint: "Engineering, ML, Data Science, Platform"
+  min_priority_score: 45
+  max_top_items: 5
+  max_weak_signals: 4
+  topic_filter:
+    include:
+      - ai_ml
+      - ai_search
+      - data_infra
+      - recommendations
+      - trust_safety
+      - mobile_product
+      - listing_quality
+      - transaction_tech
+    exclude:
+      - funding
+      - market_dynamics
+      - macro_market
+      - leadership_change
+  lens_weights:
+    marketplace_relevance: 0.25
+    event_scale: 0.15
+    portability_to_avito: 0.30
+    urgency: 0.10
+    novelty: 0.20
+  format:
+    avito_section_label: "Техническая применимость для Авито"
+    include_sections:
+      - top_news
+      - what_to_watch
+      - weak_signals
+      - tech_patterns
+    detail_level: detailed
+    max_chars_per_item: 700
+    extra_instructions: >
+      В блоке «Техническая применимость для Авито» давай:
+      - какой технический подход использован (если известен)
+      - гипотезу о реализации («вероятно LLM + re-ranking», «скорее всего vector search»)
+      - конкретный эксперимент или PoC который можно сделать за sprint
+  delivery:
+    telegram_profile: telegram_digest

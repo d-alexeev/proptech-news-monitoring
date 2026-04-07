@@ -1,0 +1,11 @@
+profiles:
+  - id: default
+    path: ./config/runtime/stakeholder-profiles/default.yaml
+  - id: product
+    path: ./config/runtime/stakeholder-profiles/product.yaml
+  - id: strategy
+    path: ./config/runtime/stakeholder-profiles/strategy.yaml
+  - id: commercial
+    path: ./config/runtime/stakeholder-profiles/commercial.yaml
+  - id: tech
+    path: ./config/runtime/stakeholder-profiles/tech.yaml
