@@ -63,6 +63,42 @@
 3. Тест или fixture-based verification.
 4. Явно зафиксированные non-goals, чтобы не оценивать milestone по лишним ожиданиям.
 
+## Milestone Progress
+
+| Milestone | Status |
+| --- | --- |
+| M0 | completed |
+| M1 | completed |
+| M2-M19 | pending |
+
+## Shared Milestone Review Template
+
+Каждый implementation step начиная с `M2` должен использовать один и тот же шаблон review package или milestone report:
+
+- Milestone ID
+- Goal
+- Scope
+- Likely files or artifacts to change
+- Dependencies
+- Risks
+- Deliverable
+- Acceptance criteria
+- Tests or verification steps
+- Explicit non-goals
+- Progress status: `pending` / `in_progress` / `blocked` / `completed`
+
+## Definition of Done for an Independently Reviewable Milestone
+
+Milestone считается independently reviewable только если выполнены все условия ниже:
+
+- diff ограничен текущим milestone или явно объяснено отклонение;
+- deliverable текущего milestone создан или обновлён;
+- по каждому acceptance criterion есть явный статус;
+- выполнены заявленные tests или явно объяснено, почему они не запускались;
+- non-goals соблюдены или отклонение явно задокументировано;
+- при скрытом расширении scope обновлён `PLANS.md`;
+- reviewer может оценить milestone без необходимости сначала реализовать следующий milestone.
+
 ## Git Usage Rules
 
 - Все substantial changes выполняются в git-репозитории.
