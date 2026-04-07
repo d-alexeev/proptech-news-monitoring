@@ -71,7 +71,8 @@
 | M1 | completed |
 | M2 | completed |
 | M3 | completed |
-| M4-M19 | pending |
+| M4 | completed |
+| M5-M19 | pending |
 
 ## Shared Milestone Review Template
 

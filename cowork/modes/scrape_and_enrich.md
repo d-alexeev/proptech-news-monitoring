@@ -5,6 +5,7 @@ Load shared context from:
 - `cowork/shared/mission_brief.md`
 - `cowork/shared/taxonomy_and_scoring.md`
 - `cowork/shared/contracts.md`
+- `cowork/adapters/source_map.md` when shortlisted `source_id` values resolve to adapters
 
 Purpose:
 
@@ -15,7 +16,7 @@ Purpose:
 Allowed inputs:
 
 - shortlist shard
-- source-specific adapters when provided
+- only the source-specific adapters resolved for shortlisted items
 - shared briefs
 
 Forbidden inputs:
@@ -27,4 +28,5 @@ Forbidden inputs:
 - stakeholder profiles
 
 This is the only mode allowed to treat full article text as a primary working input.
+Do not preload the whole adapter directory; resolve `source_id -> adapter` first.
 Do not assemble daily, weekly, or stakeholder digests here.

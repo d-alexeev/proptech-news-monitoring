@@ -5,6 +5,7 @@ Load shared context from:
 - `cowork/shared/mission_brief.md`
 - `cowork/shared/taxonomy_and_scoring.md`
 - `cowork/shared/contracts.md`
+- `cowork/adapters/source_map.md` when any configured `source_id` resolves to an adapter
 
 Purpose:
 
@@ -18,6 +19,7 @@ Allowed inputs:
 - runtime thresholds
 - last checkpoint
 - recent story index
+- only the adapter files resolved for the current source IDs
 
 Forbidden inputs:
 
@@ -28,4 +30,5 @@ Forbidden inputs:
 - whole digest archive
 
 Do not fetch or read full article text in this mode.
+Do not preload the whole adapter directory; resolve `source_id -> adapter` first.
 Do not do final digest selection here.
