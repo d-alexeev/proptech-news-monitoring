@@ -31,5 +31,9 @@ files:
   state_fixtures:
     valid_artifacts: ./config/runtime/state-fixtures/valid_artifacts.yaml
     path_resolution: ./config/runtime/state-fixtures/path_resolution.yaml
+  migration_plan: ./config/runtime/migration_plan.md
+  migration_fixtures:
+    recent_runs: ./config/runtime/migration-fixtures/recent_runs.yaml
+    rollback_checklist: ./config/runtime/migration-fixtures/rollback_checklist.yaml
   stakeholder_profiles_index: ./config/runtime/stakeholder-profiles/index.yaml
   stakeholder_profiles_dir: ./config/runtime/stakeholder-profiles

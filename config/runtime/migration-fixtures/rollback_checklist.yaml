@@ -1,0 +1,28 @@
+rollback_checklist:
+  required_inputs:
+    - ./.state/dedupe.json
+    - ./.state/delivery-log.json
+    - ./config/runtime/migration_plan.md
+    - ./config/runtime/state_layout.yaml
+
+  steps:
+    - id: rollback_1
+      action: switch readers back to legacy inputs
+      expected_result: shard readers are disabled without deleting shard files
+    - id: rollback_2
+      action: confirm legacy digests still resolve from legacy state files
+      expected_result: daily and weekly digest generation can continue in legacy mode
+    - id: rollback_3
+      action: verify no shard file deletion or mutation is required
+      expected_result: shard artifacts remain as audit trail
+    - id: rollback_4
+      action: confirm dedupe and delivery log remain unchanged
+      expected_result: legacy monoliths are still the operational source for the rollback window
+
+  invariants:
+    - no deletion of ./.state/runs/*
+    - no deletion of ./.state/stories/*
+    - no deletion of ./.state/briefs/*
+    - no rewrite of ./.state/dedupe.json
+    - no rewrite of ./.state/delivery-log.json
+    - no destructive git action is required for rollback

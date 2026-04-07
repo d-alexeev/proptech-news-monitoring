@@ -1,0 +1,51 @@
+cases:
+  - case_id: daily_2026_03_27
+    goal: backfill one recent daily digest into shard-era artifacts
+    legacy_inputs:
+      delivery_log: ./.state/delivery-log.json
+      dedupe_store: ./.state/dedupe.json
+      digest_markdown: ./digests/2026-03-27-daily.md
+      articles_dir: ./.state/articles
+    legacy_refs:
+      delivery_log_run_id: "2026-03-27T09:00:00Z"
+      schedule: weekday_digest
+      mode: dry-run
+    expected_outputs:
+      run_manifest: ./.state/runs/2026-03-27/legacy_build_daily_digest__20260327T090000Z__telegram_digest.json
+      daily_brief: ./.state/briefs/daily/2026-03-27__telegram_digest.json
+      story_brief_collection: ./.state/stories/
+    minimum_success_conditions:
+      - at least one story_id resolves from dedupe by URL match
+      - markdown_path points to the legacy digest file
+      - shard artifacts are additive only
+
+  - case_id: weekly_2026_W14
+    goal: backfill one weekly digest from weekly markdown plus same-week daily briefs
+    legacy_inputs:
+      weekly_digest_markdown: ./digests/2026-W14-weekly-digest.md
+      supporting_daily_digests:
+        - ./digests/2026-03-30-daily.md
+        - ./digests/2026-03-31-daily.md
+        - ./digests/2026-04-01-daily.md
+        - ./digests/2026-04-02-daily.md
+        - ./digests/2026-04-03-daily.md
+        - ./digests/2026-04-04-daily.md
+        - ./digests/2026-04-05-daily.md
+      dedupe_store: ./.state/dedupe.json
+    legacy_refs:
+      week_id: 2026-W14
+      delivery_log_weekly_run: absent
+    expected_outputs:
+      weekly_brief: ./.state/briefs/weekly/2026-W14__telegram_weekly_digest.json
+      prerequisite_daily_briefs:
+        - ./.state/briefs/daily/2026-03-30__telegram_digest.json
+        - ./.state/briefs/daily/2026-03-31__telegram_digest.json
+        - ./.state/briefs/daily/2026-04-01__telegram_digest.json
+        - ./.state/briefs/daily/2026-04-02__telegram_digest.json
+        - ./.state/briefs/daily/2026-04-03__telegram_digest.json
+        - ./.state/briefs/daily/2026-04-04__telegram_digest.json
+        - ./.state/briefs/daily/2026-04-05__telegram_digest.json
+    minimum_success_conditions:
+      - weekly_brief story_ids come from the union of same-week daily briefs
+      - markdown_path points to the legacy weekly digest file
+      - weekly backfill does not depend on delivery-log weekly entries
