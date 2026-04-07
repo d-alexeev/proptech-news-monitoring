@@ -1,0 +1,537 @@
+project:
+  name: proptech-news-monitor
+  timezone: Europe/Moscow
+  audience: "Avito Real Estate"
+  language: ru
+  monitor_list_path: ./monitor-list.json
+  analyst_prompt_path: ./prompts/news_analyst.md
+  deduplicator_prompt_path: ./prompts/semantic_deduplicator.md
+  contextualizer_prompt_path: ./prompts/contextualizer.md
+  trend_synthesizer_prompt_path: ./prompts/trend_synthesizer.md
+  digest_personalizer_prompt_path: ./prompts/digest_personalizer.md
+  stakeholders_config_path: ./config/stakeholders.yaml
+
+runtime:
+  state_dir: ./.state
+  raw_cache_dir: ./.state/raw
+  articles_dir: ./.state/articles          # full article markdown files, YYYY-MM/ subfolders
+  dedupe_store: ./.state/dedupe.json
+  delivery_log: ./.state/delivery-log.json
+  default_user_agent_env: HTTP_USER_AGENT
+  request_timeout_seconds: 20
+  max_concurrency: 4
+
+article_storage:
+  enabled: true
+  base_dir: ./.state/articles
+  # Subfolder per calendar month: YYYY-MM/
+  # Filename: YYYY-MM-DD_<slug>.md  (slug = first 60 chars of title, lowercased, spaces→hyphens)
+  format: markdown_with_frontmatter
+  # Frontmatter fields saved per article:
+  #   url, title, published, source_id, fetch_strategy_used, fetched_at,
+  #   companies, topic_tags, event_type, priority_score, stakeholder_scores, story_id
+  # Body: full article text, cleaned to markdown (headings, paragraphs, links preserved)
+  overwrite_existing: true              # re-fetch and overwrite on each pipeline run
+  fallback_to_snippet: true            # if fetch fails: save raw_snippet as body, mark fetch_failed: true
+  skip_if_paywall: true                # if HTTP 402/403 or <200 words returned: skip body, save metadata only
+  min_body_words: 150                  # below this threshold treat as paywall/stub and set fetch_failed: true
+  # dedupe.json field added after save:
+  #   article_file: ".state/articles/YYYY-MM/YYYY-MM-DD_slug.md"
+
+schedule:
+  weekday_digest:
+    enabled: true
+    days: [MON, TUE, WED, THU, FRI]
+    time: "09:00"
+    source_groups: [daily_core]
+    delivery_profile: telegram_digest
+  weekly_digest:
+    enabled: true
+    days: [FRI]
+    time: "17:00"
+    source_groups: [daily_core, weekly_context]
+    delivery_profile: telegram_weekly_digest
+  breaking_alert:
+    enabled: true
+    check_every_minutes: 60
+    source_groups: [daily_core, weekly_context]
+    # weekly_context sources (e.g. Inman) are normally held for the Friday digest.
+    # Including them here ensures high-signal analysis (score >= min_priority_score)
+    # is delivered immediately as an alert rather than delayed up to 5 days.
+    # Example: Inman "Realtor.com AI-first search" (Apr 4, score ~88) would have
+    # fired as a breaking_alert instead of appearing only in the weekly digest.
+    delivery_profile: telegram_alert
+    min_priority_score: 85
+
+ingestion:
+  defaults:
+    lookback_hours: 36
+    max_items_per_source: 10
+    fetch_strategy: html_discovery  # default; override per-source below
+    trust_primary_sources_more: true
+    dedupe:
+      by_canonical_url: true
+      by_title_similarity: true
+      title_similarity_threshold: 0.9
+      semantic_dedup: true
+      # Falls back to title_similarity only if LLM call fails
+      semantic_dedup_prompt_path: ./prompts/semantic_deduplicator.md
+  search:
+    enabled: true
+    queries:
+      - "proptech AI search listings marketplace"
+      - "real estate portal product launch AI"
+      - "property marketplace monetization promoted listings"
+      - "real estate portal verified listings fraud trust safety"
+      - "rentals marketplace new feature portal"
+      - "developer tools property portal new homes"
+
+  # fetch_strategy values:
+  #   rss           – parse RSS/Atom feed directly (fastest, most reliable)
+  #   itunes_api    – Apple iTunes RSS JSON API (no auth, rate-limit free)
+  #   html_scrape   – Python urllib with RSS-reader User-Agent; no Chrome needed;
+  #                   works when site returns rendered HTML server-side but blocks
+  #                   headless browsers / curl with browser UA (PerimeterX guard).
+  #                   Confirmed working for Zillow Newsroom (2026-04-07).
+  #                   See docs/rss-api-audit.md §"Zillow Newsroom — html_scrape".
+  #   chrome_scrape – navigate in Chrome and read page (JS-heavy or no feed)
+  #   blocked       – domain blocked in Cowork sandbox; manual access only
+
+  source_groups:
+    daily_core:
+      description: "High-signal daily monitoring for peer product and business moves"
+      sources:
+        - id: aim_group_real_estate_intelligence
+          source_name: "AIM Group - Real Estate Intelligence"
+          source_type: industry_analysis
+          priority: 1
+          cadence_hint: daily
+          fetch_strategy: rss
+          rss_feed: https://aimgroup.com/feed/
+          landing_urls:
+            - https://aimgroup.com/real-estate-intelligence/
+            - https://aimgroup.com/real-estate/
+
+        - id: onlinemarketplaces
+          source_name: "OnlineMarketplaces"
+          source_type: industry_analysis
+          priority: 1
+          cadence_hint: daily
+          fetch_strategy: chrome_scrape
+          # No raw XML feed: /feed/, /?feed=rss2, /articles/feed/ all redirect
+          # to an HTML subscription page (/rss-feed/). Must scrape via Chrome.
+          landing_urls:
+            - https://www.onlinemarketplaces.com/property-portal-insights/
+
+        - id: mike_delprete
+          source_name: "Mike DelPrete"
+          source_type: independent_expert_analysis
+          priority: 1
+          cadence_hint: twice_weekly
+          fetch_strategy: chrome_scrape
+          # mikedp.com blog is defunct. New site is library.mikedp.com — custom SPA,
+          # no RSS at /feed/ (returns 404). Chrome scrape of homepage works:
+          # get_page_text returns "1 week ago / 2 weeks ago" dated article list.
+          landing_urls:
+            - https://library.mikedp.com/
+
+        - id: zillow_newsroom
+          source_name: "Zillow Newsroom — Product Innovation"
+          source_type: company_primary_source
+          priority: 1
+          cadence_hint: "2-3_times_per_week"
+          fetch_strategy: html_scrape
+          # No RSS: zillow.com/news/ uses custom CMS, no <link rel="alternate">,
+          # /news/feed/ redirects to HTML.
+          # Chrome + curl w/ browser UA → blocked by PerimeterX (px-captcha).
+          # WORKING: Python urllib with User-Agent "Mozilla/5.0 (compatible; RSS reader)"
+          # and NO Accept-Encoding header (urllib doesn't auto-decompress gzip).
+          # Category page returns server-rendered HTML with article links in <a> tags.
+          # Individual article pages: same UA works; article body in <p> tags (server-side).
+          # Scope narrowed to product-innovation only (press-releases excluded).
+          # See docs/rss-api-audit.md §"Zillow Newsroom — html_scrape" for full recipe.
+          landing_urls:
+            - https://www.zillow.com/news/category/product-innovation/
+
+        - id: costar_homes
+          source_name: "CoStar Group / Homes.com"
+          source_type: company_primary_source
+          priority: 1
+          cadence_hint: weekly_and_on_news
+          fetch_strategy: rss
+          rss_feed: https://investors.costargroup.com/rss/news-releases.xml
+          # Corporate press room (costargroup.com/press-room) has no RSS.
+          # IR RSS feed covers product + investor news releases.
+          landing_urls:
+            - https://investors.costargroup.com/news-releases
+            - https://www.costargroup.com/press-room
+
+        - id: redfin_news
+          source_name: "Redfin News"
+          source_type: company_primary_source
+          priority: 1
+          cadence_hint: "2-3_times_per_week"
+          fetch_strategy: rss
+          rss_feed: https://www.redfin.com/news/feed/
+          landing_urls:
+            - https://www.redfin.com/news/
+            - https://investors.redfin.com/news-events/press-releases/default.aspx
+
+        - id: rea_group_investor_centre
+          source_name: "REA Group Investor Centre"
+          source_type: company_primary_source
+          priority: 1
+          cadence_hint: weekly_and_on_results
+          fetch_strategy: blocked
+          # rea-group.com and investors.rea-group.com are blocked in Cowork sandbox.
+          # Must access manually or via user's own browser session.
+          landing_urls:
+            - https://www.rea-group.com/investor-centre/
+
+        - id: rightmove_plc
+          source_name: "Rightmove PLC"
+          source_type: company_primary_source
+          priority: 2
+          cadence_hint: weekly_and_on_results
+          fetch_strategy: chrome_scrape
+          # plc.rightmove.co.uk/feed/ loads valid RSS XML (WordPress 6.9.4) but
+          # returns 0 items: WordPress is mounted at /wp/, regulatory news uses
+          # custom post types not exposed by the default feed.
+          # JS execution is CSP-blocked on the feed URL.
+          # NOTE: Rightmove corporate news is well-covered by OMP and AIM Group
+          # (e.g. the £1.5B agent lawsuit). Priority downgraded to 2.
+          # Scrape the investor homepage for the regulatory news anchor.
+          landing_urls:
+            - https://plc.rightmove.co.uk/
+
+        - id: similarweb_global_real_estate
+          source_name: "Similarweb - Global Real Estate Rankings"
+          source_type: behavioral_signal_source
+          priority: 2
+          cadence_hint: weekly
+          fetch_strategy: chrome_scrape
+          # Category rankings URL (business-and-consumer-services/real-estate/) exists
+          # but requires login — returns "Create an account" gate with "No Data to Display".
+          # Individual site overview pages load without auth and contain traffic metrics,
+          # global/category rank, competitor list, traffic channels.
+          # Strategy: scrape key competitor sites for traffic context.
+          landing_urls:
+            - https://www.similarweb.com/website/zillow.com/#overview
+            - https://www.similarweb.com/website/rightmove.co.uk/#overview
+            - https://www.similarweb.com/website/homes.com/#overview
+
+    weekly_context:
+      description: "Contextual and weaker signals for the Friday digest"
+      lookback_hours: 168
+      max_items_per_source: 6
+      sources:
+        - id: property_portal_watch
+          source_name: "Property Portal Watch"
+          source_type: conference_and_insights
+          priority: 2
+          cadence_hint: weekly
+          fetch_strategy: chrome_scrape
+          landing_urls:
+            - https://www.onlinemarketplaces.com/topic/videos-vodcasts-interviews/conference/
+
+        - id: inman_tech_innovation
+          source_name: "Inman - Technology & Innovation"
+          source_type: trade_media
+          priority: 3
+          cadence_hint: twice_weekly
+          fetch_strategy: rss
+          rss_feed: https://feeds.feedburner.com/inmannews
+          # Full site feed; filter by technology/innovation topics at analysis stage.
+          # Intentionally kept in weekly_context (not daily_core) to avoid daily noise —
+          # Inman publishes ~10–20 items/day, most are not proptech product intelligence.
+          # High-signal items (score >= 85) are covered by the breaking_alert rule
+          # which now includes weekly_context sources. See schedule.breaking_alert.
+          landing_urls:
+            - https://www.inman.com/access-channel/technology-and-innovation/
+
+        - id: similarweb_country_real_estate
+          source_name: "Similarweb - Country Real Estate Rankings"
+          source_type: behavioral_signal_source
+          priority: 3
+          cadence_hint: monthly
+          fetch_strategy: chrome_scrape
+          # Country-level category rankings require login (same gate as global).
+          # Use individual competitor site pages instead — publicly accessible.
+          # These pages show total visits, global rank, country rank, traffic trend.
+          # Check monthly; traffic rank is a slow-moving metric.
+          landing_urls:
+            - https://www.similarweb.com/website/propertyguru.com.sg/#overview
+            - https://www.similarweb.com/website/realestate.com.au/#overview
+            - https://www.similarweb.com/website/immobilienscout24.de/#overview
+            - https://www.similarweb.com/website/leboncoin.fr/#overview
+
+        - id: zillow_ios
+          source_name: "Zillow - Apple App Store"
+          source_type: mobile_product_signal
+          priority: 2
+          cadence_hint: weekly
+          fetch_strategy: itunes_api
+          itunes_api_url: https://itunes.apple.com/lookup?id=310738695&country=us
+          # Customer reviews RSS (…/rss/customerreviews/…/json) returns empty feed
+          # (no entry array). Use iTunes lookup API instead: returns version,
+          # currentVersionReleaseDate, releaseNotes. Extract via fetch() + regex.
+          landing_urls:
+            - https://apps.apple.com/us/app/zillow-real-estate-rentals/id310738695
+
+        - id: zillow_android
+          source_name: "Zillow - Google Play"
+          source_type: mobile_product_signal
+          priority: 2
+          cadence_hint: weekly
+          fetch_strategy: chrome_scrape
+          # Google Play has no public API. Scrape app page for version + description.
+          landing_urls:
+            - https://play.google.com/store/apps/details?id=com.zillow.android.zillowmap
+
+        - id: rightmove_ios
+          source_name: "Rightmove - Apple App Store"
+          source_type: mobile_product_signal
+          priority: 2
+          cadence_hint: weekly
+          fetch_strategy: itunes_api
+          itunes_api_url: https://itunes.apple.com/lookup?id=323822803&country=gb
+          # CY storefront reviews feed returned empty. Use GB storefront lookup API.
+          # Returns version, currentVersionReleaseDate, releaseNotes reliably.
+          landing_urls:
+            - https://apps.apple.com/gb/app/rightmove-property-search/id323822803
+
+        - id: rightmove_android
+          source_name: "Rightmove - Google Play"
+          source_type: mobile_product_signal
+          priority: 2
+          cadence_hint: weekly
+          fetch_strategy: chrome_scrape
+          # Google Play has no public API. Scrape app page for version + description.
+          landing_urls:
+            - https://play.google.com/store/apps/details?id=com.rightmove.android
+
+selection:
+  tracked_companies:
+    - Zillow
+    - Homes.com
+    - CoStar
+    - Redfin
+    - Rightmove
+    - REA Group
+    - Domain
+    - PropertyGuru
+    - Realtor.com
+    - Opendoor
+    - Compass
+  tracked_regions:
+    - US
+    - UK
+    - Australia
+    - Southeast Asia
+    - APAC
+    - Europe
+  hard_filters:
+    min_priority_for_digest: 55
+    max_top_items: 5
+    max_weak_signals: 4
+    min_confidence: 0.55
+  escalation_rules:
+    - "Escalate news affecting search UX, recommendations, or conversational discovery."
+    - "Escalate verified listings, trust and safety, or fraud control changes."
+    - "Escalate monetization changes in paid visibility, subscriptions, or bundled services."
+    - "Escalate new rental marketplace patterns and developer workflow tooling."
+
+scoring:
+  weights:
+    marketplace_relevance: 0.35
+    event_scale: 0.25
+    portability_to_avito: 0.20
+    urgency: 0.10
+    novelty: 0.10
+  boost_topics:
+    - ai_search
+    - recommendations
+    - paid_visibility
+    - verified_listings
+    - lead_qualification
+    - rentals
+    - developer_workflows
+  required_output_fields:
+    - company_or_source
+    - country_or_region
+    - date
+    - signal_type
+    - headline
+    - summary_bullets
+    - why_it_matters_for_peer_intelligence
+    - possible_implication_for_avito_like_marketplace
+    - source_url
+    - confidence
+
+# ─────────────────────────────────────────────────────
+# Item schema — defines fields stored per article at
+# each stage of the pipeline. See agent-spec.md §9.
+# ─────────────────────────────────────────────────────
+item_schema:
+
+  # Stage 1: output of the fetch/parse step.
+  # Written to .state/raw/<batch>.json
+  raw:
+    required:
+      - url                 # canonical URL, used as dedup key
+      - title               # original title from source
+      - published           # ISO date YYYY-MM-DD
+      - source_id           # matches ingestion.source_groups[].sources[].id
+      - fetch_strategy_used # rss | itunes_api | chrome_scrape
+      - fetched_at          # ISO datetime of actual fetch
+    recommended:
+      - raw_snippet         # first 600–800 chars of original text, NOT interpreted
+                            # used by semantic_deduplicator and contextualizer
+                            # if unavailable (paywall), store title + any open metadata
+
+  # Stage 2: output of classify + score step.
+  # Extends raw fields; stored alongside raw or in enriched cache.
+  enriched:
+    extends: raw
+    required:
+      - companies           # list[str] — normalised company names, e.g. ["Zillow", "CoStar"]
+      - regions             # list[str] — e.g. ["US", "UK"]
+      - topic_tags          # list[str] — from controlled vocabulary below
+      - event_type          # single value from event_types below
+      - priority_score      # int 0–100; computed by news_analyst or rule-based scorer
+      - confidence          # float 0–1; how confident the scorer is
+    recommended:
+      - stakeholder_scores  # map: stakeholder_id -> int 0–100
+                            # pre-computed per-audience relevance for routing
+                            # see config/stakeholders.yaml
+    optional:
+      - analyst_summary     # LLM-written summary (replaces old "summary" field)
+      - why_it_matters      # LLM-written "почему важно" block
+      - avito_implication   # LLM-written "для Авито" block
+      - story_id            # links to related past articles via dedupe.json
+
+  # Controlled vocabulary for topic_tags.
+  # An article may have multiple tags.
+  topic_vocabulary:
+    product:
+      - product_launch        # new feature or product released
+      - product_update        # incremental update to existing product
+      - ai_search             # conversational / AI-powered search
+      - recommendations       # personalisation or recommendation engine
+      - listing_quality       # enrichment, verification, media, data quality
+      - pre_market_listings   # private / coming-soon listings before MLS/portal
+      - mobile_product        # app update, mobile-specific feature
+    commercial:
+      - monetization          # new revenue model, pricing change
+      - paid_visibility       # promoted listings, Showcase-type products
+      - subscriptions         # agent/broker subscription model
+      - agent_relations       # portal-agent contract dynamics, pricing, NPS
+      - lead_qualification    # lead routing, scoring, qualification tools
+    strategic:
+      - m_and_a               # acquisition, merger, investment round
+      - competitive_move      # direct response to competitor action
+      - market_dynamics       # supply/demand, affordability, market data
+      - regulation            # legal, antitrust, data privacy, disclosure
+      - funding               # VC round, PE investment, IPO
+      - listing_war           # battles over listing exclusivity / portal rules
+    tech:
+      - ai_ml                 # LLM, ML models, AI infrastructure
+      - data_infra            # data pipelines, APIs, data moat
+      - trust_safety          # fraud, verification, identity
+      - transaction_tech      # mortgage, closing, escrow, fintech integration
+    macro:
+      - macro_market          # housing prices, interest rates, affordability
+      - consumer_behaviour    # buyer/renter behaviour shifts
+      - talent_leadership     # exec moves, team changes
+
+  event_types:
+    - product_launch
+    - earnings_report
+    - m_and_a_announcement
+    - m_and_a_close
+    - regulatory_action
+    - legal_filing
+    - partnership
+    - funding_round
+    - leadership_change
+    - market_data_release
+    - analysis_opinion
+    - company_statement
+
+delivery:
+  telegram_profiles:
+    telegram_digest:
+      enabled: true
+      bot_token_env: TELEGRAM_BOT_TOKEN
+      chat_id_env: TELEGRAM_CHAT_ID
+      message_thread_id_env: TELEGRAM_MESSAGE_THREAD_ID
+      parse_mode: Markdown
+      disable_web_page_preview: true
+      split_long_messages: true
+      max_message_length: 3800
+      title_template: "PropTech Monitor | {date}"
+    telegram_weekly_digest:
+      enabled: true
+      bot_token_env: TELEGRAM_BOT_TOKEN
+      chat_id_env: TELEGRAM_CHAT_ID
+      message_thread_id_env: TELEGRAM_MESSAGE_THREAD_ID
+      parse_mode: Markdown
+      disable_web_page_preview: true
+      split_long_messages: true
+      max_message_length: 3800
+      title_template: "PropTech Weekly | {date}"
+    telegram_alert:
+      enabled: true
+      bot_token_env: TELEGRAM_BOT_TOKEN
+      chat_id_env: TELEGRAM_CHAT_ID
+      message_thread_id_env: TELEGRAM_MESSAGE_THREAD_ID
+      parse_mode: Markdown
+      disable_web_page_preview: true
+      split_long_messages: false
+      max_message_length: 2500
+      title_template: "PropTech Alert | {date}"
+
+model:
+  provider_env: LLM_PROVIDER
+  model_env: LLM_MODEL
+  api_key_env: OPENAI_API_KEY
+  fallback_model: gpt-5-mini
+
+pipeline:
+  contextualizer:
+    enabled: true
+    prompt_path: ./prompts/contextualizer.md
+    # How far back to look in delivery-log for related events
+    archive_lookback_days: 30
+    # Only add context block if found; never blocks digest generation on failure
+    fail_silent: true
+
+  trend_synthesis:
+    enabled: true
+    prompt_path: ./prompts/trend_synthesizer.md
+    # Number of past weeks of digests to include as history
+    history_weeks: 4
+    # Only run on weekly digest; daily digest skips trend synthesis
+    schedules: [weekly_digest]
+
+  stakeholder_personalization:
+    enabled: false   # activate in MVP v3
+    prompt_path: ./prompts/digest_personalizer.md
+    profiles_path: ./config/stakeholders.yaml
+    # If enabled, each stakeholder profile generates its own digest variant.
+    # The base digest (default profile) is always generated regardless.
+    # Routing uses stakeholder_scores from enriched items when available;
+    # falls back to topic_tags filter if stakeholder_scores are absent.
+    schedules: [weekday_digest, weekly_digest]
+
+output:
+  style: concise
+  include_sections:
+    - top_news
+    - trend_synthesis   # injected by trend_synthesizer; weekly_digest only
+    - what_to_watch
+    - weak_signals
+  markdown_rules:
+    - "Use short paragraphs and bullets."
+    - "Always include a primary source link."
+    - "Mark hypotheses explicitly."

@@ -1,0 +1,38 @@
+{
+  "jtbd": "09",
+  "jtbd_name": "Оценка уровня срочности (breaking alert)",
+  "version": "1.0",
+  "created": "2026-04-06",
+  "annotator": "expert_review_pending",
+  "annotation_status": "draft — requires validation by domain expert before production use",
+  "total_cases": 25,
+  "breaking_count": 5,
+  "not_breaking_count": 20,
+  "source_breakdown": {
+    "real_from_dedupe_json_and_digest": 25,
+    "synthetic": 0
+  },
+  "score_distribution": {
+    "below_threshold_but_breaking": ["jtbd09-001"],
+    "above_threshold_but_not_breaking": ["jtbd09-007"],
+    "at_threshold_borderline": ["jtbd09-024"],
+    "clearly_breaking_high_score": ["jtbd09-002","jtbd09-004"],
+    "clearly_not_breaking_low_score": ["jtbd09-010","jtbd09-013","jtbd09-014","jtbd09-015"]
+  },
+  "evaluation_metrics": ["precision", "recall", "f1_score"],
+  "target_thresholds": {
+    "precision": 0.85,
+    "recall": 0.70,
+    "f1": 0.77
+  },
+  "key_test_cases": {
+    "jtbd09-001": "Score below 85 threshold but qualitatively breaking — LLM must override score",
+    "jtbd09-007": "Score above 85 threshold but NOT breaking — tests blind score-following vs. qualitative judgment",
+    "jtbd09-024": "Borderline score=85, should be breaking based on event type"
+  },
+  "notes": [
+    "Precision is weighted more heavily than recall in this task — false alerts cause alarm fatigue.",
+    "The alert_type taxonomy for golden set: major_product_launch, m_and_a_or_investment, legal_regulatory, market_structural_shift.",
+    "All 25 cases are based on real article titles and leads from the project's dedupe.json and weekly digest."
+  ]
+}

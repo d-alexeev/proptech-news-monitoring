@@ -1,0 +1,77 @@
+{
+  "jtbd": "07",
+  "jtbd_name": "Классификация типа сигнала",
+  "version": "1.1",
+  "created": "2026-04-06",
+  "updated": "2026-04-06",
+  "annotator": "expert_review_pending",
+  "annotation_status": "draft — requires validation by domain expert before production use",
+  "total_cases": 45,
+  "source_breakdown": {
+    "real_from_dedupe_json": 25,
+    "real_from_raw_collected_all": 10,
+    "real_from_raw_feb_collected": 10
+  },
+  "taxonomy": [
+    "product_launch",
+    "ai_feature",
+    "monetization_change",
+    "inventory_or_supply_move",
+    "seller_or_agent_tooling",
+    "partnership",
+    "m_and_a_or_investment",
+    "org_or_leadership_change",
+    "traffic_or_market_share_shift"
+  ],
+  "class_distribution": {
+    "product_launch": 5,
+    "ai_feature": 7,
+    "monetization_change": 4,
+    "inventory_or_supply_move": 5,
+    "seller_or_agent_tooling": 4,
+    "partnership": 3,
+    "m_and_a_or_investment": 7,
+    "org_or_leadership_change": 4,
+    "traffic_or_market_share_shift": 6,
+    "edge_case_taxonomy_gap": 2
+  },
+  "class_distribution_notes": "edge_case_taxonomy_gap cases (jtbd07-018, jtbd07-045) also carry a primary_type classification (m_and_a_or_investment and ai_feature respectively) at low confidence. They are counted once in their primary class for accuracy metrics, and once in edge_case_taxonomy_gap for edge-case coverage tracking.",
+  "edge_cases": [
+    "jtbd07-002",
+    "jtbd07-006",
+    "jtbd07-018",
+    "jtbd07-031",
+    "jtbd07-033",
+    "jtbd07-038",
+    "jtbd07-040",
+    "jtbd07-045"
+  ],
+  "edge_case_descriptions": {
+    "jtbd07-002": "Product momentum update vs. product_launch — same event, different article framing",
+    "jtbd07-006": "Legal action about pricing — no 'regulatory_legal' type; monetization_change is closest",
+    "jtbd07-018": "IP litigation — no legal type; m_and_a_or_investment chosen as closest competitive signal",
+    "jtbd07-031": "Precursor signal to jtbd07-006 lawsuit — weaker monetization_change at 2-month lead time",
+    "jtbd07-033": "Same product as jtbd07-003 covered by a different source — multi-source deduplication test",
+    "jtbd07-038": "Post-acquisition integration decision embedded in earnings — M&A or org_or_leadership_change boundary",
+    "jtbd07-040": "Financial results article — traffic_or_market_share_shift (health) vs. monetization_change (model) boundary",
+    "jtbd07-045": "AI regulatory/legal risk — taxonomy gap; ai_feature accepted at low confidence"
+  },
+  "notable_cross_case_chains": {
+    "rightmove_agent_revolt": ["jtbd07-031", "jtbd07-006"],
+    "costar_domain_consolidation": ["jtbd07-038", "jtbd07-008"],
+    "homes_com_ai_launch": ["jtbd07-003", "jtbd07-033"],
+    "compass_listings_war": ["jtbd07-036", "jtbd07-041", "jtbd07-019", "jtbd07-020"]
+  },
+  "evaluation_metrics": ["accuracy", "macro_f1", "per_class_f1", "top2_accuracy"],
+  "target_thresholds": {
+    "accuracy": 0.82,
+    "macro_f1": 0.75,
+    "top2_accuracy": 0.90
+  },
+  "notes": [
+    "Edge cases with taxonomy gaps (jtbd07-018, jtbd07-045) should receive full credit if the model: (a) selects a defensible primary_type, and (b) explicitly flags the taxonomy limitation.",
+    "For roundup articles (jtbd07-005, jtbd07-034, jtbd07-035, jtbd07-037): the classification is determined by the content type of the covered events, not the article format.",
+    "Cross-case chains are provided for context — evaluators may use them to design temporal reasoning tests (JTBD-15 benchmarks).",
+    "jtbd07-032 (Yandex) carries special relevance for Avito context — evaluators using this as a scoring case should set portability_to_avito=9."
+  ]
+}

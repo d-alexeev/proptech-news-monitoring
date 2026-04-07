@@ -1,0 +1,54 @@
+{
+  "jtbd": "06",
+  "jtbd_name": "Семантическая дедупликация",
+  "version": "1.0",
+  "created": "2026-04-06",
+  "annotator": "expert_review_pending",
+  "annotation_status": "draft — confirmed cases (jtbd06-001, jtbd06-004, jtbd06-006, jtbd06-008, jtbd06-015) are high-confidence. Edge case jtbd06-009 requires annotator discussion.",
+  "total_cases": 15,
+  "duplicate_count": 6,
+  "not_duplicate_count": 9,
+  "source_breakdown": {
+    "real_pairs_from_project_data": 8,
+    "synthetic_pairs_for_edge_cases": 7
+  },
+  "duplicate_type_taxonomy": {
+    "cross_source_same_event": "Same event covered by two different publications on the same day. Canonical duplicate.",
+    "continuation_of_same_legal_case": "Amended filing or new participant in same legal proceeding. Should be flagged as duplicate of original case.",
+    "deep_dive_follow_up_same_event": "Detailed follow-up article covering same product launch, published within days.",
+    "secondary_analysis_same_source_event": "Article that derives its factual content from an already-seen source event.",
+    "related_topic_different_event": "Same topic/theme, different companies or different events. NOT a duplicate.",
+    "related_same_product_different_events": "Same product, sequential events (launch then adoption data). NOT a duplicate.",
+    "same_company_different_event_type": "Same company, different event category. NOT a duplicate.",
+    "related_event_avito_parallel": "International peer event vs Avito's own equivalent. CRITICAL: must NOT be flagged as duplicate."
+  },
+  "confirmed_duplicates_from_project_data": {
+    "jtbd06-001": "Verified via story_id 'story_rightmove_agent_lawsuit_2026' in dedupe.json — both articles share this story_id",
+    "jtbd06-004": "story_id 'story_costar_zillow_ip_litigation' — original Oct 2025 filing vs amended March 2026 complaint"
+  },
+  "critical_test_cases": {
+    "jtbd06-002": "MUST NOT be flagged as duplicate — multiple portal AI launches are separate events",
+    "jtbd06-006": "MUST be flagged as duplicate — company newsroom + trade publication covering identical launch",
+    "jtbd06-012": "CRITICAL — Avito's own launch MUST NOT be suppressed as duplicate of international peers",
+    "jtbd06-009": "Edge case — M&A announcement vs completion 6 months later. Both answers acceptable with rationale."
+  },
+  "evaluation_metrics": [
+    "precision",
+    "recall",
+    "f1_score",
+    "per_type_f1 for cross_source_same_event",
+    "false_positive_rate on related_event_avito_parallel (critical — must be 0)"
+  ],
+  "target_thresholds": {
+    "f1_overall": 0.80,
+    "precision": 0.85,
+    "recall": 0.75,
+    "false_positive_rate_avito_parallel": 0.0
+  },
+  "notes": [
+    "The corpus in each case contains 3 articles. In production, the corpus would typically be 5-15 articles from the lookback window.",
+    "Synthetic cases (jtbd06-006, jtbd06-008, jtbd06-009, jtbd06-010, jtbd06-011, jtbd06-012, jtbd06-013, jtbd06-014, jtbd06-015) are constructed to test specific failure modes.",
+    "jtbd06-012 (Avito AI search vs international peer AI search) is the highest-stakes test case — suppressing Avito's own product news as a 'duplicate' would be a critical system failure.",
+    "Duplicate ratio (6/15 = 40%) is intentionally higher than real-world rate to ensure balanced evaluation. Real-world rate may be 15-25%."
+  ]
+}

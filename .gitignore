@@ -1,0 +1,16 @@
+.DS_Store
+
+# Local secrets
+.env
+
+# Runtime state and caches
+.state/
+*.log
+
+# Python cache, if helper scripts appear later
+__pycache__/
+*.pyc
+
+# Editor / OS noise
+.idea/
+.vscode/

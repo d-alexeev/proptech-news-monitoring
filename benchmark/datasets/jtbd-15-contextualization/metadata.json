@@ -1,0 +1,78 @@
+{
+  "jtbd": "15",
+  "jtbd_name": "Обогащение историческим контекстом",
+  "version": "1.0",
+  "created": "2026-04-06",
+  "annotator": "expert_review_pending",
+  "annotation_status": "draft — requires validation by domain expert before production use",
+  "total_cases": 3,
+  "phase": "Phase 2 (4-6 weeks) — starter set; target is 15-20 cases",
+  "task_description": "Given a new article and a corpus of 10 past articles, identify which past articles provide meaningful context for understanding the new article. Rank context articles by relevance and explain their role (direct precursor, regulatory precedent, competitive parallel, etc.).",
+  "input_format": {
+    "article_new": "The current article being contextualised",
+    "corpus": "10 past articles in chronological order (mix of relevant and irrelevant)"
+  },
+  "output_format": {
+    "relevant_context_ids": "IDs of corpus articles that provide meaningful context",
+    "ranked_by_relevance": "Same IDs ranked most-to-least relevant",
+    "context_roles": "Per-article explanation: role type + explanation of why it is relevant",
+    "not_relevant_ids": "IDs correctly excluded with brief rationale"
+  },
+  "context_role_taxonomy": [
+    "direct_precursor — same story, earlier in time",
+    "story_development — same story, concurrent or later development",
+    "competitive_parallel — same product/strategy at a competitor",
+    "financial_context — financial results that explain the underlying economics",
+    "regulatory_precedent — earlier legal/regulatory case that enables or frames this one",
+    "proximate_trigger — the specific event that caused the article_new event to happen",
+    "governance_context — shareholder or board pressure that explains company behaviour",
+    "legal_context — court ruling or legal proceeding directly relevant",
+    "irrelevant — correctly excluded"
+  ],
+  "cases": {
+    "jtbd15-001": {
+      "article": "Rightmove £1.5B lawsuit",
+      "chain": "Agent open letter (Feb) → Tiered subscription launch (Feb) → FY2025 results (Feb) → Czech precedent (Mar) → Lawsuit filed (Apr)",
+      "key_test": "Does model reconstruct the causal chain or only retrieve the most similar surface-level article?",
+      "corpus_composition": "5 directly relevant, 5 clearly irrelevant (different geography/topic)"
+    },
+    "jtbd15-002": {
+      "article": "CoStar eliminates Domain's AU teams",
+      "chain": "Divest adjacent businesses (Feb) → Confirm fold-in plan (Feb) → Eliminate local teams (Mar)",
+      "key_test": "Does model identify 3-step consolidation sequence with shareholder pressure context?",
+      "corpus_composition": "4 relevant (2 high, 2 medium), 6 irrelevant"
+    },
+    "jtbd15-003": {
+      "article": "Zillow Preview brokerage traction update",
+      "chain": "Redfin-Compass alliance (Feb) → Court ruling (Feb) → Zillow Preview launch (Mar) → Homes.com parallel launch (Mar) → Traction update (Mar)",
+      "key_test": "Does model understand that Homes.com parallel (c04) is critical competitive context?",
+      "corpus_composition": "7 relevant with varying degrees, 3 irrelevant"
+    }
+  },
+  "corpus_design_principles": [
+    "Each corpus contains 10 articles: a mix of highly relevant, moderately relevant, and clearly irrelevant",
+    "Irrelevant articles are plausible distractors (same sector, different story) not random noise",
+    "Articles span 2 months before the new article to test temporal reasoning",
+    "At least one corpus always includes a competitive parallel (same product at a competitor)"
+  ],
+  "evaluation_metrics": {
+    "precision_at_k": "What fraction of retrieved articles are truly relevant (k=3, k=5)?",
+    "recall": "What fraction of golden relevant articles are retrieved?",
+    "role_accuracy": "For retrieved relevant articles, does the model correctly identify the context role?",
+    "narrative_coherence": "LLM-as-judge: does the model's context explanation reconstruct the causal chain? (0-5 rubric)"
+  },
+  "narrative_coherence_rubric": {
+    "5": "Reconstructs full causal chain, identifies all context roles correctly, explains missing context explicitly",
+    "4": "Identifies all high-relevance articles, explains their roles, misses some medium-relevance pieces",
+    "3": "Retrieves most relevant articles but role descriptions are shallow or partially incorrect",
+    "2": "Retrieves only the most obvious context (direct precursor) and misses regulatory/competitive context",
+    "1": "Retrieves surface-level similar articles only (e.g. same company, wrong story)"
+  },
+  "target_thresholds": {
+    "precision_at_3": 0.85,
+    "recall": 0.75,
+    "narrative_coherence_avg": 3.5
+  },
+  "data_sources": "All articles derived from .state/raw/feb-collected.json and .state/raw/collected-all.json with leads reconstructed from summaries",
+  "avito_relevance_notes": "jtbd15-002 (CoStar/Domain consolidation) is the highest-Avito-relevance case — the pattern of a dominant player centralising acquired portal operations is directly applicable to Avito's ecosystem strategy."
+}

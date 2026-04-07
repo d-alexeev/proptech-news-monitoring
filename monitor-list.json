@@ -1,0 +1,646 @@
+{
+  "schema_version": "1.0",
+  "generated_at": "2026-04-07",
+  "domain": "global_proptech_and_property_portals_market_intelligence",
+  "priority_scale": {
+    "1": "core - mandatory monitoring",
+    "2": "important - strong second layer",
+    "3": "supplementary - signal enrichment"
+  },
+  "recommended_monitoring_stack": {
+    "delivery_target": "telegram_channel_digest",
+    "daily_core_sources": [
+      "AIM Group - Real Estate Intelligence",
+      "OnlineMarketplaces",
+      "Mike DelPrete",
+      "Zillow Newsroom",
+      "CoStar Group / Homes.com",
+      "REA Group Investor Centre",
+      "Rightmove PLC",
+      "Redfin News",
+      "Similarweb - Global Real Estate Rankings"
+    ],
+    "weekly_context_sources": [
+      "Property Portal Watch",
+      "Inman - Technology & Innovation",
+      "Similarweb - Country Real Estate Rankings",
+      "Zillow - Apple App Store",
+      "Zillow - Google Play",
+      "Rightmove - Apple App Store",
+      "Rightmove - Google Play"
+    ],
+    "tracked_companies_core": [
+      "Zillow",
+      "Homes.com",
+      "CoStar",
+      "Redfin",
+      "Rightmove",
+      "REA Group",
+      "Domain",
+      "PropertyGuru",
+      "Realtor.com",
+      "Opendoor",
+      "Compass"
+    ],
+    "tracked_regions": [
+      "US",
+      "UK",
+      "Australia",
+      "Southeast Asia",
+      "Europe"
+    ],
+    "search_queries": [
+      "proptech AI search listings marketplace",
+      "real estate portal product launch AI",
+      "property marketplace monetization promoted listings",
+      "real estate portal verified listings fraud trust safety",
+      "rentals marketplace new feature portal",
+      "developer tools property portal new homes"
+    ],
+    "selection_notes": [
+      "Prioritize primary company sources over rewrites when both exist.",
+      "Treat investor relations, newsroom, and app store release trails as the highest-signal layer for peer moves.",
+      "Use trade media and expert analysis as context, not as the sole basis for high-confidence conclusions.",
+      "Escalate items that affect search UX, lead quality, monetization, listing quality, verified supply, or strategic adjacencies."
+    ]
+  },
+  "sources": [
+    {
+      "source_name": "AIM Group - Real Estate Intelligence",
+      "source_type": "industry_analysis",
+      "region": [
+        "global"
+      ],
+      "signal_types": [
+        "industry news",
+        "product launches",
+        "M&A",
+        "leadership changes",
+        "marketplace strategy",
+        "AI feature launches"
+      ],
+      "check_frequency": "daily",
+      "monitoring_focus": [
+        "new portal features and launches",
+        "marketplace and classifieds strategy changes",
+        "cross-country peer moves",
+        "M&A and investment activity",
+        "leadership appointments",
+        "AI and product-search innovation"
+      ],
+      "priority": 1,
+      "urls": {
+        "homepage": "https://aimgroup.com/",
+        "real_estate_intelligence": "https://aimgroup.com/real-estate-intelligence/",
+        "real_estate_section": "https://aimgroup.com/real-estate/"
+      }
+    },
+    {
+      "source_name": "OnlineMarketplaces",
+      "source_type": "industry_analysis",
+      "region": [
+        "global"
+      ],
+      "signal_types": [
+        "proptech news",
+        "portal strategy",
+        "AI/search UX",
+        "product launches",
+        "competitive analysis"
+      ],
+      "check_frequency": "daily",
+      "monitoring_focus": [
+        "AI-native portal challengers",
+        "search UX evolution",
+        "monetization changes",
+        "consumer journey redesign",
+        "global portal peer benchmarks"
+      ],
+      "priority": 1,
+      "urls": {
+        "homepage": "https://www.onlinemarketplaces.com/",
+        "property_portal_insights": "https://www.onlinemarketplaces.com/property-portal-insights/",
+        "conference_archive": "https://www.onlinemarketplaces.com/topic/videos-vodcasts-interviews/conference/"
+      }
+    },
+    {
+      "source_name": "Property Portal Watch",
+      "source_type": "conference_and_insights",
+      "region": [
+        "global"
+      ],
+      "signal_types": [
+        "C-level market insights",
+        "operator benchmarks",
+        "strategy trends",
+        "transaction model evolution"
+      ],
+      "check_frequency": "weekly",
+      "monitoring_focus": [
+        "conference roundups",
+        "speaker insights",
+        "operator case studies",
+        "emerging best practices from portal leaders"
+      ],
+      "priority": 2,
+      "urls": {
+        "overview_article": "https://www.onlinemarketplaces.com/articles/the-property-portal-watch-conference-a-decade-and-a-half-of-helping-break-companies-out-of-their-bubbles/",
+        "bangkok_event_example": "https://www.onlinemarketplaces.com/articles/everything-you-need-to-know-about-property-portal-watch-bangkok-23/",
+        "roundup_example": "https://www.onlinemarketplaces.com/articles/97970-2/"
+      }
+    },
+    {
+      "source_name": "Mike DelPrete",
+      "source_type": "independent_expert_analysis",
+      "region": [
+        "global",
+        "US-heavy"
+      ],
+      "signal_types": [
+        "strategic analysis",
+        "market commentary",
+        "earnings interpretation",
+        "business model analysis"
+      ],
+      "check_frequency": "twice_weekly",
+      "monitoring_focus": [
+        "what is signal vs noise in proptech",
+        "real estate portal strategy",
+        "unit economics implications",
+        "AI impact on marketplace models",
+        "public company interpretation"
+      ],
+      "priority": 1,
+      "urls": {
+        "homepage": "https://library.mikedp.com/",
+        "library": "https://library.mikedp.com/",
+        "legacy_homepage": "https://www.mikedp.com/"
+      },
+      "fetch_strategy": "supabase_api",
+      "fetch_notes": {
+        "method": "Supabase REST API via Chrome JS (sandbox не имеет прямого доступа к интернету)",
+        "supabase_endpoint": "https://palshouozbpmjltbubcv.supabase.co",
+        "supabase_table": "items",
+        "anon_key_location": "https://library.mikedp.com/assets/index-DFA7Evy9.js (JWT regex)",
+        "fields": [
+          "slug",
+          "title",
+          "published_at",
+          "format",
+          "full_content",
+          "summary_200",
+          "key_points",
+          "metadata"
+        ],
+        "content_note": "articles: full_content (HTML, 3-6K chars). podcasts: full_content = описание + '--- TRANSCRIPT ---' + полный транскрипт с временными метками (40-150K chars) — ИСПОЛЬЗОВАТЬ full_content, НЕ summary_200. Если full_content < 800 chars — транскрипт ещё не загружен (stub): сохранять с fetch_failed=true, has_transcript=false. metadata.audioUrl = прямая ссылка на аудиофайл.",
+        "save_script": "save_article.py",
+        "workflow_doc": "docs/rss-api-audit.md §Tier 2.7 / docs/runbook.md §library.mikedp.com"
+      },
+      "rss_feed": null
+    },
+    {
+      "source_name": "Zillow Investor Relations",
+      "source_type": "company_primary_source",
+      "region": [
+        "US"
+      ],
+      "signal_types": [
+        "earnings",
+        "shareholder letters",
+        "strategy updates",
+        "AI narrative",
+        "adjacency expansion"
+      ],
+      "check_frequency": "weekly_and_on_earnings",
+      "monitoring_focus": [
+        "shareholder letters",
+        "investor presentations",
+        "AI strategy",
+        "home shopping experience changes",
+        "rentals, mortgage, transaction adjacencies"
+      ],
+      "priority": 1,
+      "urls": {
+        "investor_relations": "https://investors.zillowgroup.com/investors/overview/default.aspx"
+      }
+    },
+    {
+      "source_name": "Zillow Newsroom — Product Innovation",
+      "source_type": "company_primary_source",
+      "region": [
+        "US"
+      ],
+      "signal_types": [
+        "product launches",
+        "feature rollouts",
+        "partnerships",
+        "buyer journey innovation"
+      ],
+      "check_frequency": "2-3_times_per_week",
+      "monitoring_focus": [
+        "AI mode and conversational search",
+        "natural language search",
+        "new consumer flows",
+        "agent and seller tooling",
+        "new partnerships"
+      ],
+      "priority": 1,
+      "fetch_strategy": "html_scrape",
+      "fetch_notes": "PerimeterX blocks Chrome and curl with browser UA. Use Python urllib with User-Agent 'Mozilla/5.0 (compatible; RSS reader)' and NO Accept-Encoding header. Category page returns server-rendered HTML; article body in <p> tags. Full recipe: docs/rss-api-audit.md §'Zillow Newsroom — html_scrape'.",
+      "urls": {
+        "product_innovation_category": "https://www.zillow.com/news/category/product-innovation/"
+      }
+    },
+    {
+      "source_name": "CoStar Group / Homes.com",
+      "source_type": "company_primary_source",
+      "region": [
+        "US"
+      ],
+      "signal_types": [
+        "product launches",
+        "AI shopping experience",
+        "inventory initiatives",
+        "investor updates"
+      ],
+      "check_frequency": "weekly_and_on_news",
+      "monitoring_focus": [
+        "Homes.com AI experience",
+        "early-access or pre-market inventory",
+        "broker partnerships",
+        "marketing aggression and GTM moves",
+        "competitive attacks on incumbents"
+      ],
+      "priority": 1,
+      "urls": {
+        "investor_news": "https://investors.costargroup.com/news-releases",
+        "example_release": "https://investors.costargroup.com/news-releases/news-release-details/homescom-expands-early-access-pre-market-listings",
+        "corporate_press_room": "https://www.costargroup.com/press-room"
+      }
+    },
+    {
+      "source_name": "Redfin News",
+      "source_type": "company_primary_source",
+      "region": [
+        "US"
+      ],
+      "signal_types": [
+        "product launches",
+        "market commentary",
+        "housing demand signals",
+        "rentals and brokerage updates"
+      ],
+      "check_frequency": "2-3_times_per_week",
+      "monitoring_focus": [
+        "search and map experience changes",
+        "buyer and seller workflow updates",
+        "rentals and brokerage model signals",
+        "market data narratives with product implications",
+        "partnerships and packaged services"
+      ],
+      "priority": 1,
+      "urls": {
+        "news": "https://www.redfin.com/news/",
+        "press_releases": "https://investors.redfin.com/news-events/press-releases/default.aspx"
+      }
+    },
+    {
+      "source_name": "REA Group Investor Centre",
+      "source_type": "company_primary_source",
+      "region": [
+        "Australia",
+        "APAC"
+      ],
+      "signal_types": [
+        "earnings",
+        "product priorities",
+        "adjacency strategy",
+        "data products",
+        "developer tools"
+      ],
+      "check_frequency": "weekly_and_on_results",
+      "monitoring_focus": [
+        "actual investment priorities",
+        "developer and agent monetization",
+        "PropTrack and data plays",
+        "adjacent services expansion",
+        "group strategy shifts"
+      ],
+      "priority": 1,
+      "urls": {
+        "investor_centre": "https://www.rea-group.com/investor-centre/"
+      }
+    },
+    {
+      "source_name": "Rightmove PLC",
+      "source_type": "company_primary_source",
+      "region": [
+        "UK"
+      ],
+      "signal_types": [
+        "earnings",
+        "AI/search moves",
+        "agent monetization",
+        "strategy updates"
+      ],
+      "check_frequency": "weekly_and_on_results",
+      "monitoring_focus": [
+        "AI tools and assistants",
+        "image or conversational search",
+        "agent pricing and packages",
+        "ancillary services",
+        "product roadmap signals"
+      ],
+      "priority": 1,
+      "urls": {
+        "investor_site": "https://plc.rightmove.co.uk/"
+      }
+    },
+    {
+      "source_name": "Hemnet Investors",
+      "source_type": "company_primary_source",
+      "region": [
+        "Sweden",
+        "Nordics"
+      ],
+      "signal_types": [
+        "financial reports",
+        "monetization updates",
+        "consumer engagement changes",
+        "B2B packaging"
+      ],
+      "check_frequency": "weekly_and_on_reports",
+      "monitoring_focus": [
+        "ARPL and monetization model changes",
+        "product packaging",
+        "developer and B2B offerings",
+        "listing volume dynamics",
+        "engagement experiments"
+      ],
+      "priority": 2,
+      "urls": {
+        "investors": "https://www.hemnetgroup.se/en/investors/"
+      }
+    },
+    {
+      "source_name": "AVIV Group",
+      "source_type": "company_primary_source",
+      "region": [
+        "continental Europe"
+      ],
+      "signal_types": [
+        "group strategy",
+        "brand-level initiatives",
+        "org changes",
+        "cross-market initiatives"
+      ],
+      "check_frequency": "weekly",
+      "monitoring_focus": [
+        "SeLoger, immowelt, Immoweb, Meilleurs Agents signals",
+        "cross-country initiatives",
+        "leadership changes",
+        "platform and data strategy"
+      ],
+      "priority": 2,
+      "urls": {
+        "homepage": "https://www.aviv-group.com/"
+      }
+    },
+    {
+      "source_name": "PropertyGuru Agent Product Updates",
+      "source_type": "company_primary_source",
+      "region": [
+        "Southeast Asia",
+        "APAC"
+      ],
+      "signal_types": [
+        "seller-side tools",
+        "agent tools",
+        "package redesigns",
+        "AI/video features"
+      ],
+      "check_frequency": "weekly",
+      "monitoring_focus": [
+        "agent workflow tools",
+        "package and listing boost redesigns",
+        "AI video or trust/credibility tools",
+        "seller monetization levers"
+      ],
+      "priority": 2,
+      "urls": {
+        "product_updates": "https://www.agentofferings.propertyguru.com.my/agentnews/category/product-updates/"
+      }
+    },
+    {
+      "source_name": "Similarweb - Global Real Estate Rankings",
+      "source_type": "behavioral_signal_source",
+      "region": [
+        "global"
+      ],
+      "signal_types": [
+        "traffic trends",
+        "ranking changes",
+        "attention share shifts",
+        "country-level market structure"
+      ],
+      "check_frequency": "weekly",
+      "monitoring_focus": [
+        "who is gaining or losing attention",
+        "new local champions",
+        "country-by-country ranking shifts",
+        "share-of-attention changes after product launches"
+      ],
+      "priority": 1,
+      "urls": {
+        "global_real_estate": "https://www.similarweb.com/top-websites/business-and-consumer-services/real-estate/"
+      }
+    },
+    {
+      "source_name": "Similarweb - Country Real Estate Rankings",
+      "source_type": "behavioral_signal_source",
+      "region": [
+        "country_specific"
+      ],
+      "signal_types": [
+        "local traffic trends",
+        "country peer benchmarking"
+      ],
+      "check_frequency": "weekly",
+      "monitoring_focus": [
+        "local incumbents and challengers",
+        "market structure by country",
+        "attention shifts after launches or campaigns"
+      ],
+      "priority": 2,
+      "urls": {
+        "template_note": "replace COUNTRY in the URL pattern below",
+        "url_pattern": "https://www.similarweb.com/top-websites/COUNTRY/business-and-consumer-services/real-estate/",
+        "example_thailand": "https://www.similarweb.com/top-websites/thailand/business-and-consumer-services/real-estate/"
+      }
+    },
+    {
+      "source_name": "Zillow - Apple App Store",
+      "source_type": "mobile_product_signal",
+      "region": [
+        "US"
+      ],
+      "signal_types": [
+        "release notes",
+        "ratings",
+        "user complaints",
+        "mobile feature rollout"
+      ],
+      "check_frequency": "weekly",
+      "monitoring_focus": [
+        "what actually shipped in mobile",
+        "feature rollout cadence",
+        "user feedback on relevance and UX",
+        "signals not yet visible in formal PR"
+      ],
+      "priority": 2,
+      "urls": {
+        "app_store": "https://apps.apple.com/us/app/zillow-real-estate-rentals/id310738695"
+      }
+    },
+    {
+      "source_name": "Zillow - Google Play",
+      "source_type": "mobile_product_signal",
+      "region": [
+        "US"
+      ],
+      "signal_types": [
+        "release trail",
+        "install base context",
+        "user feedback",
+        "mobile feature rollout"
+      ],
+      "check_frequency": "weekly",
+      "monitoring_focus": [
+        "new mobile value proposition wording",
+        "update cadence",
+        "feature evidence",
+        "user pain points"
+      ],
+      "priority": 2,
+      "urls": {
+        "google_play": "https://play.google.com/store/apps/details?id=com.zillow.android.zillowmap"
+      }
+    },
+    {
+      "source_name": "Rightmove - Apple App Store",
+      "source_type": "mobile_product_signal",
+      "region": [
+        "UK"
+      ],
+      "signal_types": [
+        "release notes",
+        "ratings",
+        "UX signals"
+      ],
+      "check_frequency": "weekly",
+      "monitoring_focus": [
+        "new save/search/list flows",
+        "feature rollouts",
+        "customer complaints around search relevance",
+        "mobile-only experiments"
+      ],
+      "priority": 2,
+      "urls": {
+        "app_store": "https://apps.apple.com/cy/app/rightmove-property-search/id323822803"
+      }
+    },
+    {
+      "source_name": "Rightmove - Google Play",
+      "source_type": "mobile_product_signal",
+      "region": [
+        "UK"
+      ],
+      "signal_types": [
+        "release trail",
+        "ratings",
+        "UX signals"
+      ],
+      "check_frequency": "weekly",
+      "monitoring_focus": [
+        "map/search UX changes",
+        "photo and floorplan flow changes",
+        "save/share behavior",
+        "search quality complaints"
+      ],
+      "priority": 2,
+      "urls": {
+        "google_play": "https://play.google.com/store/apps/details?id=com.rightmove.android"
+      }
+    },
+    {
+      "source_name": "Inman - Technology & Innovation",
+      "source_type": "trade_media",
+      "region": [
+        "US"
+      ],
+      "signal_types": [
+        "adjacent proptech trends",
+        "brokerage-tech shifts",
+        "MLS and agent workflow trends",
+        "AI tool launches"
+      ],
+      "check_frequency": "twice_weekly",
+      "monitoring_focus": [
+        "broker and agent workflow disruption",
+        "AI tooling adjacent to portals",
+        "new startup signals",
+        "US market-specific innovation"
+      ],
+      "priority": 3,
+      "urls": {
+        "technology_channel": "https://www.inman.com/access-channel/technology-and-innovation/"
+      }
+    }
+  ],
+  "agent_instructions": {
+    "objective": "Monitor global proptech and property portal sources for peer intelligence with emphasis on product launches, AI features, monetization moves, seller-side tools, inventory advantages, M&A, org changes, and traffic shifts.",
+    "output_format": {
+      "fields": [
+        "company_or_source",
+        "country_or_region",
+        "date",
+        "signal_type",
+        "headline",
+        "summary_bullets",
+        "why_it_matters_for_peer_intelligence",
+        "possible_implication_for_avito_like_marketplace",
+        "source_url",
+        "confidence"
+      ]
+    },
+    "signal_type_taxonomy": [
+      "product_launch",
+      "ai_feature",
+      "monetization_change",
+      "inventory_or_supply_move",
+      "seller_or_agent_tooling",
+      "partnership",
+      "m_and_a_or_investment",
+      "org_or_leadership_change",
+      "traffic_or_market_share_shift"
+    ],
+    "special_focus": [
+      "conversational search",
+      "natural language search",
+      "image search",
+      "voice search",
+      "AI assistants for buyers",
+      "listing enrichment and verification",
+      "lead qualification and routing",
+      "premium packages and pricing changes",
+      "developer products",
+      "exclusive or pre-market inventory",
+      "mortgage, transaction, CRM, and data-product adjacencies"
+    ],
+    "ignore_rules": [
+      "ignore generic macro news without product or business implication",
+      "ignore duplicate rewrites without new facts",
+      "ignore PR items with no visible effect on product, demand, supply, or economics"
+    ]
+  }
+}

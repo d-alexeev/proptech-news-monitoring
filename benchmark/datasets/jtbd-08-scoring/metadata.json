@@ -1,0 +1,53 @@
+{
+  "jtbd": "08",
+  "jtbd_name": "Многомерный скоринг релевантности",
+  "version": "1.0",
+  "created": "2026-04-06",
+  "annotator": "expert_review_pending",
+  "annotation_status": "draft — all golden scores require validation by two Avito domain experts (PM + Strategy) before production use",
+  "total_cases": 16,
+  "source_breakdown": {
+    "real_from_dedupe_json_and_digest": 15,
+    "real_from_raw_feb_collected": 1,
+    "synthetic": 0
+  },
+  "scoring_dimensions": {
+    "marketplace_relevance": {"weight": 0.35, "scale": "0-10", "description": "How directly relevant is this to the classifieds/marketplace business model and portal product strategy?"},
+    "event_scale": {"weight": 0.25, "scale": "0-10", "description": "How large is the company, market, or user base affected? Global/top-3 platform = 9-10; small regional market = 4-5."},
+    "portability_to_avito": {"weight": 0.20, "scale": "0-10", "description": "Can the product, business model, or regulatory pattern be applied to Avito Real Estate? Internal Avito data = 10."},
+    "urgency": {"weight": 0.10, "scale": "0-10", "description": "How time-sensitive is the required response or awareness? Live product = 8-9; planning-horizon signal = 4-5."},
+    "novelty": {"weight": 0.10, "scale": "0-10", "description": "How new is this pattern, model, or technology? First of its kind = 9-10; established pattern = 2-3."}
+  },
+  "weighted_score_formula": "total = (marketplace_relevance*0.35 + event_scale*0.25 + portability_to_avito*0.20 + urgency*0.10 + novelty*0.10) * 10",
+  "priority_buckets": {
+    "high": "score 75-100 — include as main digest story",
+    "medium": "score 55-74 — include as main digest story (lower position)",
+    "weak_signal": "score 40-54 — include in weak signals section",
+    "borderline_weak": "score 38-42 — annotator discretion required",
+    "irrelevant": "score < 40 — exclude"
+  },
+  "score_distribution": {
+    "high_75_plus": ["jtbd08-001","jtbd08-002","jtbd08-003","jtbd08-006","jtbd08-013","jtbd08-016"],
+    "medium_55_74": ["jtbd08-004","jtbd08-005","jtbd08-009","jtbd08-010","jtbd08-012","jtbd08-015"],
+    "weak_signal_40_54": ["jtbd08-007","jtbd08-008","jtbd08-014"],
+    "borderline": ["jtbd08-011"]
+  },
+  "calibration_cases": {
+    "jtbd08-002_vs_jtbd08-003": "Nearly identical scores (88 vs 87) — tests whether model correctly scores two equivalent events similarly",
+    "jtbd08-005": "High novelty + high portability but low scale — tests multi-dimensional reasoning",
+    "jtbd08-013_and_jtbd08-015": "portability_to_avito=10 internal cases — tests whether model handles 'this IS Avito' correctly",
+    "jtbd08-016": "portability_to_avito=9 despite Yandex being a competitor, not Avito — tests whether model understands portability as 'applicability of pattern' not 'this IS Avito'"
+  },
+  "evaluation_metrics": ["spearman_rho_vs_expert", "bucket_accuracy", "llm_judge_rationale_score"],
+  "target_thresholds": {
+    "spearman_rho": 0.75,
+    "bucket_accuracy": 0.80,
+    "llm_judge_rationale": "3.8/5"
+  },
+  "notes": [
+    "All golden scores were derived from the weekly digest priority labels (high/medium) and the scoring rubric in agent-spec.md.",
+    "Avito-internal articles (jtbd08-013, jtbd08-015) receive portability_to_avito=10 by definition — this is intentional and correct.",
+    "Score variance of ±5 between annotators is acceptable on individual cases. Variance > 10 indicates a calibration issue.",
+    "The scoring formula produces 0-100 range: (sum of weighted 0-10 scores) × 10."
+  ]
+}
