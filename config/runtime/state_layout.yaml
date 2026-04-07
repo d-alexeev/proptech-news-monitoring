@@ -1,0 +1,102 @@
+version: 1
+root_dir: ./.state
+
+naming_rules:
+  structured_format: json
+  article_format: markdown_with_frontmatter
+  run_id_pattern: "<mode>__<YYYYMMDDTHHMMSSZ>__<scope>"
+  run_date_format: YYYY-MM-DD
+  published_date_format: YYYY-MM-DD
+  published_month_format: YYYY-MM
+  week_id_format: YYYY-Www
+  story_id_pattern: "story_<stable_hash_or_slug>"
+
+collections:
+  runs:
+    record_type: run_manifest
+    path_template: ./.state/runs/{run_date}/{run_id}.json
+    shard_keys: [run_date, run_id]
+    lookup_keys: [run_id, run_date]
+    notes:
+      - one file per run
+      - manifest is created by the mode that owns the run
+
+  raw:
+    record_type: raw_candidate[]
+    path_template: ./.state/raw/{run_date}/{run_id}.json
+    shard_keys: [run_date, run_id]
+    lookup_keys: [run_id, run_date]
+    notes:
+      - one shard file per run
+      - stores discovery output before shortlist filtering is finalised
+
+  shortlists:
+    record_type: shortlisted_item[]
+    path_template: ./.state/shortlists/{run_date}/{run_id}.json
+    shard_keys: [run_date, run_id]
+    lookup_keys: [run_id, run_date]
+    notes:
+      - one shard file per run
+      - shortlist output is the only allowed upstream for later full-text fetch
+
+  enriched:
+    record_type: enriched_item[]
+    path_template: ./.state/enriched/{run_date}/{run_id}.json
+    shard_keys: [run_date, run_id]
+    lookup_keys: [run_id, run_date]
+    notes:
+      - one shard file per run
+      - downstream daily, weekly, and alert modes read compact records from here
+
+  stories:
+    record_type: story_brief
+    path_template: ./.state/stories/{first_seen_month}/{story_id}.json
+    shard_keys: [first_seen_month, story_id]
+    lookup_keys: [story_id]
+    notes:
+      - one file per canonical story
+      - compact story state only; no dependency on dedupe.json or delivery-log.json
+
+  briefs_daily:
+    record_type: daily_brief
+    path_template: ./.state/briefs/daily/{digest_date}__{delivery_profile}.json
+    shard_keys: [digest_date, delivery_profile]
+    lookup_keys: [digest_date, delivery_profile]
+    notes:
+      - one file per digest date and delivery profile
+      - machine-readable output for weekly synthesis and fanout
+
+  briefs_weekly:
+    record_type: weekly_brief
+    path_template: ./.state/briefs/weekly/{week_id}__{delivery_profile}.json
+    shard_keys: [week_id, delivery_profile]
+    lookup_keys: [week_id, delivery_profile]
+    notes:
+      - one file per ISO week and delivery profile
+      - compact weekly artifact for trend continuation and fanout
+
+  reviews:
+    record_type: qa_review_report
+    path_template: ./.state/reviews/{review_date}/{parent_run_id}__{review_kind}.json
+    shard_keys: [review_date, parent_run_id, review_kind]
+    lookup_keys: [parent_run_id, review_kind, review_date]
+    notes:
+      - review-specific schema is detailed later with the review mode milestone
+      - stored separately from digest briefs to keep QA output isolated
+
+  articles:
+    record_type: article_markdown
+    path_template: ./.state/articles/{published_month}/{published_date}_{slug}.md
+    shard_keys: [published_month, published_date, slug]
+    lookup_keys: [published_date, slug]
+    notes:
+      - full article bodies remain in markdown files
+      - article archive is not a default downstream input
+
+layout_guards:
+  story_brief_must_not_depend_on:
+    - ./.state/dedupe.json
+    - ./.state/delivery-log.json
+  run_manifest_must_not_depend_on:
+    - ./.state/dedupe.json
+    - ./.state/delivery-log.json

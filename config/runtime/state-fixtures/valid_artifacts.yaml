@@ -1,0 +1,85 @@
+artifacts:
+  raw_candidate:
+    run_id: monitor_sources__20260408T060000Z__daily_core
+    source_id: zillow_newsroom
+    group_id: daily_core
+    url: https://www.zillow.com/news/example-story/
+    canonical_url: https://www.zillow.com/news/example-story/
+    title: Zillow launches example product feature
+    published: 2026-04-08
+    discovered_at: 2026-04-08T06:05:00Z
+    fetch_strategy: html_scrape
+    raw_snippet: Example snippet
+
+  shortlisted_item:
+    run_id: monitor_sources__20260408T060000Z__daily_core
+    source_id: zillow_newsroom
+    url: https://www.zillow.com/news/example-story/
+    canonical_url: https://www.zillow.com/news/example-story/
+    title: Zillow launches example product feature
+    published: 2026-04-08
+    shortlisted_at: 2026-04-08T06:06:00Z
+    triage_decision: shortlist
+    shortlist_reason: primary company source with product signal
+    provisional_priority: 82
+    fetch_strategy: html_scrape
+
+  enriched_item:
+    run_id: scrape_and_enrich__20260408T061500Z__daily_core
+    source_id: zillow_newsroom
+    url: https://www.zillow.com/news/example-story/
+    canonical_url: https://www.zillow.com/news/example-story/
+    title: Zillow launches example product feature
+    published: 2026-04-08
+    enriched_at: 2026-04-08T06:17:00Z
+    companies: [Zillow]
+    regions: [US]
+    topic_tags: [product_launch, ai_search]
+    event_type: product_launch
+    priority_score: 82
+    confidence: 0.88
+    story_id: story_zillow_ai_feature
+
+  story_brief:
+    story_id: story_zillow_ai_feature
+    canonical_url: https://www.zillow.com/news/example-story/
+    title_snapshot: Zillow launches example product feature
+    first_seen: 2026-04-08
+    last_seen: 2026-04-08
+    first_seen_month: 2026-04
+    source_ids: [zillow_newsroom]
+    companies: [Zillow]
+    topic_tags: [product_launch, ai_search]
+    summary_line: Zillow pushed a new AI-led discovery feature.
+
+  daily_brief:
+    brief_id: daily__2026-04-08__telegram_digest
+    run_id: build_daily_digest__20260408T070000Z__telegram_digest
+    digest_date: 2026-04-08
+    delivery_profile: telegram_digest
+    generated_at: 2026-04-08T07:10:00Z
+    story_ids: [story_zillow_ai_feature]
+    top_story_ids: [story_zillow_ai_feature]
+
+  weekly_brief:
+    brief_id: weekly__2026-W15__telegram_weekly_digest
+    run_id: build_weekly_digest__20260410T140000Z__telegram_weekly_digest
+    week_id: 2026-W15
+    delivery_profile: telegram_weekly_digest
+    generated_at: 2026-04-10T14:20:00Z
+    story_ids: [story_zillow_ai_feature]
+    trend_ids: [trend_ai_search_adoption]
+
+  run_manifest:
+    run_id: monitor_sources__20260408T060000Z__daily_core
+    mode: monitor_sources
+    started_at: 2026-04-08T06:00:00Z
+    finished_at: 2026-04-08T06:07:00Z
+    status: completed
+    inputs:
+      - config/runtime/source-groups/daily_core.yaml
+      - config/runtime/runtime_thresholds.yaml
+    outputs:
+      - .state/raw/2026-04-08/monitor_sources__20260408T060000Z__daily_core.json
+      - .state/shortlists/2026-04-08/monitor_sources__20260408T060000Z__daily_core.json
+    source_groups: [daily_core]

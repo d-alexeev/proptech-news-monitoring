@@ -1,0 +1,56 @@
+fixtures:
+  - collection: runs
+    vars:
+      run_date: 2026-04-08
+      run_id: monitor_sources__20260408T060000Z__daily_core
+    expected_path: ./.state/runs/2026-04-08/monitor_sources__20260408T060000Z__daily_core.json
+
+  - collection: raw
+    vars:
+      run_date: 2026-04-08
+      run_id: monitor_sources__20260408T060000Z__daily_core
+    expected_path: ./.state/raw/2026-04-08/monitor_sources__20260408T060000Z__daily_core.json
+
+  - collection: shortlists
+    vars:
+      run_date: 2026-04-08
+      run_id: monitor_sources__20260408T060000Z__daily_core
+    expected_path: ./.state/shortlists/2026-04-08/monitor_sources__20260408T060000Z__daily_core.json
+
+  - collection: enriched
+    vars:
+      run_date: 2026-04-08
+      run_id: scrape_and_enrich__20260408T061500Z__daily_core
+    expected_path: ./.state/enriched/2026-04-08/scrape_and_enrich__20260408T061500Z__daily_core.json
+
+  - collection: stories
+    vars:
+      first_seen_month: 2026-04
+      story_id: story_zillow_ai_feature
+    expected_path: ./.state/stories/2026-04/story_zillow_ai_feature.json
+
+  - collection: briefs_daily
+    vars:
+      digest_date: 2026-04-08
+      delivery_profile: telegram_digest
+    expected_path: ./.state/briefs/daily/2026-04-08__telegram_digest.json
+
+  - collection: briefs_weekly
+    vars:
+      week_id: 2026-W15
+      delivery_profile: telegram_weekly_digest
+    expected_path: ./.state/briefs/weekly/2026-W15__telegram_weekly_digest.json
+
+  - collection: reviews
+    vars:
+      review_date: 2026-04-08
+      parent_run_id: build_daily_digest__20260408T070000Z__telegram_digest
+      review_kind: qa
+    expected_path: ./.state/reviews/2026-04-08/build_daily_digest__20260408T070000Z__telegram_digest__qa.json
+
+  - collection: articles
+    vars:
+      published_month: 2026-04
+      published_date: 2026-04-08
+      slug: zillow-launches-example-product-feature
+    expected_path: ./.state/articles/2026-04/2026-04-08_zillow-launches-example-product-feature.md

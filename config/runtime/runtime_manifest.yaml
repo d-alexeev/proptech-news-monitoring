@@ -26,5 +26,10 @@ files:
     weekly_context: ./config/runtime/source-groups/weekly_context.yaml
   thresholds: ./config/runtime/runtime_thresholds.yaml
   schedule_bindings: ./config/runtime/schedule_bindings.yaml
+  state_layout: ./config/runtime/state_layout.yaml
+  state_schemas: ./config/runtime/state_schemas.yaml
+  state_fixtures:
+    valid_artifacts: ./config/runtime/state-fixtures/valid_artifacts.yaml
+    path_resolution: ./config/runtime/state-fixtures/path_resolution.yaml
   stakeholder_profiles_index: ./config/runtime/stakeholder-profiles/index.yaml
   stakeholder_profiles_dir: ./config/runtime/stakeholder-profiles

@@ -1,0 +1,288 @@
+version: 1
+
+artifacts:
+  raw_candidate:
+    shard_collection: raw
+    producer_modes: [monitor_sources]
+    consumer_modes: [monitor_sources]
+    required_fields:
+      - name: run_id
+        type: string
+      - name: source_id
+        type: string
+      - name: group_id
+        type: string
+      - name: url
+        type: string
+      - name: canonical_url
+        type: string
+      - name: title
+        type: string
+      - name: published
+        type: date
+      - name: discovered_at
+        type: datetime
+      - name: fetch_strategy
+        type: enum[rss,itunes_api,html_scrape,chrome_scrape,blocked]
+    optional_fields:
+      - name: source_name
+        type: string
+      - name: landing_url
+        type: string
+      - name: raw_snippet
+        type: string
+      - name: author
+        type: string
+      - name: region_hint
+        type: string
+      - name: story_hint
+        type: string
+      - name: dedupe_key
+        type: string
+      - name: metadata
+        type: map
+
+  shortlisted_item:
+    shard_collection: shortlists
+    producer_modes: [monitor_sources]
+    consumer_modes: [scrape_and_enrich]
+    required_fields:
+      - name: run_id
+        type: string
+      - name: source_id
+        type: string
+      - name: url
+        type: string
+      - name: canonical_url
+        type: string
+      - name: title
+        type: string
+      - name: published
+        type: date
+      - name: shortlisted_at
+        type: datetime
+      - name: triage_decision
+        type: enum[shortlist]
+      - name: shortlist_reason
+        type: string
+      - name: provisional_priority
+        type: integer
+      - name: fetch_strategy
+        type: string
+    optional_fields:
+      - name: raw_snippet
+        type: string
+      - name: story_hint
+        type: string
+      - name: companies_hint
+        type: list[string]
+      - name: topic_hint
+        type: list[string]
+      - name: dedupe_match
+        type: map
+      - name: notes
+        type: string
+
+  enriched_item:
+    shard_collection: enriched
+    producer_modes: [scrape_and_enrich]
+    consumer_modes: [build_daily_digest, build_weekly_digest, breaking_alert]
+    required_fields:
+      - name: run_id
+        type: string
+      - name: source_id
+        type: string
+      - name: url
+        type: string
+      - name: canonical_url
+        type: string
+      - name: title
+        type: string
+      - name: published
+        type: date
+      - name: enriched_at
+        type: datetime
+      - name: companies
+        type: list[string]
+      - name: regions
+        type: list[string]
+      - name: topic_tags
+        type: list[string]
+      - name: event_type
+        type: string_or_null
+      - name: priority_score
+        type: integer
+      - name: confidence
+        type: float
+    optional_fields:
+      - name: raw_snippet
+        type: string
+      - name: analyst_summary
+        type: string
+      - name: why_it_matters
+        type: string
+      - name: avito_implication
+        type: string
+      - name: story_id
+        type: string
+      - name: body_status
+        type: string
+      - name: article_file
+        type: string
+      - name: evidence_points
+        type: list[string]
+      - name: source_quality
+        type: string
+      - name: stakeholder_scores
+        type: map
+    notes:
+      - full-text-specific optional fields are reserved here and will be finalised later with the enrichment milestone
+
+  story_brief:
+    shard_collection: stories
+    producer_modes: [scrape_and_enrich]
+    consumer_modes: [monitor_sources, build_daily_digest, build_weekly_digest, breaking_alert]
+    required_fields:
+      - name: story_id
+        type: string
+      - name: canonical_url
+        type: string
+      - name: title_snapshot
+        type: string
+      - name: first_seen
+        type: date
+      - name: last_seen
+        type: date
+      - name: first_seen_month
+        type: string
+      - name: source_ids
+        type: list[string]
+      - name: companies
+        type: list[string]
+      - name: topic_tags
+        type: list[string]
+    optional_fields:
+      - name: regions
+        type: list[string]
+      - name: event_types_seen
+        type: list[string]
+      - name: latest_priority_score
+        type: integer
+      - name: last_digest_refs
+        type: list[string]
+      - name: summary_line
+        type: string
+      - name: notes
+        type: string
+    legacy_dependencies: none
+
+  daily_brief:
+    shard_collection: briefs_daily
+    producer_modes: [build_daily_digest]
+    consumer_modes: [build_weekly_digest, review_digest, stakeholder_fanout]
+    required_fields:
+      - name: brief_id
+        type: string
+      - name: run_id
+        type: string
+      - name: digest_date
+        type: date
+      - name: delivery_profile
+        type: string
+      - name: generated_at
+        type: datetime
+      - name: story_ids
+        type: list[string]
+    optional_fields:
+      - name: top_story_ids
+        type: list[string]
+      - name: weak_signal_ids
+        type: list[string]
+      - name: context_refs
+        type: list[string]
+      - name: section_order
+        type: list[string]
+      - name: selection_notes
+        type: list[string]
+      - name: markdown_path
+        type: string
+      - name: delivery_metadata
+        type: map
+    notes:
+      - rendering-specific content detail is expanded later with the daily rendering milestone
+
+  weekly_brief:
+    shard_collection: briefs_weekly
+    producer_modes: [build_weekly_digest]
+    consumer_modes: [review_digest, stakeholder_fanout]
+    required_fields:
+      - name: brief_id
+        type: string
+      - name: run_id
+        type: string
+      - name: week_id
+        type: string
+      - name: delivery_profile
+        type: string
+      - name: generated_at
+        type: datetime
+      - name: story_ids
+        type: list[string]
+    optional_fields:
+      - name: top_story_ids
+        type: list[string]
+      - name: trend_ids
+        type: list[string]
+      - name: prior_week_refs
+        type: list[string]
+      - name: section_order
+        type: list[string]
+      - name: markdown_path
+        type: string
+      - name: synthesis_notes
+        type: list[string]
+    notes:
+      - trend synthesis details are expanded later with the weekly milestones
+
+  run_manifest:
+    shard_collection: runs
+    producer_modes:
+      - monitor_sources
+      - scrape_and_enrich
+      - build_daily_digest
+      - review_digest
+      - build_weekly_digest
+      - breaking_alert
+      - stakeholder_fanout
+    consumer_modes: [review_digest]
+    required_fields:
+      - name: run_id
+        type: string
+      - name: mode
+        type: string
+      - name: started_at
+        type: datetime
+      - name: finished_at
+        type: datetime
+      - name: status
+        type: enum[pending,running,completed,failed,partial]
+      - name: inputs
+        type: list[string]
+      - name: outputs
+        type: list[string]
+    optional_fields:
+      - name: source_groups
+        type: list[string]
+      - name: delivery_profile
+        type: string
+      - name: parent_run_id
+        type: string
+      - name: counts
+        type: map
+      - name: warnings
+        type: list[string]
+      - name: errors
+        type: list[string]
+      - name: notes
+        type: list[string]
+    legacy_dependencies: none
