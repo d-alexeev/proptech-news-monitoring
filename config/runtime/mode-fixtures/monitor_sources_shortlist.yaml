@@ -1,0 +1,58 @@
+fixture_id: monitor_sources_shortlist_sample
+mode_id: monitor_sources
+
+inputs:
+  run_id: monitor_sources__20260408T060000Z__daily_core
+  run_date: 2026-04-08
+  group_id: daily_core
+  source_group_config: ./config/runtime/source-groups/daily_core.yaml
+  runtime_thresholds: ./config/runtime/runtime_thresholds.yaml
+  checkpoint:
+    group_id: daily_core
+    last_successful_run_id: monitor_sources__20260407T060000Z__daily_core
+    last_successful_finished_at: 2026-04-07T06:08:00Z
+    per_source_latest_published:
+      zillow_newsroom: 2026-04-07
+      redfin_news: 2026-04-06
+  recent_story_index:
+    - story_id: story_zillow_ai_feature
+      canonical_url: https://www.zillow.com/news/older-ai-story/
+      title_snapshot: Older Zillow AI story
+      last_seen: 2026-04-07
+      topic_tags: [ai_search]
+      last_digest_refs: [daily__2026-04-07__telegram_digest]
+  discovered_candidates:
+    - source_id: zillow_newsroom
+      url: https://www.zillow.com/news/example-product-feature/
+      canonical_url: https://www.zillow.com/news/example-product-feature/
+      title: Zillow launches example product feature
+      published: 2026-04-08
+      raw_snippet: New AI-led discovery feature in the Zillow app.
+      fetch_strategy: html_scrape
+    - source_id: onlinemarketplaces
+      url: https://www.onlinemarketplaces.com/articles/example-portal-analysis/
+      canonical_url: https://www.onlinemarketplaces.com/articles/example-portal-analysis/
+      title: Portal operators debate AI search quality
+      published: 2026-04-08
+      raw_snippet: Analysis of AI search as a competitive differentiator.
+      fetch_strategy: chrome_scrape
+    - source_id: redfin_news
+      url: https://www.redfin.com/news/market-note/
+      canonical_url: https://www.redfin.com/news/market-note/
+      title: Weekly housing market note
+      published: 2026-04-08
+      raw_snippet: General market commentary without clear product or strategic signal.
+      fetch_strategy: rss
+
+expected:
+  output_paths:
+    raw_shard: ./.state/raw/2026-04-08/monitor_sources__20260408T060000Z__daily_core.json
+    shortlist_shard: ./.state/shortlists/2026-04-08/monitor_sources__20260408T060000Z__daily_core.json
+    run_manifest: ./.state/runs/2026-04-08/monitor_sources__20260408T060000Z__daily_core.json
+  raw_candidate_count: 3
+  shortlisted_item_count: 2
+  shortlisted_urls:
+    - https://www.zillow.com/news/example-product-feature/
+    - https://www.onlinemarketplaces.com/articles/example-portal-analysis/
+  dropped_urls:
+    - https://www.redfin.com/news/market-note/

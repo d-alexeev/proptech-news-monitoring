@@ -1,0 +1,96 @@
+mode_id: monitor_sources
+
+purpose:
+  - discover candidate items from the configured source group
+  - perform primary triage on title, metadata, and available snippet
+  - emit raw shard, shortlist shard, and run manifest
+
+shared_context:
+  briefs:
+    - ./cowork/shared/mission_brief.md
+    - ./cowork/shared/taxonomy_and_scoring.md
+    - ./cowork/shared/contracts.md
+
+static_config_inputs:
+  required:
+    - ./config/runtime/source-groups/{group_id}.yaml
+    - ./config/runtime/runtime_thresholds.yaml
+  conditional:
+    - ./cowork/adapters/source_map.md
+    - ./cowork/adapters/{resolved_adapter}.md
+
+runtime_state_inputs:
+  checkpoints:
+    description: compact last-success markers scoped to the current source group
+    allowed_fields:
+      - group_id
+      - last_successful_run_id
+      - last_successful_finished_at
+      - per_source_latest_published
+      - per_source_latest_url
+  recent_story_index:
+    description: compact lookup derived from recent story briefs for duplicate linking
+    max_lookback_days: 30
+    allowed_fields:
+      - story_id
+      - canonical_url
+      - title_snapshot
+      - last_seen
+      - topic_tags
+      - last_digest_refs
+
+allowed_runtime_inputs:
+  - source-group config for the current run
+  - runtime thresholds
+  - last checkpoint for the current source group
+  - recent story index
+  - only adapters resolved for source IDs in the current run
+
+forbidden_runtime_inputs:
+  - ./.state/articles/
+  - ./.state/enriched/
+  - ./.state/briefs/
+  - ./.state/reviews/
+  - stakeholder profiles
+  - digest markdown archive
+  - full article bodies
+
+processing_stages:
+  - name: discovery
+    output: raw_candidate[]
+  - name: primary_triage
+    output: shortlist decisions on titles, metadata, and snippet only
+  - name: duplicate_linking
+    output: story_hint or dedupe_match when recent story index indicates related coverage
+  - name: shortlist_emission
+    output: shortlisted_item[]
+
+output_contract:
+  raw_shard:
+    schema: raw_candidate[]
+    collection: raw
+    path_template: ./.state/raw/{run_date}/{run_id}.json
+  shortlist_shard:
+    schema: shortlisted_item[]
+    collection: shortlists
+    path_template: ./.state/shortlists/{run_date}/{run_id}.json
+  run_manifest:
+    schema: run_manifest
+    collection: runs
+    path_template: ./.state/runs/{run_date}/{run_id}.json
+
+duplicate_policy:
+  exact_canonical_match:
+    action: filter_or_link
+    note: raw candidate may still be recorded, but shortlist is optional
+  same_story_follow_up:
+    action: link_via_story_hint
+    note: keep the item if the update is materially new, otherwise drop at triage
+  unavailable_story_match:
+    action: continue_without_story_hint
+
+non_goals:
+  - no full-text fetch
+  - no article markdown creation
+  - no semantic enrichment
+  - no digest assembly

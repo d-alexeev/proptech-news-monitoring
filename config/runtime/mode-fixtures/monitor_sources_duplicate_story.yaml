@@ -1,0 +1,40 @@
+fixture_id: monitor_sources_duplicate_story
+mode_id: monitor_sources
+
+inputs:
+  run_id: monitor_sources__20260408T060000Z__daily_core
+  run_date: 2026-04-08
+  group_id: daily_core
+  source_group_config: ./config/runtime/source-groups/daily_core.yaml
+  runtime_thresholds: ./config/runtime/runtime_thresholds.yaml
+  checkpoint:
+    group_id: daily_core
+    last_successful_run_id: monitor_sources__20260407T060000Z__daily_core
+    last_successful_finished_at: 2026-04-07T06:08:00Z
+  recent_story_index:
+    - story_id: story_rightmove_agent_lawsuit_2026
+      canonical_url: https://www.onlinemarketplaces.com/articles/rightmove-sued-for-1-5-billion/
+      title_snapshot: Rightmove sued for £1.5 billion
+      last_seen: 2026-04-01
+      topic_tags: [agent_relations, regulation]
+      last_digest_refs: [daily__2026-04-01__telegram_digest]
+  discovered_candidates:
+    - source_id: aim_group_real_estate_intelligence
+      url: https://aimgroup.com/2026/04/01/2b-legal-action-against-rightmove-gains-new-participant/
+      canonical_url: https://aimgroup.com/2026/04/01/2b-legal-action-against-rightmove-gains-new-participant/
+      title: 2B legal action against Rightmove gains new participant
+      published: 2026-04-01
+      raw_snippet: Follow-up coverage of the same Rightmove agent lawsuit story.
+      fetch_strategy: rss
+
+expected:
+  output_paths:
+    raw_shard: ./.state/raw/2026-04-08/monitor_sources__20260408T060000Z__daily_core.json
+    shortlist_shard: ./.state/shortlists/2026-04-08/monitor_sources__20260408T060000Z__daily_core.json
+    run_manifest: ./.state/runs/2026-04-08/monitor_sources__20260408T060000Z__daily_core.json
+  duplicate_resolution: linked_via_story_hint
+  raw_candidate:
+    story_hint: story_rightmove_agent_lawsuit_2026
+  shortlisted_item:
+    story_hint: story_rightmove_agent_lawsuit_2026
+    triage_decision: shortlist
