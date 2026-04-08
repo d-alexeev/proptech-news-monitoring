@@ -91,7 +91,29 @@ artifacts:
     delivery_profile: telegram_weekly_digest
     generated_at: 2026-04-10T14:20:00Z
     story_ids: [story_zillow_ai_feature]
+    top_story_ids: [story_zillow_ai_feature]
     trend_ids: [trend_ai_search_adoption]
+    prior_week_refs: [weekly__2026-W14__telegram_weekly_digest]
+    section_order: [weekly_trends, top_stories]
+    trend_cards:
+      - trend_id: trend_ai_search_adoption
+        title: AI search in real estate is moving from launches to adoption evidence
+        supporting_story_ids: [story_zillow_ai_feature]
+        evidence_refs: [daily__2026-04-08__telegram_digest, weekly__2026-W14__telegram_weekly_digest]
+        why_it_matters: The market is moving from experimentation to measurable product adoption.
+        avito_implication: Avito should assess conversational entry points as a medium-term search thesis.
+        horizon: medium
+    story_cards:
+      - story_id: story_zillow_ai_feature
+        section: top_stories
+        title: Zillow launches example product feature
+        priority_score: 82
+        confidence: 0.88
+        analyst_summary: Zillow launched a new AI-led discovery feature for home search.
+        why_it_matters: This changes search UX and can alter user intent capture.
+        avito_implication: Avito should watch conversational and intent-led discovery patterns.
+        context_refs: [daily__2026-04-08__telegram_digest]
+    markdown_path: ./digests/2026-W15-weekly-digest.md
 
   qa_review_report:
     review_id: review_digest__20260408T092000Z__daily_digest

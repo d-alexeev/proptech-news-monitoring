@@ -1,0 +1,83 @@
+mode_id: build_weekly_digest
+
+purpose:
+  - synthesize weekly trends from aggregated daily briefs and limited prior weekly memory
+  - emit a compact weekly_brief suitable for downstream review and stakeholder fanout
+  - keep weekly reasoning bounded to brief-level artifacts rather than the full digest archive
+
+depends_on:
+  aggregation_contract: ./config/runtime/mode-contracts/build_weekly_digest_aggregation.yaml
+  state_layout: ./config/runtime/state_layout.yaml
+  state_schemas: ./config/runtime/state_schemas.yaml
+
+allowed_runtime_inputs:
+  - ordered current-week daily_brief set from the aggregation stage
+  - carry-over refs from limited prior weekly_brief history
+  - shared mission, taxonomy, and contract briefs
+
+forbidden_runtime_inputs:
+  - ./.state/raw/
+  - ./.state/shortlists/
+  - ./.state/enriched/
+  - ./.state/articles/
+  - raw candidates
+  - full article bodies
+  - full digest archive
+  - stakeholder profiles
+  - README
+  - docs/*
+  - benchmark/*
+
+trend_synthesis_policy:
+  source_scope: daily_and_weekly_briefs_only
+  max_trends: 3
+  supporting_signal_rule:
+    minimum_supporting_story_refs: 2
+    additional_support_allowed_from_prior_week_refs: true
+  trend_card_required_fields:
+    - trend_id
+    - title
+    - supporting_story_ids
+    - evidence_refs
+    - why_it_matters
+    - avito_implication
+    - horizon
+  weekly_brief_required_outputs:
+    - brief_id
+    - run_id
+    - week_id
+    - delivery_profile
+    - generated_at
+    - story_ids
+    - top_story_ids
+    - trend_ids
+    - prior_week_refs
+    - section_order
+    - trend_cards
+    - story_cards
+    - markdown_path
+
+limited_history_behavior:
+  when_fewer_than_expected_daily_briefs:
+    action: reduce_trend_count_but_continue
+    minimum_trend_count: 1
+  when_no_prior_weekly_refs:
+    action: synthesize_from_current_week_only
+  fallback_note_required: true
+
+output_contract:
+  weekly_brief:
+    schema: weekly_brief
+    collection: briefs_weekly
+    path_template: ./.state/briefs/weekly/{week_id}__{delivery_profile}.json
+  weekly_markdown:
+    path_template: ./digests/{week_id}-weekly-digest.md
+  run_manifest:
+    schema: run_manifest
+    collection: runs
+    path_template: ./.state/runs/{run_date}/{run_id}.json
+
+non_goals:
+  - no stakeholder-specific weekly variants
+  - no full-text access
+  - no raw-source reconsideration

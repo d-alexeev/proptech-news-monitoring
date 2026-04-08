@@ -234,7 +234,6 @@ artifacts:
         type: datetime
       - name: story_ids
         type: list[string]
-    optional_fields:
       - name: top_story_ids
         type: list[string]
       - name: trend_ids
@@ -243,12 +242,20 @@ artifacts:
         type: list[string]
       - name: section_order
         type: list[string]
+      - name: trend_cards
+        type: list[map]
+      - name: story_cards
+        type: list[map]
       - name: markdown_path
         type: string
+    optional_fields:
       - name: synthesis_notes
         type: list[string]
+      - name: delivery_metadata
+        type: map
     notes:
-      - trend synthesis details are expanded later with the weekly milestones
+      - weekly_brief is the compact weekly output for downstream review and stakeholder fanout
+      - trend_cards should contain compact trend render units with at least trend_id, title, supporting_story_ids, evidence_refs, why_it_matters, avito_implication, and horizon
 
   qa_review_report:
     shard_collection: reviews

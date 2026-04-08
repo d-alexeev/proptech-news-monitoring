@@ -10,13 +10,15 @@ Purpose:
 
 - aggregate the current week from compact daily artifacts;
 - load only limited prior weekly memory for continuity;
-- prepare the weekly aggregation package before trend synthesis and final weekly rendering.
+- synthesize weekly trends from daily and prior weekly briefs only;
+- emit a compact `weekly_brief` for downstream review and fanout.
 
 Allowed inputs:
 
 - current-week `daily_brief`
 - limited prior `weekly_brief`
 - weekly and weekday schedule bindings
+- weekly aggregation outputs for the target ISO week
 
 Forbidden inputs:
 
@@ -33,3 +35,4 @@ Forbidden inputs:
 This mode should not depend on the full historical digest corpus.
 Use compact weekly memory, not raw archives.
 Include only daily briefs from the target ISO week and matching weekday delivery profile.
+If daily history is short, reduce trend count rather than reading broader archives or full text.

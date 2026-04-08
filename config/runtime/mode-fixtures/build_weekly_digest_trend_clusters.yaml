@@ -1,0 +1,56 @@
+fixture_id: build_weekly_digest_trend_clusters
+mode_id: build_weekly_digest
+
+inputs:
+  run_id: build_weekly_digest__20260405T170000Z__telegram_weekly_digest
+  week_id: 2026-W14
+  delivery_profile: telegram_weekly_digest
+  aggregated_daily_briefs:
+    - brief_id: daily__2026-03-31__telegram_digest
+      story_ids:
+        - story_rightmove_agent_lawsuit_2026
+        - story_zillow_ai_feature
+    - brief_id: daily__2026-04-01__telegram_digest
+      story_ids:
+        - story_zillow_ai_feature
+        - story_ai_search_adoption_data_202604
+    - brief_id: daily__2026-04-02__telegram_digest
+      story_ids:
+        - story_opendoor_doma_transaction_stack_2026
+        - story_avito_adtech_analytics_2026
+    - brief_id: daily__2026-04-03__telegram_digest
+      story_ids:
+        - story_realtor_chatgpt_launch_2026
+        - story_opendoor_doma_transaction_stack_2026
+    - brief_id: daily__2026-04-04__telegram_digest
+      story_ids:
+        - story_property_finder_refinement_2026
+        - story_realtor_chatgpt_launch_2026
+  prior_weekly_briefs:
+    - brief_id: weekly__2026-W13__telegram_weekly_digest
+      trend_ids:
+        - trend_ai_search_adoption
+      prior_week_refs: []
+
+expected:
+  trend_ids:
+    - trend_ai_search_adoption
+    - trend_transaction_infrastructure
+    - trend_portal_agent_tension
+  trend_cards:
+    - trend_id: trend_ai_search_adoption
+      supporting_story_ids:
+        - story_zillow_ai_feature
+        - story_ai_search_adoption_data_202604
+        - story_realtor_chatgpt_launch_2026
+    - trend_id: trend_transaction_infrastructure
+      supporting_story_ids:
+        - story_opendoor_doma_transaction_stack_2026
+        - story_avito_adtech_analytics_2026
+    - trend_id: trend_portal_agent_tension
+      supporting_story_ids:
+        - story_rightmove_agent_lawsuit_2026
+        - story_property_finder_refinement_2026
+  section_order:
+    - weekly_trends
+    - top_stories

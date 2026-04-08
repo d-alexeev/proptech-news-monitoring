@@ -1,0 +1,31 @@
+fixture_id: build_weekly_digest_limited_history_trends
+mode_id: build_weekly_digest
+
+inputs:
+  run_id: build_weekly_digest__20260410T170000Z__telegram_weekly_digest
+  week_id: 2026-W15
+  delivery_profile: telegram_weekly_digest
+  aggregated_daily_briefs:
+    - brief_id: daily__2026-04-06__telegram_digest
+      story_ids:
+        - story_rechat_ai_memo_2026
+    - brief_id: daily__2026-04-07__telegram_digest
+      story_ids:
+        - story_ai_search_adoption_data_202604
+    - brief_id: daily__2026-04-08__telegram_digest
+      story_ids:
+        - story_zillow_ai_feature
+  prior_weekly_briefs:
+    - brief_id: weekly__2026-W14__telegram_weekly_digest
+      trend_ids:
+        - trend_ai_search_adoption
+      prior_week_refs:
+        - weekly__2026-W13__telegram_weekly_digest
+
+expected:
+  short_history_mode: true
+  trend_ids:
+    - trend_ai_search_adoption
+  trend_count: 1
+  synthesis_notes:
+    - Reduced trend count because the current week has fewer daily briefs than the standard weekly window.
