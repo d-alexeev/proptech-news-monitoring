@@ -40,6 +40,7 @@ files:
     scrape_and_enrich_gate: ./config/runtime/mode-contracts/scrape_and_enrich_gate.yaml
     scrape_and_enrich_output: ./config/runtime/mode-contracts/scrape_and_enrich_output.yaml
     build_daily_digest_selection: ./config/runtime/mode-contracts/build_daily_digest_selection.yaml
+    build_daily_digest_rendering: ./config/runtime/mode-contracts/build_daily_digest_rendering.yaml
   mode_fixtures:
     monitor_sources_shortlist: ./config/runtime/mode-fixtures/monitor_sources_shortlist.yaml
     monitor_sources_duplicate_story: ./config/runtime/mode-fixtures/monitor_sources_duplicate_story.yaml
@@ -50,5 +51,7 @@ files:
     scrape_and_enrich_snippet_fallback: ./config/runtime/mode-fixtures/scrape_and_enrich_snippet_fallback.yaml
     build_daily_digest_repeated_story: ./config/runtime/mode-fixtures/build_daily_digest_repeated_story.yaml
     build_daily_digest_contextual_continuation: ./config/runtime/mode-fixtures/build_daily_digest_contextual_continuation.yaml
+    build_daily_digest_render_top_and_weak: ./config/runtime/mode-fixtures/build_daily_digest_render_top_and_weak.yaml
+    build_daily_digest_parity_window: ./config/runtime/mode-fixtures/build_daily_digest_parity_window.yaml
   stakeholder_profiles_index: ./config/runtime/stakeholder-profiles/index.yaml
   stakeholder_profiles_dir: ./config/runtime/stakeholder-profiles

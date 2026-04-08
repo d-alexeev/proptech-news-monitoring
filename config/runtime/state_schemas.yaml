@@ -194,7 +194,6 @@ artifacts:
         type: datetime
       - name: story_ids
         type: list[string]
-    optional_fields:
       - name: top_story_ids
         type: list[string]
       - name: weak_signal_ids
@@ -203,14 +202,20 @@ artifacts:
         type: list[string]
       - name: section_order
         type: list[string]
-      - name: selection_notes
-        type: list[string]
+      - name: story_cards
+        type: list[map]
       - name: markdown_path
         type: string
+    optional_fields:
+      - name: selection_notes
+        type: list[string]
       - name: delivery_metadata
         type: map
+      - name: render_metadata
+        type: map
     notes:
-      - rendering-specific content detail is expanded later with the daily rendering milestone
+      - daily_brief is the machine-readable daily output for weekly synthesis, QA review, and stakeholder fanout
+      - story_cards should contain compact story render units with at least story_id, section, title, priority_score, confidence, analyst_summary, why_it_matters, avito_implication, and context_refs
 
   weekly_brief:
     shard_collection: briefs_weekly

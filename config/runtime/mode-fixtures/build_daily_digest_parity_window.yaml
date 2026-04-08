@@ -1,0 +1,20 @@
+fixture_id: build_daily_digest_parity_window
+mode_id: build_daily_digest
+
+inputs:
+  digest_date: 2026-04-03
+  delivery_profile: telegram_digest
+  reference_digest_markdown: ./digests/2026-04-03-daily.md
+  reference_schedule: weekday_digest
+
+expected:
+  markdown_output_path: ./digests/2026-04-03-daily.md
+  daily_brief_path: ./.state/briefs/daily/2026-04-03__telegram_digest.json
+  minimum_parity_conditions:
+    sections_present:
+      - "## Главные события"
+      - "## Что посмотреть команде"
+      - "## Слабые сигналы"
+    top_story_heading_count: 4
+    weak_signal_bullet_count: 2
+    delivery_profile: telegram_digest

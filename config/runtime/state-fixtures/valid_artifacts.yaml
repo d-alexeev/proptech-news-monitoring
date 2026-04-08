@@ -69,6 +69,20 @@ artifacts:
     generated_at: 2026-04-08T07:10:00Z
     story_ids: [story_zillow_ai_feature]
     top_story_ids: [story_zillow_ai_feature]
+    weak_signal_ids: []
+    context_refs: []
+    section_order: [top_stories, weak_signals]
+    story_cards:
+      - story_id: story_zillow_ai_feature
+        section: top_stories
+        title: Zillow launches example product feature
+        priority_score: 82
+        confidence: 0.88
+        analyst_summary: Zillow launched a new AI-led discovery feature for home search.
+        why_it_matters: This changes search UX and can alter user intent capture.
+        avito_implication: Avito should watch conversational and intent-led discovery patterns.
+        context_refs: []
+    markdown_path: ./digests/2026-04-08-daily.md
 
   weekly_brief:
     brief_id: weekly__2026-W15__telegram_weekly_digest

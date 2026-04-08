@@ -1,0 +1,105 @@
+mode_id: build_daily_digest
+
+purpose:
+  - render a human-readable markdown digest from compact daily selection outputs
+  - emit a machine-readable daily_brief that is sufficient for weekly synthesis and stakeholder fanout
+  - keep rendering isolated from raw shards and article bodies
+
+depends_on:
+  selection_contract: ./config/runtime/mode-contracts/build_daily_digest_selection.yaml
+  schedule_bindings: ./config/runtime/schedule_bindings.yaml
+  state_layout: ./config/runtime/state_layout.yaml
+  state_schemas: ./config/runtime/state_schemas.yaml
+
+allowed_runtime_inputs:
+  - selection-stage outputs from the current build_daily_digest run
+  - compact enriched items for selected story IDs
+  - matching story briefs for contextual carry-over
+  - delivery profile metadata from schedule bindings
+  - shared mission, taxonomy, and contract briefs
+
+forbidden_runtime_inputs:
+  - ./.state/raw/
+  - ./.state/shortlists/
+  - ./.state/articles/
+  - digest markdown archive as context input
+  - full article bodies
+  - stakeholder profiles
+  - README
+  - docs/*
+  - benchmark/*
+
+rendering_stages:
+  - name: assemble_sections
+    outputs:
+      - section_order
+      - story_cards
+  - name: render_markdown_digest
+    outputs:
+      - markdown_path
+      - delivery_ready_markdown
+  - name: emit_daily_brief
+    outputs:
+      - daily_brief
+      - run_manifest
+
+markdown_output_contract:
+  path_template: ./digests/{digest_date}-daily.md
+  required_sections:
+    - top_stories
+    - weak_signals
+  optional_sections:
+    - team_watchlist
+    - source_status
+    - context_summary
+  must_be_built_from_compact_inputs_only: true
+
+daily_brief_contract:
+  path_template: ./.state/briefs/daily/{digest_date}__{delivery_profile}.json
+  required_fields:
+    - brief_id
+    - run_id
+    - digest_date
+    - delivery_profile
+    - generated_at
+    - story_ids
+    - top_story_ids
+    - weak_signal_ids
+    - context_refs
+    - section_order
+    - story_cards
+    - markdown_path
+  story_card_required_fields:
+    - story_id
+    - section
+    - title
+    - priority_score
+    - confidence
+    - analyst_summary
+    - why_it_matters
+    - avito_implication
+    - context_refs
+
+downstream_readiness:
+  build_weekly_digest:
+    required_daily_brief_fields:
+      - story_ids
+      - top_story_ids
+      - weak_signal_ids
+      - story_cards
+      - markdown_path
+  stakeholder_fanout:
+    required_daily_brief_fields:
+      - section_order
+      - story_cards
+      - delivery_profile
+  review_digest:
+    required_daily_brief_fields:
+      - selection_notes
+      - story_cards
+      - markdown_path
+
+non_goals:
+  - no stakeholder-specific rendering variants
+  - no QA review findings
+  - no weekly aggregation or trend synthesis

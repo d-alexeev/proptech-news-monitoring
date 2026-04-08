@@ -1,0 +1,68 @@
+fixture_id: build_daily_digest_render_top_and_weak
+mode_id: build_daily_digest
+
+inputs:
+  run_id: build_daily_digest__20260408T090000Z__telegram_digest
+  digest_date: 2026-04-08
+  delivery_profile: telegram_digest
+  selection_outputs:
+    selected_story_ids:
+      - story_zillow_ai_feature
+      - story_dubizzle_transactions_2026
+      - story_property_finder_refinement_2026
+    top_story_ids:
+      - story_zillow_ai_feature
+      - story_dubizzle_transactions_2026
+    weak_signal_ids:
+      - story_property_finder_refinement_2026
+    context_refs:
+      - daily__2026-04-07__telegram_digest
+    section_order:
+      - top_stories
+      - weak_signals
+  enriched_items:
+    - story_id: story_zillow_ai_feature
+      title: Zillow extends rollout of its AI-led discovery feature
+      priority_score: 84
+      confidence: 0.87
+      analyst_summary: Zillow expanded rollout messaging around its AI-led discovery feature.
+      why_it_matters: This keeps AI search as an active competitive product thesis.
+      avito_implication: Avito should continue tracking intent-led entry points.
+    - story_id: story_dubizzle_transactions_2026
+      title: Dubizzle deepens property transaction tooling in MENA
+      priority_score: 63
+      confidence: 0.79
+      analyst_summary: Dubizzle continues moving from classifieds toward transaction infrastructure.
+      why_it_matters: This is another marketplace-to-transactions signal.
+      avito_implication: Vertical monetization beyond listings remains strategically relevant.
+    - story_id: story_property_finder_refinement_2026
+      title: Property Finder favors refinement over reinvention
+      priority_score: 51
+      confidence: 0.68
+      analyst_summary: Property Finder is optimizing monetization depth rather than broad expansion.
+      why_it_matters: Mature RE portals may prefer monetization depth once scale is achieved.
+      avito_implication: This is a weaker but relevant signal for classifieds maturity.
+
+expected:
+  markdown_output:
+    path: ./digests/2026-04-08-daily.md
+    required_sections:
+      - top_stories
+      - weak_signals
+  daily_brief:
+    path: ./.state/briefs/daily/2026-04-08__telegram_digest.json
+    top_story_ids:
+      - story_zillow_ai_feature
+      - story_dubizzle_transactions_2026
+    weak_signal_ids:
+      - story_property_finder_refinement_2026
+    section_order:
+      - top_stories
+      - weak_signals
+    story_cards:
+      - story_id: story_zillow_ai_feature
+        section: top_stories
+      - story_id: story_dubizzle_transactions_2026
+        section: top_stories
+      - story_id: story_property_finder_refinement_2026
+        section: weak_signals
