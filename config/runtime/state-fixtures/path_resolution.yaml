@@ -48,6 +48,13 @@ fixtures:
       review_kind: qa
     expected_path: ./.state/reviews/2026-04-08/build_daily_digest__20260408T070000Z__telegram_digest__qa.json
 
+  - collection: change_requests
+    vars:
+      request_date: 2026-04-08
+      request_id: change_request__20260408T093500Z__zillow_newsroom_html
+      run_id: scrape_and_enrich__20260408T093000Z__weekday_digest
+    expected_path: ./.state/change-requests/2026-04-08/change_request__20260408T093500Z__zillow_newsroom_html.json
+
   - collection: articles
     vars:
       published_month: 2026-04

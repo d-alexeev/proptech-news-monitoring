@@ -11,7 +11,7 @@ Canonical artifact names:
 - `daily_brief`
 - `weekly_brief`
 - `run_manifest`
-- `change_request` (follow-up escalation artifact; schema in `config/runtime/change_request_schema.yaml`, storage path deferred)
+- `change_request` (follow-up escalation artifact; schema in `config/runtime/change_request_schema.yaml`, state path in `config/runtime/state_layout.yaml`)
 
 Contract rules:
 

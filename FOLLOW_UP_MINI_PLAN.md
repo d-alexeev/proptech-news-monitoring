@@ -66,7 +66,7 @@
 | --- | --- |
 | `TF1` | completed |
 | `TF2` | completed |
-| `TF3` | pending |
+| `TF3` | completed |
 | `TF4` | pending |
 | `TF5` | pending |
 | `TF6` | pending |

@@ -84,6 +84,15 @@ collections:
       - review-specific schema is defined in state_schemas under qa_review_report
       - stored separately from digest briefs to keep QA output isolated
 
+  change_requests:
+    record_type: change_request
+    path_template: ./.state/change-requests/{request_date}/{request_id}.json
+    shard_keys: [request_date, request_id]
+    lookup_keys: [request_id, run_id, request_date]
+    notes:
+      - follow-up escalation artifacts created by external runners instead of persistent self-mutation
+      - field-level schema is defined in config/runtime/change_request_schema.yaml
+
   articles:
     record_type: article_markdown
     path_template: ./.state/articles/{published_month}/{published_date}_{slug}.md
