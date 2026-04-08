@@ -2,11 +2,20 @@
 
 ## Scope
 
-Этот аудит сравнивает текущую ветку с исходным implementation plan из [`PLANS.md`](./PLANS.md).
+Этот аудит сравнивает текущую ветку с follow-up implementation plan из
+[FOLLOW_UP_MINI_PLAN.md](./FOLLOW_UP_MINI_PLAN.md).
+
+Базовый refactor-план из [PLANS.md](./PLANS.md) здесь не переаудируется подробно:
+он уже был закрыт ранее. Этот документ оценивает именно follow-up слой:
+
+- policy для внешнего раннера;
+- `change_request` artifacts и intake workflow;
+- canonical docs по runtime architecture, modes, launch/rerun flows;
+- выравнивание legacy docs.
 
 Аудит выполнен по состоянию на:
 
-- `HEAD`: `01d5ef5` (`Add regression harness and rollout gates`)
+- `HEAD`: `d96ab22` (`Align legacy docs with canonical runtime layer`)
 - рабочее дерево: чистое
 - тип репозитория: prompt/config/contract-oriented, практически без исполняемого кода
 
@@ -14,114 +23,136 @@
 
 Источники истины для аудита:
 
-- [`PLANS.md`](./PLANS.md)
-- runtime artifacts under [`config/runtime/`](./config/runtime)
-- runtime prompt pack under [`cowork/`](./cowork)
-- benchmark artifacts under [`benchmark/`](./benchmark)
-- legacy docs and legacy bridge files:
-  - [`README.md`](./README.md)
-  - [`config/monitoring.yaml`](./config/monitoring.yaml)
-  - [`config/stakeholders.yaml`](./config/stakeholders.yaml)
-  - [`docs/runbook.md`](./docs/runbook.md)
-  - [`docs/agent-spec.md`](./docs/agent-spec.md)
-  - [`docs/rss-api-audit.md`](./docs/rss-api-audit.md)
-- git history on the current branch
+- [FOLLOW_UP_MINI_PLAN.md](./FOLLOW_UP_MINI_PLAN.md)
+- [cowork/shared/change_request_policy.md](./cowork/shared/change_request_policy.md)
+- [cowork/shared/contracts.md](./cowork/shared/contracts.md)
+- [config/runtime/change_request_schema.yaml](./config/runtime/change_request_schema.yaml)
+- [config/runtime/change_request_intake_workflow.md](./config/runtime/change_request_intake_workflow.md)
+- [config/runtime/state_layout.yaml](./config/runtime/state_layout.yaml)
+- source-facing mode contracts:
+  - [config/runtime/mode-contracts/monitor_sources.yaml](./config/runtime/mode-contracts/monitor_sources.yaml)
+  - [config/runtime/mode-contracts/scrape_and_enrich_gate.yaml](./config/runtime/mode-contracts/scrape_and_enrich_gate.yaml)
+  - [config/runtime/mode-contracts/breaking_alert.yaml](./config/runtime/mode-contracts/breaking_alert.yaml)
+- change-request fixtures:
+  - [config/runtime/change-request-fixtures/sample_change_request.yaml](./config/runtime/change-request-fixtures/sample_change_request.yaml)
+  - [config/runtime/change-request-fixtures/intake_dry_run.yaml](./config/runtime/change-request-fixtures/intake_dry_run.yaml)
+  - [config/runtime/mode-fixtures/monitor_sources_blocked_manual_change_request.yaml](./config/runtime/mode-fixtures/monitor_sources_blocked_manual_change_request.yaml)
+  - [config/runtime/mode-fixtures/scrape_and_enrich_scrape_failure_change_request.yaml](./config/runtime/mode-fixtures/scrape_and_enrich_scrape_failure_change_request.yaml)
+  - [config/runtime/mode-fixtures/scrape_and_enrich_adapter_gap_change_request.yaml](./config/runtime/mode-fixtures/scrape_and_enrich_adapter_gap_change_request.yaml)
+  - [config/runtime/mode-fixtures/breaking_alert_blocked_manual_change_request.yaml](./config/runtime/mode-fixtures/breaking_alert_blocked_manual_change_request.yaml)
+- canonical docs:
+  - [README.md](./README.md)
+  - [docs/runtime-architecture.md](./docs/runtime-architecture.md)
+  - [docs/mode-catalog.md](./docs/mode-catalog.md)
+  - [docs/launch-rerun-dry-run.md](./docs/launch-rerun-dry-run.md)
+- legacy-sensitive docs:
+  - [docs/runbook.md](./docs/runbook.md)
+  - [docs/agent-spec.md](./docs/agent-spec.md)
+  - [docs/rss-api-audit.md](./docs/rss-api-audit.md)
+- вторичный doc surface:
+  - [docs/llm-jtbd-analysis.md](./docs/llm-jtbd-analysis.md)
+  - [docs/daily-digest-mechanism-review.md](./docs/daily-digest-mechanism-review.md)
+  - [docs/benchmark-design.md](./docs/benchmark-design.md)
 
 ## Status Model
 
 В этом аудите статусы трактуются так:
 
 - `Fully implemented`:
-  требование закрыто на уровне артефактов, которые и являются основной формой реализации в этом проекте: prompts, configs, contracts, schemas, fixtures, manifests, migration/compatibility docs.
+  требование закрыто на уровне source-of-truth artifacts этого репозитория и не
+  требует дополнительной repo-side декомпозиции.
 - `Partially implemented`:
-  есть существенный artifact layer, но по самому плану остаётся незакрытый кусок.
+  существенная artifact layer уже есть, но остаётся хотя бы один важный
+  незакрытый хвост: либо operational adoption вне репозитория не подтверждена,
+  либо в repo остаётся конфликтующий/невыравненный surface.
 - `Not implemented`:
-  нет достаточного artifact layer, чтобы считать требование выполненным.
+  нет достаточного repo-side слоя, чтобы считать требование закрытым.
 
 Важно:
 
-- этот аудит оценивает завершённость refactor-плана в репозитории;
-- он не утверждает, что выполнен production cutover или что в репозитории появился полноценный исполняемый runner;
-- в текущем проекте реализация в основном и состоит из instruction/config/runtime-contract артефактов, поэтому именно они считаются главным объектом аудита.
+- этот аудит оценивает завершённость follow-up implementation plan в
+  репозитории;
+- он не утверждает, что внешний `Claude Cowork` runner уже реально переведён на
+  новый contract surface и эмитит `change_request` в живом окружении;
+- для этого потребовались бы внешние operational rehearsal artifacts, которых в
+  репозитории сейчас нет.
 
 ## What Exists On This Branch
 
-На ветке действительно присутствует новый canonical runtime layer:
+На ветке действительно присутствует follow-up source-of-truth layer:
 
-- compact runtime briefs in [`cowork/shared/`](./cowork/shared)
-- mode prompts in [`cowork/modes/`](./cowork/modes)
-- source adapters in [`cowork/adapters/`](./cowork/adapters)
-- split runtime config, schemas, fixtures, migration plan, compatibility bridge and regression gates in [`config/runtime/`](./config/runtime)
+- policy boundary для внешнего раннера в
+  [cowork/shared/change_request_policy.md](./cowork/shared/change_request_policy.md)
+- canonical `change_request` schema и lifecycle в
+  [config/runtime/change_request_schema.yaml](./config/runtime/change_request_schema.yaml)
+- canonical storage path в
+  [config/runtime/state_layout.yaml](./config/runtime/state_layout.yaml)
+- source-facing escalation contracts для:
+  - `monitor_sources`
+  - `scrape_and_enrich`
+  - `breaking_alert`
+- Codex-side intake workflow в
+  [config/runtime/change_request_intake_workflow.md](./config/runtime/change_request_intake_workflow.md)
+- canonical docs по architecture, modes и launch/rerun flows
+- legacy markers в ключевых старых docs
 
 При этом на ветке по-прежнему отсутствуют:
 
-- отдельный исполняемый `runner` в репозитории;
-- `save_article.py`, на который продолжают ссылаться legacy docs;
-- production cutover artifact с фактическим результатом smoke/parity runs.
+- repo-side исполняемый внешний runner;
+- live artifact, реально выпущенный внешним runner'ом через
+  `./.state/change-requests/...`;
+- подтверждённый end-to-end rehearsal:
+  external runner failure -> emitted `change_request` -> Codex intake -> plan ->
+  implementation commit.
 
 ## Overall Verdict
 
-- `PLANS.md` закрыт полностью: `M0-M19 = completed`
-- `16 / 16` original requirements are `Fully implemented`
-- `0 / 16` requirements are `Partially implemented`
-- `0 / 16` requirements are `Not implemented`
+- [FOLLOW_UP_MINI_PLAN.md](./FOLLOW_UP_MINI_PLAN.md) закрыт по milestone table:
+  `TF1-TF8 = completed`
+- `6 / 10` follow-up requirements are `Fully implemented`
+- `4 / 10` requirements are `Partially implemented`
+- `0 / 10` requirements are `Not implemented`
 
 Ключевой вывод:
 
-- исходный implementation plan закрыт полностью на том уровне реализации, который этот репозиторий реально использует: prompts, contracts, configs, fixtures, migration notes and regression gates;
-- незавершённые вещи теперь находятся уже за пределами исходного milestone-plan и относятся к operationalization:
-  docs alignment, реальная wiring/configuration в `Claude Cowork`, dry-run исполнения smoke/parity gates и решение о cutover.
+- follow-up plan закрыт качественно на уровне policy/config/contract/docs
+  артефактов;
+- но часть требований по смыслу относится к поведению внешнего раннера и к
+  полному выравниванию всего doc surface, а это на текущей ветке ещё не
+  подтверждено operational evidence;
+- поэтому честный итог не “всё безоговорочно finished”, а “repo-side
+  implementation done, operational adoption still pending”.
 
 ## Requirement-by-Requirement Audit
 
 | Requirement | Status | Evidence | Notes |
 | --- | --- | --- | --- |
-| `R1` | Fully implemented | [`cowork/modes/`](./cowork/modes), mode contracts in [`config/runtime/mode-contracts/`](./config/runtime/mode-contracts), [`config/runtime/runtime_manifest.yaml`](./config/runtime/runtime_manifest.yaml) | У каждого режима заданы явные allowed/forbidden inputs; runtime artifacts не опираются на `README`, `docs/*`, `benchmark/*`. |
-| `R2` | Fully implemented | job matrix in [`PLANS.md`](./PLANS.md), [`config/runtime/schedule_bindings.yaml`](./config/runtime/schedule_bindings.yaml), mode prompts, mode contracts | Агент декомпозирован на отдельные `Claude Cowork` modes/jobs с IO и schedule map. |
-| `R3` | Fully implemented | [`cowork/shared/mission_brief.md`](./cowork/shared/mission_brief.md), [`cowork/shared/taxonomy_and_scoring.md`](./cowork/shared/taxonomy_and_scoring.md), [`cowork/shared/contracts.md`](./cowork/shared/contracts.md) | Shared runtime knowledge вынесено из больших narrative docs в компактный shared layer. |
-| `R4` | Fully implemented | [`config/runtime/mode-contracts/scrape_and_enrich_gate.yaml`](./config/runtime/mode-contracts/scrape_and_enrich_gate.yaml), [`config/runtime/mode-contracts/scrape_and_enrich_output.yaml`](./config/runtime/mode-contracts/scrape_and_enrich_output.yaml), [`cowork/modes/scrape_and_enrich.md`](./cowork/modes/scrape_and_enrich.md) | Full text контрактно изолирован в `scrape_and_enrich`; downstream режимы запрещают article archive. |
-| `R5` | Fully implemented | [`config/runtime/state_layout.yaml`](./config/runtime/state_layout.yaml), [`config/runtime/state_schemas.yaml`](./config/runtime/state_schemas.yaml), [`config/runtime/legacy_exports.yaml`](./config/runtime/legacy_exports.yaml), [`config/runtime/legacy_compatibility.md`](./config/runtime/legacy_compatibility.md) | Sharded state оформлен как canonical layout; monoliths выведены из нового critical path и оставлены только как compatibility exports. |
-| `R6` | Fully implemented | [`config/runtime/state_schemas.yaml`](./config/runtime/state_schemas.yaml), [`config/runtime/state-fixtures/valid_artifacts.yaml`](./config/runtime/state-fixtures/valid_artifacts.yaml), [`cowork/shared/contracts.md`](./cowork/shared/contracts.md) | Все ключевые handoff-контракты зафиксированы и покрыты fixture-level validation. |
-| `R7` | Fully implemented | [`cowork/adapters/source_map.md`](./cowork/adapters/source_map.md), files under [`cowork/adapters/`](./cowork/adapters) | Source-specific knowledge вынесено в компактный adapter layer и загружается адресно. |
-| `R8` | Fully implemented | [`config/runtime/mode-contracts/monitor_sources.yaml`](./config/runtime/mode-contracts/monitor_sources.yaml), monitor fixtures, [`cowork/modes/monitor_sources.md`](./cowork/modes/monitor_sources.md) | `monitor_sources` формализован как discovery/triage/shortlist mode без full text. |
-| `R9` | Fully implemented | [`config/runtime/mode-contracts/build_daily_digest_selection.yaml`](./config/runtime/mode-contracts/build_daily_digest_selection.yaml), [`config/runtime/mode-contracts/build_daily_digest_rendering.yaml`](./config/runtime/mode-contracts/build_daily_digest_rendering.yaml), daily fixtures | Daily path закрыт через compact artifacts only и `daily_brief`. |
-| `R10` | Fully implemented | [`config/runtime/mode-contracts/build_weekly_digest_aggregation.yaml`](./config/runtime/mode-contracts/build_weekly_digest_aggregation.yaml), [`config/runtime/mode-contracts/build_weekly_digest_trends.yaml`](./config/runtime/mode-contracts/build_weekly_digest_trends.yaml), weekly fixtures | Weekly path ограничен `daily_brief` + bounded `weekly_brief` history. |
-| `R11` | Fully implemented | [`config/runtime/mode-contracts/review_digest.yaml`](./config/runtime/mode-contracts/review_digest.yaml), `qa_review_report` schema in [`config/runtime/state_schemas.yaml`](./config/runtime/state_schemas.yaml) | Есть отдельный QA mode с собственным artifact path. |
-| `R12` | Fully implemented | [`config/runtime/mode-contracts/breaking_alert.yaml`](./config/runtime/mode-contracts/breaking_alert.yaml), alert fixtures, [`cowork/modes/breaking_alert.md`](./cowork/modes/breaking_alert.md) | Alert mode отделён от daily/weekly path и поддерживает `weekly_context` high-signal cases. |
-| `R13` | Fully implemented | [`config/runtime/mode-contracts/stakeholder_fanout.yaml`](./config/runtime/mode-contracts/stakeholder_fanout.yaml), fanout fixtures, stakeholder profiles in [`config/runtime/stakeholder-profiles/`](./config/runtime/stakeholder-profiles) | Персонализация вынесена в downstream mode и убрана из базового critical path. |
-| `R14` | Fully implemented | [`config/runtime/migration_plan.md`](./config/runtime/migration_plan.md), [`config/runtime/migration-fixtures/recent_runs.yaml`](./config/runtime/migration-fixtures/recent_runs.yaml), [`config/runtime/migration-fixtures/rollback_checklist.yaml`](./config/runtime/migration-fixtures/rollback_checklist.yaml) | Migration/backfill/rollback path описан и закреплён fixture-backed walkthrough. |
-| `R15` | Fully implemented | [`config/runtime/regression_harness.yaml`](./config/runtime/regression_harness.yaml), regression fixtures in [`config/runtime/regression-fixtures/`](./config/runtime/regression-fixtures), benchmark datasets in [`benchmark/datasets/`](./benchmark/datasets) | Regression gates, smoke subsets, parity windows и explicit go/no-go criteria заданы. |
-| `R16` | Fully implemented | [`.gitignore`](./.gitignore), git history from `746cc2e` to `01d5ef5`, git rules in [`PLANS.md`](./PLANS.md) and [`AGENTS.md`](./AGENTS.md) | Git реально используется как milestone-scoped review/rollback mechanism. |
+| `F1` | Fully implemented | [cowork/shared/change_request_policy.md](./cowork/shared/change_request_policy.md), [README.md](./README.md), [docs/runtime-architecture.md](./docs/runtime-architecture.md) | Репозиторий явно объявлен master source of truth для runtime changes. |
+| `F2` | Partially implemented | policy in [cowork/shared/change_request_policy.md](./cowork/shared/change_request_policy.md), guards in source-facing mode contracts and prompts | Repo-side запрет self-mutation зафиксирован, но нет operational proof, что внешний runner уже реально соблюдает его в другом окружении. |
+| `F3` | Partially implemented | [config/runtime/change_request_schema.yaml](./config/runtime/change_request_schema.yaml), [config/runtime/state_layout.yaml](./config/runtime/state_layout.yaml), source-facing fixtures and contracts | Artifact shape и emission points описаны полностью, но live emitted `change_request` от внешнего runner'а на этой ветке отсутствует. |
+| `F4` | Fully implemented | [config/runtime/change_request_intake_workflow.md](./config/runtime/change_request_intake_workflow.md), [config/runtime/change-request-fixtures/intake_dry_run.yaml](./config/runtime/change-request-fixtures/intake_dry_run.yaml) | Codex-side intake workflow описан и имеет dry-run walkthrough. |
+| `F5` | Fully implemented | [docs/runtime-architecture.md](./docs/runtime-architecture.md), [README.md](./README.md) | Canonical architecture docs добавлены и связаны с runtime manifest. |
+| `F6` | Fully implemented | [docs/mode-catalog.md](./docs/mode-catalog.md), [docs/launch-rerun-dry-run.md](./docs/launch-rerun-dry-run.md), [README.md](./README.md) | Есть актуальные docs по режимам и способам запуска/перезапуска. |
+| `F7` | Partially implemented | legacy markers in [docs/runbook.md](./docs/runbook.md), [docs/agent-spec.md](./docs/agent-spec.md), [docs/rss-api-audit.md](./docs/rss-api-audit.md) | Основные legacy-sensitive docs выровнены, но вторичный doc surface всё ещё содержит старые `dedupe.json` / `delivery-log.json` narrative без legacy marker. |
+| `F8` | Fully implemented | required fields in [config/runtime/change_request_schema.yaml](./config/runtime/change_request_schema.yaml), sample fixture, path lookup keys in [config/runtime/state_layout.yaml](./config/runtime/state_layout.yaml) | `run_id`, `mode`, `stage`, `url` и `evidence_refs` зафиксированы как обязательные поля. |
+| `F9` | Fully implemented | lifecycle and transitions in [config/runtime/change_request_schema.yaml](./config/runtime/change_request_schema.yaml), workflow ownership in [config/runtime/change_request_intake_workflow.md](./config/runtime/change_request_intake_workflow.md) | Lifecycle/status model и ownership transitions заданы явно. |
+| `F10` | Partially implemented | allowed vs forbidden workaround rules in [cowork/shared/change_request_policy.md](./cowork/shared/change_request_policy.md), escalation hooks in source-facing mode contracts | Правило оформлено в repo policy, но нет external-runner rehearsal, подтверждающего фактическое соблюдение этой границы. |
 
 ## Fully Implemented Requirements
 
-Все исходные требования из [`PLANS.md`](./PLANS.md) закрыты:
-
-- `R1`
-- `R2`
-- `R3`
-- `R4`
-- `R5`
-- `R6`
-- `R7`
-- `R8`
-- `R9`
-- `R10`
-- `R11`
-- `R12`
-- `R13`
-- `R14`
-- `R15`
-- `R16`
+- `F1`
+- `F4`
+- `F5`
+- `F6`
+- `F8`
+- `F9`
 
 ## Partially Implemented Requirements
 
-Отсутствуют.
-
-Пояснение:
-
-- на этой ветке больше не осталось требований, которые были бы частично покрыты внутри самого milestone-плана;
-- остаются только post-plan operational tasks, но они уже не являются незакрытыми требованиями из исходного implementation plan.
+- `F2`
+- `F3`
+- `F7`
+- `F10`
 
 ## Not Implemented Requirements
 
@@ -129,205 +160,161 @@
 
 ## Misleading Documentation Or Status Claims
 
-Ниже перечислены места, где репозиторий может ввести в заблуждение, несмотря на то что сам implementation plan уже закрыт.
-
-### 1. `README.md` выглядит как canonical runtime guide для старого pipeline
+### 1. `FOLLOW_UP_MINI_PLAN.md` всё ещё имеет top-level статус `proposed`
 
 Проблема:
 
-- [`README.md`](./README.md) всё ещё показывает `runner --config config/monitoring.yaml ...`
-- там же `dedupe.json` и `delivery-log.json` выглядят как базовые runtime stores
+- в [FOLLOW_UP_MINI_PLAN.md](./FOLLOW_UP_MINI_PLAN.md) milestone table уже
+  говорит `TF1-TF8 = completed`
+- но в секции `## Status` по-прежнему стоит ``proposed``
 
 Почему это вводит в заблуждение:
 
-- в текущем refactor canonical runtime source of truth уже перенесён в [`config/runtime/`](./config/runtime) и [`cowork/`](./cowork)
-- в репозитории нет исполняемого `runner`, который соответствовал бы этим командам
+- документ одновременно выглядит и как неисполненный план, и как завершённый
+  execution record
+- это самый явный stale status claim на текущей ветке
 
-### 2. `docs/runbook.md` и `docs/rss-api-audit.md` описывают несуществующий `save_article.py`
+### 2. Часть вторичных docs всё ещё описывает старую `dedupe.json` /
+`delivery-log.json` модель как активную
 
 Проблема:
 
-- [`docs/runbook.md`](./docs/runbook.md) и [`docs/rss-api-audit.md`](./docs/rss-api-audit.md) продолжают ссылаться на `save_article.py`
-- такого файла в репозитории нет
+- [docs/llm-jtbd-analysis.md](./docs/llm-jtbd-analysis.md)
+- [docs/daily-digest-mechanism-review.md](./docs/daily-digest-mechanism-review.md)
+- [docs/benchmark-design.md](./docs/benchmark-design.md)
+- `docs/llm-jtbd-analysis — копия.md`
+
+по-прежнему ссылаются на `dedupe.json`, `delivery-log.json` и старый narrative
+как на текущую operational модель без явного legacy marker.
 
 Почему это вводит в заблуждение:
 
-- документы читаются как актуальная operational инструкция
-- по факту это legacy procedural description, а не текущий canonical runtime path
+- основные canonical docs уже переведены на `config/runtime/` + `cowork/`
+- но вторичный аналитический/benchmark surface может спутать нового читателя
 
-### 3. `docs/agent-spec.md` всё ещё описывает старый monolithic flow как будто он активен
-
-Проблема:
-
-- [`docs/agent-spec.md`](./docs/agent-spec.md) продолжает рассказывать про contextualization через `delivery-log.json + digests/`
-- там же старый pipeline воспринимается как текущая рабочая архитектура
-
-Почему это вводит в заблуждение:
-
-- refactor уже зафиксировал новую mode-based contract architecture
-- `delivery-log.json` и `dedupe.json` в новой архитектуре больше не canonical runtime inputs
-
-### 4. `config/monitoring.yaml` по-прежнему выглядит как рабочий runtime config
+### 3. В legacy-marked docs всё ещё живут процедурные примеры с
+несуществующим `save_article.py`
 
 Проблема:
 
-- [`config/monitoring.yaml`](./config/monitoring.yaml) теперь помечен как legacy aggregate bridge
-- но он всё ещё большой и содержит пути к `dedupe.json` и `delivery-log.json`
+- [docs/runbook.md](./docs/runbook.md) и
+  [docs/rss-api-audit.md](./docs/rss-api-audit.md) теперь честно помечены как
+  legacy/reference
+- но внутри всё ещё есть подробные шаги с `save_article.py`, которого в
+  репозитории нет
 
-Почему это вводит в заблуждение:
+Почему это всё ещё слегка вводит в заблуждение:
 
-- при беглом чтении он всё ещё выглядит как основной operational config
-- фактически canonical runtime layer уже находится в [`config/runtime/runtime_manifest.yaml`](./config/runtime/runtime_manifest.yaml)
+- если читать документ выборочно, можно решить, что script существует
+- формально конфликт смягчён legacy banner'ом, но stale examples остаются
 
-### 5. Статус `M0-M19 = completed` можно неверно прочитать как “новый runtime уже запущен”
+### 4. Статус `TF4` можно неверно прочитать как “external runner уже реально
+эмитит change_request”
 
 Проблема:
 
-- [`PLANS.md`](./PLANS.md) корректно отмечает все milestones как `completed`
+- repo-side contracts и fixtures для `change_request` в source-facing modes
+  действительно сделаны
 
 Почему это может быть прочитано неверно:
 
-- completion здесь означает закрытие artifact/config/contract plan
-- это не равняется выполненному production cutover или наличию рабочего local runner inside repo
-
-Это не ложное утверждение, но его нужно сопровождать явным operational caveat.
+- на этой ветке нет live operational proof artifact из внешнего runner
+- завершённость milestone означает готовность source-of-truth слоя, а не
+  подтверждённую runtime adoption во внешнем окружении
 
 ## Exact Next Tasks Needed For Full Completion
 
-Ниже не “следующие milestones”, а точные post-plan задачи, которые остаются, если цель — не просто закрыть refactor-plan в репозитории, а довести систему до операционно ясного состояния.
+Ниже перечислены уже не follow-up milestones, а точные post-plan задачи, если
+цель — довести систему до полного operational completion, а не только закрыть
+repo-side contract/docs layer.
 
-### 1. Сделать docs alignment pass
-
-Нужно:
-
-- переписать [`README.md`](./README.md) так, чтобы canonical runtime layer ссылался на [`config/runtime/`](./config/runtime) и [`cowork/`](./cowork)
-- явно пометить [`config/monitoring.yaml`](./config/monitoring.yaml) и [`config/stakeholders.yaml`](./config/stakeholders.yaml) как legacy compatibility bridge
-- либо обновить, либо архивировать [`docs/runbook.md`](./docs/runbook.md), [`docs/agent-spec.md`](./docs/agent-spec.md), [`docs/rss-api-audit.md`](./docs/rss-api-audit.md)
-
-Результат:
-
-- у репозитория исчезнут conflicting sources of truth
-
-### 2. Зафиксировать реальную `Claude Cowork` operational wiring
+### 1. Обновить top-level статус follow-up плана
 
 Нужно:
 
-- описать, как именно каждый mode создаётся в `Claude Cowork`
-- для каждого job зафиксировать:
-  - entry instructions
-  - loaded files
-  - schedule
-  - output persistence path
-  - handoff to next job
+- заменить `## Status` в [FOLLOW_UP_MINI_PLAN.md](./FOLLOW_UP_MINI_PLAN.md) с
+  ``proposed`` на что-то вроде ``completed`` или `implemented_at_repo_layer`
 
 Результат:
 
-- архитектура перестанет быть только repo-level contract model и станет runner-ready operating model
+- исчезнет главный stale status claim на текущей ветке
 
-### 3. Выполнить первый non-production dry run по regression gates
+### 2. Провести первый живой rehearsal внешнего `change_request`
 
 Нужно:
 
-- пройти `JTBD-06/07/08/09` smoke subsets из [`config/runtime/regression-fixtures/smoke_subsets.yaml`](./config/runtime/regression-fixtures/smoke_subsets.yaml)
-- пройти daily/weekly parity review из [`config/runtime/regression-fixtures/recent_week_parity.yaml`](./config/runtime/regression-fixtures/recent_week_parity.yaml)
-- зафиксировать результат отдельным артефактом, например `CUTOVER_READINESS.md`
+- в реальном внешнем `Claude Cowork` environment спровоцировать хотя бы один
+  source-facing failure case:
+  - blocked/manual source
+  - или scrape failure / adapter gap
+- убедиться, что runner:
+  - не мутирует runtime files,
+  - пишет `change_request` в ожидаемый path,
+  - заполняет обязательные поля из schema
 
 Результат:
 
-- появится не только definition of gates, но и первый реальный результат прохождения gates
+- требования `F2`, `F3`, `F10` перейдут из contract-level readiness в
+  operationally verified state
 
-### 4. Выполнить sample backfill/dry export на реальных окнах
+### 3. Зафиксировать end-to-end intake rehearsal
 
 Нужно:
 
-- пройти кейсы из [`config/runtime/migration-fixtures/recent_runs.yaml`](./config/runtime/migration-fixtures/recent_runs.yaml)
-- пройти legacy export fixtures из [`config/runtime/legacy-export-fixtures/`](./config/runtime/legacy-export-fixtures)
-- убедиться, что reference windows действительно materialize в shard-era artifacts так, как описано контрактами
+- взять emitted `change_request`
+- прогнать его через workflow из
+  [config/runtime/change_request_intake_workflow.md](./config/runtime/change_request_intake_workflow.md)
+- получить:
+  - plan update
+  - минимальный implementation diff
+  - validation evidence
+  - reviewable commit
 
 Результат:
 
-- migration/compatibility layer будет подтверждён не только как design, но и как rehearsal outcome
+- появится не только dry-run fixture, но и реальный reference example процесса
+  `change_request -> Codex intake -> commit`
 
-### 5. Принять отдельное решение о cutover
+### 4. Доделать secondary docs alignment
 
 Нужно:
 
-- на основании regression harness, parity review, rollback path и compatibility bridge принять `go` или `no_go`
-- если `go`, то зафиксировать дату cutover и rollback owner
-- если `no_go`, то перечислить blocking gaps
+- явно пометить как legacy/reference или архивировать:
+  - [docs/llm-jtbd-analysis.md](./docs/llm-jtbd-analysis.md)
+  - [docs/daily-digest-mechanism-review.md](./docs/daily-digest-mechanism-review.md)
+  - [docs/benchmark-design.md](./docs/benchmark-design.md)
+  - `docs/llm-jtbd-analysis — копия.md`
 
 Результат:
 
-- завершение artifact plan превратится в управляемое операционное решение
+- `F7` станет действительно закрытым для всего заметного doc surface, а не
+  только для главных operator/reference docs
 
-### 6. Добавить workflow внешних change requests от запущенного агента
+### 5. Решить судьбу stale `save_article.py` примеров
 
-Почему это актуально:
+Нужно:
 
-- master source of truth для изменений должен оставаться в этом репозитории под контролем Codex и git;
-- агент, который реально запускается в другом месте, будет сталкиваться с operational failures, blocked sources, layout changes, anti-bot issues и находить workaround'ы;
-- если такой агент начнёт сам менять свои prompts/config локально, быстро появится drift между production runtime и version-controlled source of truth.
-
-Что нужно:
-
-- ввести отдельный artifact типа `change_request`, который агент формирует вместо самостоятельной правки runtime-файлов;
-- зафиксировать правило для external runner agent:
-  - не изменять prompts, adapters, config и contracts самостоятельно;
-  - при неудаче или найденном workaround создавать structured change request;
-- включить в change request обязательные поля:
-  - `request_id`
-  - `created_at`
-  - `mode`
-  - `stage`
-  - `source_id`
-  - `url`
-  - `failure_type`
-  - `symptoms`
-  - `suspected_cause`
-  - `workaround_found`
-  - `proposed_change_scope`
-  - `suggested_target_files`
-  - `tests_to_add`
-  - `evidence_refs`
-  - `severity`
-  - `status`
-- спроектировать canonical storage path, например:
-  - `./.state/change-requests/{request_date}/{request_id}.json`
-- отдельно определить Codex-side workflow:
-  - review incoming change request
-  - convert it into milestone-scoped plan
-  - decide whether to patch adapters, prompts, config, contracts, or tests
-  - commit the approved fix in this repository
-
-Какие файлы, скорее всего, придётся менять:
-
-- [`config/runtime/state_layout.yaml`](./config/runtime/state_layout.yaml)
-- [`config/runtime/state_schemas.yaml`](./config/runtime/state_schemas.yaml)
-- [`config/runtime/state-fixtures/valid_artifacts.yaml`](./config/runtime/state-fixtures/valid_artifacts.yaml)
-- [`cowork/shared/contracts.md`](./cowork/shared/contracts.md)
-- новый shared policy file, например `cowork/shared/change_request_policy.md`
-- mode prompts, где runner может сталкиваться с scrape/fetch/adapter failures
-- отдельный operator doc, например `docs/change-request-workflow.md`
-
-Какие тесты и fixtures понадобятся:
-
-- fixture на scrape failure с URL и workaround suggestion;
-- fixture на blocked/manual source, где change request обязателен;
-- fixture на adapter gap, где агент предлагает target files и tests to add;
-- guard test, что runtime mode не мутирует собственные prompt/config files;
-- validation, что Codex-side triage получает все обязательные поля.
+- либо убрать procedural примеры с `save_article.py` из legacy docs,
+- либо добавить сверхявную пометку `historical example; script absent from repo`,
+- либо заменить ссылку на реально существующий replacement flow
 
 Результат:
 
-- production runtime остаётся наблюдателем и эскалатором проблем, но не источником truth;
-- все реальные fixes продолжают проходить через Codex, review и git history;
-- operational learning из внешнего запуска начинает попадать обратно в master repo в управляемом виде.
+- legacy docs перестанут содержать полуоперационные примеры, которые невозможно
+  буквально выполнить в текущем репозитории
 
-## Bottom Line
+## Final Assessment
 
-Текущая ветка полностью закрывает исходный implementation plan из [`PLANS.md`](./PLANS.md).
+Ветка выглядит сильно и последовательно:
 
-Что ещё осталось:
+- follow-up план реально реализован как repo-side source-of-truth layer;
+- `change_request` policy, schema, storage path, source-facing guards, intake
+  workflow и canonical docs присутствуют и связаны между собой;
+- ключевой remaining gap теперь не в проектировании, а в operational adoption и
+  в дочистке вторичного doc surface.
 
-- не требования из плана,
-- а переход от “архитектура и контракты в репозитории готовы” к “операционная правда, документация и runner wiring выровнены и проверены dry-run’ом”.
+Итоговая формулировка:
+
+- follow-up plan **завершён по артефактам репозитория**;
+- full operational completion **ещё требует живого external-runner rehearsal и
+  финального doc cleanup вокруг secondary legacy materials**.
