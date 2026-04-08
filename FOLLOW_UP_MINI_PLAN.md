@@ -70,7 +70,7 @@
 | `TF4` | completed |
 | `TF5` | completed |
 | `TF6` | completed |
-| `TF7` | pending |
+| `TF7` | completed |
 | `TF8` | pending |
 
 ## Milestone Overview

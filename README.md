@@ -96,6 +96,7 @@ Policy и workflow:
 | [config/runtime/runtime_manifest.yaml](./config/runtime/runtime_manifest.yaml) | Canonical runtime entrypoint: contracts, fixtures, config slices and references |
 | [docs/runtime-architecture.md](./docs/runtime-architecture.md) | Canonical описание текущей runtime-архитектуры |
 | [docs/mode-catalog.md](./docs/mode-catalog.md) | Canonical каталог режимов `Claude Cowork` |
+| [docs/launch-rerun-dry-run.md](./docs/launch-rerun-dry-run.md) | Canonical reference по schedules, manual reruns и regression/parity dry-runs |
 | [cowork/](./cowork) | Canonical runtime instructions: shared briefs, modes and adapters |
 | [docs/agent-spec.md](./docs/agent-spec.md) | Legacy detailed spec; useful as reference, but not current canonical runtime layer |
 | [docs/runbook.md](./docs/runbook.md) | Legacy operator/runbook reference; launch/rerun alignment продолжается отдельно |
