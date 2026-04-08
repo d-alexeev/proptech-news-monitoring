@@ -1,0 +1,28 @@
+fixture_id: monitor_sources_blocked_manual_change_request
+mode_id: monitor_sources
+
+inputs:
+  run_id: monitor_sources__20260408T060000Z__daily_core
+  run_date: 2026-04-08
+  source_id: rea_group_investor_centre
+  source_url: https://www.rea-group.com/investor-centre/
+  resolved_adapter: ./cowork/adapters/blocked_manual_access.md
+  stage: discovery
+  observed_issue: sandbox-blocked source confirmed during discovery
+
+expected:
+  action: emit_change_request
+  failure_type: blocked_or_manual_source
+  change_request_output_path: ./.state/change-requests/2026-04-08/change_request__20260408T060500Z__rea_group_investor_centre.json
+  required_fields:
+    - run_id
+    - mode
+    - stage
+    - source_id
+    - url
+    - failure_type
+    - suggested_target_files
+    - tests_to_add
+  no_runtime_file_mutation:
+    - cowork/adapters/blocked_manual_access.md
+    - config/runtime/source-groups/daily_core.yaml

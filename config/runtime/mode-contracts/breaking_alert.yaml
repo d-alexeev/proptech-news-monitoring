@@ -10,6 +10,7 @@ depends_on:
   runtime_thresholds: ./config/runtime/runtime_thresholds.yaml
   schedule_bindings: ./config/runtime/schedule_bindings.yaml
   state_layout: ./config/runtime/state_layout.yaml
+  change_request_policy: ./cowork/shared/change_request_policy.md
 
 allowed_runtime_inputs:
   - recent enriched items within the alert lookback window
@@ -31,6 +32,12 @@ forbidden_runtime_inputs:
   - README
   - docs/*
   - benchmark/*
+
+forbidden_runtime_actions:
+  - edit prompt files
+  - edit config files
+  - edit adapter files
+  - create hidden local overrides for future runs
 
 trigger_policy:
   allowed_source_groups:
@@ -66,6 +73,30 @@ output_contract:
     schema: run_manifest
     collection: runs
     path_template: ./.state/runs/{run_date}/{run_id}.json
+  change_request:
+    schema: change_request
+    collection: change_requests
+    path_template: ./.state/change-requests/{request_date}/{request_id}.json
+    optional: true
+
+change_request_escalation:
+  enabled: true
+  policy_ref: ./cowork/shared/change_request_policy.md
+  allowed_failure_types:
+    - blocked_or_manual_source
+  trigger_conditions:
+    - a threshold-crossing alert candidate depends on upstream evidence with source_quality = manual_blocked
+    - producing a trustworthy alert would require manual or out-of-band source access
+  expected_fields:
+    - run_id
+    - mode
+    - stage
+    - source_id
+    - url
+    - failure_type
+    - evidence_refs
+    - suggested_target_files
+    - tests_to_add
 
 non_goals:
   - no full digest assembly

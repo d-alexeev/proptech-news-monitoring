@@ -1,0 +1,29 @@
+fixture_id: scrape_and_enrich_scrape_failure_change_request
+mode_id: scrape_and_enrich
+
+inputs:
+  run_id: scrape_and_enrich__20260408T093000Z__weekday_digest
+  run_date: 2026-04-08
+  source_id: onlinemarketplaces
+  url: https://www.onlinemarketplaces.com/articles/example-story/
+  stage: full_text_fetch
+  observed_issue: repeated fetch attempts fail before contract-allowed fallback yields usable body text
+  workaround_found: use a one-off browser-like retry for this run without editing adapter or config files
+
+expected:
+  action: emit_change_request
+  failure_type: scrape_failure
+  change_request_output_path: ./.state/change-requests/2026-04-08/change_request__20260408T093200Z__onlinemarketplaces_scrape_failure.json
+  required_fields:
+    - run_id
+    - mode
+    - stage
+    - source_id
+    - url
+    - failure_type
+    - workaround_found
+    - suggested_target_files
+    - tests_to_add
+  no_runtime_file_mutation:
+    - cowork/adapters/onlinemarketplaces_family.md
+    - config/runtime/runtime_thresholds.yaml

@@ -10,6 +10,7 @@ shared_context:
     - ./cowork/shared/mission_brief.md
     - ./cowork/shared/taxonomy_and_scoring.md
     - ./cowork/shared/contracts.md
+    - ./cowork/shared/change_request_policy.md
   adapter_source_map: ./cowork/adapters/source_map.md
 
 upstream_gate:
@@ -37,6 +38,12 @@ forbidden_runtime_inputs:
   - stakeholder profiles
   - whole adapter directory
 
+forbidden_runtime_actions:
+  - edit prompt files
+  - edit config files
+  - edit adapter files
+  - create hidden local overrides for future runs
+
 adapter_resolution:
   source_map: ./cowork/adapters/source_map.md
   steps:
@@ -55,6 +62,32 @@ gate_outcome:
     description: only shortlisted items become eligible for body fetch
   excluded_scope:
     description: noisy or irrelevant candidates stay outside the fetch queue
+
+change_request_output:
+  schema: change_request
+  collection: change_requests
+  path_template: ./.state/change-requests/{request_date}/{request_id}.json
+  optional: true
+
+change_request_escalation:
+  enabled: true
+  policy_ref: ./cowork/shared/change_request_policy.md
+  allowed_failure_types:
+    - scrape_failure
+    - adapter_gap
+  trigger_conditions:
+    - shortlisted fetch fails beyond contract-allowed fallback behavior
+    - resolved adapter is insufficient to extract or normalize required body content
+  expected_fields:
+    - run_id
+    - mode
+    - stage
+    - source_id
+    - url
+    - failure_type
+    - workaround_found
+    - suggested_target_files
+    - tests_to_add
 
 non_goals:
   - no enrichment output contract

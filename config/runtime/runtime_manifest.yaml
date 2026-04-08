@@ -64,6 +64,9 @@ files:
     scrape_and_enrich_full_body: ./config/runtime/mode-fixtures/scrape_and_enrich_full_body.yaml
     scrape_and_enrich_paywall_stub: ./config/runtime/mode-fixtures/scrape_and_enrich_paywall_stub.yaml
     scrape_and_enrich_snippet_fallback: ./config/runtime/mode-fixtures/scrape_and_enrich_snippet_fallback.yaml
+    monitor_sources_blocked_manual_change_request: ./config/runtime/mode-fixtures/monitor_sources_blocked_manual_change_request.yaml
+    scrape_and_enrich_scrape_failure_change_request: ./config/runtime/mode-fixtures/scrape_and_enrich_scrape_failure_change_request.yaml
+    scrape_and_enrich_adapter_gap_change_request: ./config/runtime/mode-fixtures/scrape_and_enrich_adapter_gap_change_request.yaml
     build_daily_digest_repeated_story: ./config/runtime/mode-fixtures/build_daily_digest_repeated_story.yaml
     build_daily_digest_contextual_continuation: ./config/runtime/mode-fixtures/build_daily_digest_contextual_continuation.yaml
     build_daily_digest_render_top_and_weak: ./config/runtime/mode-fixtures/build_daily_digest_render_top_and_weak.yaml
@@ -78,6 +81,7 @@ files:
     breaking_alert_true_positive_weekly_context: ./config/runtime/mode-fixtures/breaking_alert_true_positive_weekly_context.yaml
     breaking_alert_false_positive_not_breaking: ./config/runtime/mode-fixtures/breaking_alert_false_positive_not_breaking.yaml
     breaking_alert_duplicate_followup: ./config/runtime/mode-fixtures/breaking_alert_duplicate_followup.yaml
+    breaking_alert_blocked_manual_change_request: ./config/runtime/mode-fixtures/breaking_alert_blocked_manual_change_request.yaml
     stakeholder_fanout_product_profile: ./config/runtime/mode-fixtures/stakeholder_fanout_product_profile.yaml
     stakeholder_fanout_strategy_profile: ./config/runtime/mode-fixtures/stakeholder_fanout_strategy_profile.yaml
     stakeholder_fanout_multi_profile_guard: ./config/runtime/mode-fixtures/stakeholder_fanout_multi_profile_guard.yaml

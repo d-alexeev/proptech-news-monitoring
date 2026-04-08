@@ -1,0 +1,27 @@
+fixture_id: scrape_and_enrich_adapter_gap_change_request
+mode_id: scrape_and_enrich
+
+inputs:
+  run_id: scrape_and_enrich__20260408T093000Z__weekday_digest
+  run_date: 2026-04-08
+  source_id: zillow_newsroom
+  url: https://zillow.mediaroom.com/2026-04-08-example-story
+  stage: body_normalization
+  observed_issue: current adapter selectors no longer match the article container after markup changes
+
+expected:
+  action: emit_change_request
+  failure_type: adapter_gap
+  change_request_output_path: ./.state/change-requests/2026-04-08/change_request__20260408T093500Z__zillow_newsroom_html.json
+  required_fields:
+    - run_id
+    - mode
+    - stage
+    - source_id
+    - url
+    - failure_type
+    - suggested_target_files
+    - tests_to_add
+  no_runtime_file_mutation:
+    - cowork/adapters/zillow_newsroom_html.md
+    - config/runtime/mode-contracts/scrape_and_enrich_gate.yaml

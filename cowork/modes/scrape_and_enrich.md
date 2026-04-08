@@ -5,6 +5,7 @@ Load shared context from:
 - `cowork/shared/mission_brief.md`
 - `cowork/shared/taxonomy_and_scoring.md`
 - `cowork/shared/contracts.md`
+- `cowork/shared/change_request_policy.md`
 - `cowork/adapters/source_map.md` when shortlisted `source_id` values resolve to adapters
 
 Purpose:
@@ -24,6 +25,7 @@ Outputs:
 - `./.state/enriched/{run_date}/{run_id}.json`
 - updated `./.state/stories/{first_seen_month}/{story_id}.json`
 - `./.state/runs/{run_date}/{run_id}.json`
+- optional `./.state/change-requests/{request_date}/{request_id}.json`
 
 Forbidden inputs:
 
@@ -42,3 +44,4 @@ Capture 2-4 `evidence_points` for `full`, 1-2 for `snippet_fallback`, and none f
 Emit downstream-ready `analyst_summary`, `why_it_matters`, `avito_implication`, `story_id`, and `source_quality`.
 Do not preload the whole adapter directory; resolve `source_id -> adapter` first.
 Do not assemble daily, weekly, or stakeholder digests here.
+If fetch or normalization fails beyond contract-allowed fallback, or an adapter gap is discovered, emit `change_request` and never edit prompts, config, or adapters on disk.

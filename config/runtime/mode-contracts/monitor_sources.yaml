@@ -10,6 +10,7 @@ shared_context:
     - ./cowork/shared/mission_brief.md
     - ./cowork/shared/taxonomy_and_scoring.md
     - ./cowork/shared/contracts.md
+    - ./cowork/shared/change_request_policy.md
 
 static_config_inputs:
   required:
@@ -55,6 +56,12 @@ forbidden_runtime_inputs:
   - digest markdown archive
   - full article bodies
 
+forbidden_runtime_actions:
+  - edit prompt files
+  - edit config files
+  - edit adapter files
+  - create hidden local overrides for future runs
+
 processing_stages:
   - name: discovery
     output: raw_candidate[]
@@ -78,6 +85,30 @@ output_contract:
     schema: run_manifest
     collection: runs
     path_template: ./.state/runs/{run_date}/{run_id}.json
+  change_request:
+    schema: change_request
+    collection: change_requests
+    path_template: ./.state/change-requests/{request_date}/{request_id}.json
+    optional: true
+
+change_request_escalation:
+  enabled: true
+  policy_ref: ./cowork/shared/change_request_policy.md
+  allowed_failure_types:
+    - blocked_or_manual_source
+  trigger_conditions:
+    - configured source resolves to a blocked/manual access adapter or equivalent runtime limitation
+    - declared discovery path cannot proceed without manual or out-of-band access
+  expected_fields:
+    - run_id
+    - mode
+    - stage
+    - source_id
+    - url
+    - failure_type
+    - workaround_found
+    - suggested_target_files
+    - tests_to_add
 
 duplicate_policy:
   exact_canonical_match:

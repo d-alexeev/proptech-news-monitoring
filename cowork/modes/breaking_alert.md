@@ -5,6 +5,7 @@ Load shared context from:
 - `cowork/shared/mission_brief.md`
 - `cowork/shared/taxonomy_and_scoring.md`
 - `cowork/shared/contracts.md`
+- `cowork/shared/change_request_policy.md`
 
 Purpose:
 
@@ -34,3 +35,4 @@ Forbidden inputs:
 This mode is alert-only.
 Do not depend on daily or weekly digest generation.
 Do not build a daily or weekly digest here.
+If a threshold-crossing candidate depends on blocked/manual upstream evidence that would require a persistent repo change, emit `change_request` and do not edit prompts, config, or adapters.
