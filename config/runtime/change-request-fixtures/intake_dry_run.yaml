@@ -1,0 +1,47 @@
+fixture_id: change_request_intake_dry_run
+
+input:
+  change_request_artifact: ./config/runtime/change-request-fixtures/sample_change_request.yaml
+
+expected_workflow:
+  stages:
+    - intake
+    - triage
+    - plan_update
+    - implementation
+    - validation
+    - commit
+  triage:
+    decision: accept_for_planning
+    failure_type: adapter_gap
+    affected_runtime_layer:
+      - source_adapter
+      - mode_fixture
+  planning:
+    file_decision_owner: codex_planning
+    suggested_target_files_are_hints_only: true
+    expected_target_files:
+      - cowork/adapters/zillow_newsroom_html.md
+      - config/runtime/mode-fixtures/scrape_and_enrich_full_body.yaml
+  validation:
+    verification_scope_from_tests_to_add:
+      - add a fixture covering the new article container layout for zillow newsroom pages
+      - validate that evidence_points extraction still produces 2-4 items for full body cases
+    expected_checks:
+      - fixture_validation
+      - contract_linkage_review
+  commit:
+    repository: this_repo
+    requirement: reviewable_commit
+
+guards:
+  external_runner_must_not:
+    - edit repo source-of-truth files
+    - decide final target files
+  codex_owns:
+    - intake
+    - triage
+    - planning
+    - implementation
+    - validation
+    - commit

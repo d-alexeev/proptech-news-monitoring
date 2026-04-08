@@ -68,7 +68,7 @@
 | `TF2` | completed |
 | `TF3` | completed |
 | `TF4` | completed |
-| `TF5` | pending |
+| `TF5` | completed |
 | `TF6` | pending |
 | `TF7` | pending |
 | `TF8` | pending |

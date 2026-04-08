@@ -26,8 +26,13 @@ files:
     weekly_context: ./config/runtime/source-groups/weekly_context.yaml
   thresholds: ./config/runtime/runtime_thresholds.yaml
   schedule_bindings: ./config/runtime/schedule_bindings.yaml
+  change_request_schema: ./config/runtime/change_request_schema.yaml
+  change_request_intake_workflow: ./config/runtime/change_request_intake_workflow.md
   state_layout: ./config/runtime/state_layout.yaml
   state_schemas: ./config/runtime/state_schemas.yaml
+  change_request_fixtures:
+    sample_change_request: ./config/runtime/change-request-fixtures/sample_change_request.yaml
+    intake_dry_run: ./config/runtime/change-request-fixtures/intake_dry_run.yaml
   state_fixtures:
     valid_artifacts: ./config/runtime/state-fixtures/valid_artifacts.yaml
     path_resolution: ./config/runtime/state-fixtures/path_resolution.yaml
