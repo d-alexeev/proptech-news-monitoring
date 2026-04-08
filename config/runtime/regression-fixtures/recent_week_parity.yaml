@@ -1,0 +1,45 @@
+fixture_id: recent_week_parity
+owner: regression_harness
+
+recent_daily_window:
+  digest_date: 2026-04-03
+  reference_digest_markdown: ./digests/2026-04-03-daily.md
+  fixture_refs:
+    - ./config/runtime/mode-fixtures/build_daily_digest_parity_window.yaml
+    - ./config/runtime/legacy-export-fixtures/daily_window.yaml
+  comparison_scope:
+    - section_presence
+    - top_story_overlap
+    - weak_signal_overlap
+    - markdown_path_alignment
+  tolerances:
+    section_presence: exact
+    top_story_overlap_min: 0.8
+    weak_signal_overlap_min: 0.5
+    unexpected_story_count_max: 1
+    markdown_path_must_match: true
+
+recent_weekly_window:
+  week_id: 2026-W14
+  reference_digest_markdown: ./digests/2026-W14-weekly-digest.md
+  fixture_refs:
+    - ./config/runtime/mode-fixtures/build_weekly_digest_full_week.yaml
+    - ./config/runtime/mode-fixtures/build_weekly_digest_trend_clusters.yaml
+    - ./config/runtime/legacy-export-fixtures/weekly_window.yaml
+  comparison_scope:
+    - section_presence
+    - top_story_overlap
+    - trend_count
+    - trend_support_overlap
+    - markdown_path_alignment
+  tolerances:
+    section_presence: exact
+    top_story_overlap_min: 0.75
+    trend_count_delta_max: 1
+    trend_support_overlap_min: 0.67
+    markdown_path_must_match: true
+
+parity_review_rules:
+  use_real_project_artifacts_only: true
+  explain_any_non_zero_delta: true
+  no_go_if_any_tolerance_breached: true

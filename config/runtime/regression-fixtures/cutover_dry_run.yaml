@@ -1,0 +1,40 @@
+fixture_id: cutover_dry_run
+owner: regression_harness
+
+required_inputs:
+  regression_harness: ./config/runtime/regression_harness.yaml
+  smoke_subsets: ./config/runtime/regression-fixtures/smoke_subsets.yaml
+  recent_week_parity: ./config/runtime/regression-fixtures/recent_week_parity.yaml
+  rollback_checklist: ./config/runtime/migration-fixtures/rollback_checklist.yaml
+  legacy_export_daily: ./config/runtime/legacy-export-fixtures/daily_window.yaml
+  legacy_export_weekly: ./config/runtime/legacy-export-fixtures/weekly_window.yaml
+
+go_criteria:
+  - all JTBD-06/07/08/09 smoke subsets pass their thresholds
+  - all critical smoke cases pass with zero exceptions
+  - daily and weekly parity windows stay within declared tolerances
+  - legacy export fixtures remain green for daily and weekly windows
+  - rollback checklist is available and rehearsable without destructive actions
+  - runtime manifest links every contract, fixture, and compatibility bridge required for cutover
+
+no_go_conditions:
+  - any missing smoke subset dataset, golden file, or selected case id
+  - any critical smoke case failure
+  - any parity tolerance breach on the recent daily or weekly window
+  - any attempt to route runtime back through legacy files as source of truth
+  - any missing rollback reference or destructive rollback dependency
+  - any unresolved manifest-to-contract link break
+
+dry_run_steps:
+  - verify benchmark datasets exist and selected smoke case ids resolve
+  - verify recent daily and weekly parity references exist on disk
+  - verify legacy export bridge fixtures still point to the same windows
+  - verify rollback checklist inputs exist and require no destructive cleanup
+  - record current git HEAD as cutover baseline before any operational switch
+
+expected_outcome:
+  decision_states:
+    - go
+    - no_go
+  default_if_unknown: no_go
+  escalation_rule: any missing proof is treated as no_go until resolved

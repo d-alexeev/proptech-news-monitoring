@@ -1,0 +1,45 @@
+version: 1
+purpose: pre_cutover_regression_gate
+
+scope:
+  mandatory_before_cutover: true
+  design_only: true
+  production_cutover_performed_here: false
+
+source_references:
+  benchmark_readme: ./benchmark/README.md
+  benchmark_design: ./docs/benchmark-design.md
+  rollback_checklist: ./config/runtime/migration-fixtures/rollback_checklist.yaml
+  legacy_export_daily_fixture: ./config/runtime/legacy-export-fixtures/daily_window.yaml
+  legacy_export_weekly_fixture: ./config/runtime/legacy-export-fixtures/weekly_window.yaml
+
+smoke_subsets:
+  required_jtbds:
+    - JTBD-06
+    - JTBD-07
+    - JTBD-08
+    - JTBD-09
+  fixture_ref: ./config/runtime/regression-fixtures/smoke_subsets.yaml
+  pass_rule:
+    all_critical_cases_must_pass: true
+    no_missing_dataset_or_case_ids: true
+
+parity_review:
+  fixture_ref: ./config/runtime/regression-fixtures/recent_week_parity.yaml
+  required_windows:
+    - recent_daily_window
+    - recent_weekly_window
+  pass_rule:
+    tolerance_breaches_allowed: 0
+    real_project_data_required: true
+
+cutover_gates:
+  fixture_ref: ./config/runtime/regression-fixtures/cutover_dry_run.yaml
+  go_requires_all_green: true
+  no_go_on_any_critical_failure: true
+  rollback_path_must_be_rehearsed: true
+
+notes:
+  - Smoke subsets are intentionally smaller than the full benchmark datasets and are used to catch regressions quickly before cutover.
+  - Parity review uses a recent real week from the project, not synthetic examples.
+  - Legacy compatibility and rollback readiness remain mandatory preconditions for cutover.

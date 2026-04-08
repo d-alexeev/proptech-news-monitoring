@@ -1,0 +1,110 @@
+fixture_id: jtbd_smoke_subsets
+owner: regression_harness
+
+subsets:
+  JTBD-06:
+    dataset_dir: ./benchmark/datasets/jtbd-06-deduplication
+    inputs: ./benchmark/datasets/jtbd-06-deduplication/inputs.jsonl
+    golden: ./benchmark/datasets/jtbd-06-deduplication/golden.jsonl
+    metadata: ./benchmark/datasets/jtbd-06-deduplication/metadata.json
+    selected_case_ids:
+      - jtbd06-001
+      - jtbd06-006
+      - jtbd06-009
+      - jtbd06-012
+    critical_case_ids:
+      - jtbd06-006
+      - jtbd06-012
+    rationale:
+      - includes one confirmed real duplicate from project data
+      - includes one high-stakes semantic duplicate
+      - includes one ambiguous discussion case
+      - includes the Avito false-positive guard case
+    smoke_thresholds:
+      subset_f1_min: 0.75
+      max_critical_failures: 0
+      avito_parallel_false_positives_allowed: 0
+
+  JTBD-07:
+    dataset_dir: ./benchmark/datasets/jtbd-07-classification
+    inputs: ./benchmark/datasets/jtbd-07-classification/inputs.jsonl
+    golden: ./benchmark/datasets/jtbd-07-classification/golden.jsonl
+    metadata: ./benchmark/datasets/jtbd-07-classification/metadata.json
+    selected_case_ids:
+      - jtbd07-001
+      - jtbd07-006
+      - jtbd07-018
+      - jtbd07-033
+      - jtbd07-045
+    critical_case_ids:
+      - jtbd07-006
+      - jtbd07-018
+      - jtbd07-045
+    rationale:
+      - covers one plain classification baseline
+      - covers legal/taxonomy-gap edges
+      - covers multi-source same-product framing
+      - covers AI regulatory risk taxonomy ambiguity
+    smoke_thresholds:
+      subset_accuracy_min: 0.8
+      max_critical_failures: 0
+
+  JTBD-08:
+    dataset_dir: ./benchmark/datasets/jtbd-08-scoring
+    inputs: ./benchmark/datasets/jtbd-08-scoring/inputs.jsonl
+    golden: ./benchmark/datasets/jtbd-08-scoring/golden.jsonl
+    metadata: ./benchmark/datasets/jtbd-08-scoring/metadata.json
+    selected_case_ids:
+      - jtbd08-002
+      - jtbd08-005
+      - jtbd08-013
+      - jtbd08-014
+      - jtbd08-015
+    critical_case_ids:
+      - jtbd08-013
+      - jtbd08-015
+    rationale:
+      - calibrates near-equivalent high-score events
+      - checks multi-dimensional tradeoff reasoning
+      - checks internal Avito portability handling
+      - checks weak-signal bucket preservation
+    smoke_thresholds:
+      subset_bucket_accuracy_min: 0.75
+      subset_spearman_min: 0.7
+      max_critical_failures: 0
+
+  JTBD-09:
+    dataset_dir: ./benchmark/datasets/jtbd-09-breaking-alert
+    inputs: ./benchmark/datasets/jtbd-09-breaking-alert/inputs.jsonl
+    golden: ./benchmark/datasets/jtbd-09-breaking-alert/golden.jsonl
+    metadata: ./benchmark/datasets/jtbd-09-breaking-alert/metadata.json
+    selected_case_ids:
+      - jtbd09-001
+      - jtbd09-002
+      - jtbd09-007
+      - jtbd09-024
+    critical_case_ids:
+      - jtbd09-001
+      - jtbd09-007
+      - jtbd09-024
+    rationale:
+      - forces override below numeric threshold
+      - includes one obvious breaking true positive
+      - checks above-threshold false-positive trap
+      - checks threshold-borderline qualitative alert
+    smoke_thresholds:
+      subset_precision_min: 0.75
+      max_critical_failures: 0
+
+global_rules:
+  run_order:
+    - JTBD-07
+    - JTBD-09
+    - JTBD-08
+    - JTBD-06
+  stop_on_first_critical_failure: true
+  report_per_subset:
+    - selected_case_ids
+    - pass_fail
+    - critical_case_failures
+    - metric_summary

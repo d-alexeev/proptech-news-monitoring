@@ -34,12 +34,17 @@ files:
   migration_plan: ./config/runtime/migration_plan.md
   legacy_exports: ./config/runtime/legacy_exports.yaml
   legacy_compatibility_notes: ./config/runtime/legacy_compatibility.md
+  regression_harness: ./config/runtime/regression_harness.yaml
   migration_fixtures:
     recent_runs: ./config/runtime/migration-fixtures/recent_runs.yaml
     rollback_checklist: ./config/runtime/migration-fixtures/rollback_checklist.yaml
   legacy_export_fixtures:
     daily_window: ./config/runtime/legacy-export-fixtures/daily_window.yaml
     weekly_window: ./config/runtime/legacy-export-fixtures/weekly_window.yaml
+  regression_fixtures:
+    smoke_subsets: ./config/runtime/regression-fixtures/smoke_subsets.yaml
+    recent_week_parity: ./config/runtime/regression-fixtures/recent_week_parity.yaml
+    cutover_dry_run: ./config/runtime/regression-fixtures/cutover_dry_run.yaml
   mode_contracts:
     monitor_sources: ./config/runtime/mode-contracts/monitor_sources.yaml
     scrape_and_enrich_gate: ./config/runtime/mode-contracts/scrape_and_enrich_gate.yaml
