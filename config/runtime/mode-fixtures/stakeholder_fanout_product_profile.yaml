@@ -1,0 +1,59 @@
+fixture_id: stakeholder_fanout_product_profile
+mode_id: stakeholder_fanout
+
+inputs:
+  run_id: stakeholder_fanout__20260403T093000Z__product
+  run_date: 2026-04-03
+  brief_type: daily_brief
+  stakeholder_profile_path: ./config/runtime/stakeholder-profiles/product.yaml
+  brief:
+    brief_id: daily__2026-04-03__telegram_digest
+    delivery_profile: telegram_digest
+    section_order:
+      - top_stories
+      - weak_signals
+    story_cards:
+      - story_id: story_realtor_chatgpt_launch_2026
+        section: top_stories
+        title: Realtor.com launches AI search and ChatGPT app
+        priority_score: 85
+        confidence: 0.89
+        topic_tags: [product_launch, ai_search]
+        analyst_summary: Realtor.com moved conversational search into production and launched in ChatGPT.
+        why_it_matters: Search UX is shifting from filters to intent capture.
+        avito_implication: Avito should assess conversational entry points.
+        context_refs: [daily__2026-04-01__telegram_digest]
+      - story_id: story_zillow_ai_feature
+        section: top_stories
+        title: Zillow extends rollout of AI-led discovery
+        priority_score: 82
+        confidence: 0.88
+        topic_tags: [product_update, ai_search]
+        analyst_summary: Zillow expanded rollout of AI-led search guidance.
+        why_it_matters: Another major portal is iterating the same UX thesis.
+        avito_implication: Product teams can benchmark conversational discovery patterns.
+        context_refs: [daily__2026-04-02__telegram_digest]
+      - story_id: story_rightmove_agent_lawsuit_2026
+        section: top_stories
+        title: Rightmove faces a major agent lawsuit
+        priority_score: 71
+        confidence: 0.84
+        topic_tags: [listing_war, regulation]
+        analyst_summary: UK agents escalated a long-running pricing conflict with Rightmove.
+        why_it_matters: Marketplace-agent tension can reshape monetization models.
+        avito_implication: Useful strategically, but not a product workflow pattern.
+        context_refs: []
+
+expected:
+  profile_id: product
+  selected_story_ids:
+    - story_realtor_chatgpt_launch_2026
+    - story_zillow_ai_feature
+  omitted_story_ids:
+    - story_rightmove_agent_lawsuit_2026
+  section_order:
+    - top_news
+    - try_now
+    - what_to_watch
+    - weak_signals
+  output_path: ./digests/profiles/product/daily__2026-04-03__telegram_digest.md

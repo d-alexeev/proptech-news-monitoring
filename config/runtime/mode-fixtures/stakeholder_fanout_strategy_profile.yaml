@@ -1,0 +1,58 @@
+fixture_id: stakeholder_fanout_strategy_profile
+mode_id: stakeholder_fanout
+
+inputs:
+  run_id: stakeholder_fanout__20260403T093500Z__strategy
+  run_date: 2026-04-03
+  brief_type: daily_brief
+  stakeholder_profile_path: ./config/runtime/stakeholder-profiles/strategy.yaml
+  brief:
+    brief_id: daily__2026-04-03__telegram_digest
+    delivery_profile: telegram_digest
+    section_order:
+      - top_stories
+      - weak_signals
+    story_cards:
+      - story_id: story_realtor_chatgpt_launch_2026
+        section: top_stories
+        title: Realtor.com launches AI search and ChatGPT app
+        priority_score: 85
+        confidence: 0.89
+        topic_tags: [product_launch, ai_search]
+        analyst_summary: Realtor.com moved conversational search into production and launched in ChatGPT.
+        why_it_matters: Search UX is shifting from filters to intent capture.
+        avito_implication: Avito should assess conversational entry points.
+        context_refs: [daily__2026-04-01__telegram_digest]
+      - story_id: story_opendoor_doma_transaction_stack_2026
+        section: top_stories
+        title: Opendoor acquires Doma closing and escrow stack
+        priority_score: 62
+        confidence: 0.81
+        topic_tags: [m_and_a, transaction_tech]
+        analyst_summary: Opendoor is moving from iBuying toward transaction infrastructure.
+        why_it_matters: Large portals may monetize transactions without balance-sheet risk.
+        avito_implication: Deep real estate monetization may move beyond leads into services.
+        context_refs: []
+      - story_id: story_rightmove_agent_lawsuit_2026
+        section: top_stories
+        title: Rightmove faces a major agent lawsuit
+        priority_score: 71
+        confidence: 0.84
+        topic_tags: [listing_war, regulation, agent_relations]
+        analyst_summary: UK agents escalated a long-running pricing conflict with Rightmove.
+        why_it_matters: Marketplace-agent tension can reshape monetization models.
+        avito_implication: Avito should track monetization backlash risks.
+        context_refs: []
+
+expected:
+  profile_id: strategy
+  selected_story_ids:
+    - story_rightmove_agent_lawsuit_2026
+    - story_opendoor_doma_transaction_stack_2026
+  omitted_story_ids:
+    - story_realtor_chatgpt_launch_2026
+  section_order:
+    - top_news
+    - strategic_implications
+    - what_to_watch
+  output_path: ./digests/profiles/strategy/daily__2026-04-03__telegram_digest.md

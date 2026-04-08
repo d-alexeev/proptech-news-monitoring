@@ -1,0 +1,15 @@
+fixture_id: stakeholder_fanout_multi_profile_guard
+mode_id: stakeholder_fanout
+
+inputs:
+  run_id: stakeholder_fanout__20260403T094000Z__invalid
+  run_date: 2026-04-03
+  brief_type: daily_brief
+  brief_path: ./.state/briefs/daily/2026-04-03__telegram_digest.json
+  stakeholder_profile_paths:
+    - ./config/runtime/stakeholder-profiles/product.yaml
+    - ./config/runtime/stakeholder-profiles/strategy.yaml
+
+expected:
+  valid: false
+  validation_error: exactly one stakeholder profile config is allowed per run

@@ -14,10 +14,13 @@ Allowed inputs:
 
 - one `daily_brief` or `weekly_brief`
 - one stakeholder profile
+- no other runtime artifacts are required
 
 Forbidden inputs:
 
 - raw candidates
+- `./.state/raw/`
+- `./.state/articles/`
 - full article bodies
 - source adapters
 - the whole profile set at once
@@ -25,4 +28,5 @@ Forbidden inputs:
 - evaluation datasets and goldens
 
 This mode is downstream only.
+Keep personalization out of the base daily and weekly critical path.
 Do not re-run source discovery or full enrichment here.

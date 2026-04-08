@@ -1,0 +1,70 @@
+mode_id: stakeholder_fanout
+
+purpose:
+  - transform one completed daily_brief or weekly_brief into one audience-specific digest
+  - apply one stakeholder profile to filtering, ranking, and section emphasis
+  - keep personalization downstream of the base daily and weekly critical path
+
+depends_on:
+  daily_rendering_contract: ./config/runtime/mode-contracts/build_daily_digest_rendering.yaml
+  weekly_trend_contract: ./config/runtime/mode-contracts/build_weekly_digest_trends.yaml
+  stakeholder_profiles_index: ./config/runtime/stakeholder-profiles/index.yaml
+  state_layout: ./config/runtime/state_layout.yaml
+
+allowed_runtime_inputs:
+  - exactly one daily_brief or weekly_brief
+  - exactly one stakeholder profile config
+  - shared mission and contract briefs
+
+forbidden_runtime_inputs:
+  - ./.state/raw/
+  - ./.state/shortlists/
+  - ./.state/enriched/
+  - ./.state/articles/
+  - raw candidates
+  - full article bodies
+  - source adapters
+  - the whole profile set at once
+  - README
+  - docs/*
+  - benchmark/*
+
+activation_policy:
+  downstream_only: true
+  base_daily_weekly_critical_path_must_remain_unchanged: true
+
+personalization_policy:
+  one_profile_per_run: true
+  allowed_input_briefs:
+    - daily_brief
+    - weekly_brief
+  selection_controls_from_profile:
+    - min_priority_score
+    - max_top_items
+    - max_weak_signals
+    - topic_filter
+    - lens_weights
+    - format.include_sections
+    - format.detail_level
+    - format.max_chars_per_item
+  profile_delivery_binding_field: profile.delivery.telegram_profile
+
+output_contract:
+  profile_digest:
+    path_template: ./digests/profiles/{profile_id}/{brief_id}.md
+    required_fields:
+      - profile_id
+      - source_brief_id
+      - source_brief_type
+      - selected_story_ids
+      - section_order
+      - output_path
+  run_manifest:
+    schema: run_manifest
+    collection: runs
+    path_template: ./.state/runs/{run_date}/{run_id}.json
+
+non_goals:
+  - no activation inside the base daily or weekly pipeline
+  - no threshold changes to stakeholder profiles
+  - no raw discovery or enrichment reruns
