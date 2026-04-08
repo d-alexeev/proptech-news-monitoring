@@ -1,0 +1,63 @@
+fixture_id: legacy_export_daily_window
+bridge_id: legacy_exports
+
+inputs:
+  run_manifest: ./.state/runs/2026-04-03/build_daily_digest__20260403T090000Z__telegram_digest.json
+  daily_brief: ./.state/briefs/daily/2026-04-03__telegram_digest.json
+  story_lookup_root: ./.state/stories/
+  enriched_lookup_root: ./.state/enriched/2026-04-03/
+  reference_digest_markdown: ./digests/2026-04-03-daily.md
+
+expected_legacy_exports:
+  dedupe_store:
+    output_path: ./.state/dedupe.json
+    top_level_keys:
+      - _schema_notes
+      - seen
+      - title_hashes
+    seen_entry_format:
+      - canonical_url
+      - metadata_map
+    required_metadata_fields:
+      - title
+      - title_hash
+      - story_id
+      - first_seen
+      - published
+      - sent
+      - digest_date
+      - companies
+      - topic_tags
+      - event_type
+      - priority_score
+      - confidence
+      - analyst_summary
+      - why_it_matters
+      - avito_implication
+      - enriched_at
+    optional_metadata_fields:
+      - raw_snippet
+      - stakeholder_scores
+      - fetch_strategy_used
+  delivery_log:
+    output_path: ./.state/delivery-log.json
+    top_level_keys:
+      - _schema_notes
+      - runs
+    required_run_fields:
+      - run_id
+      - schedule
+      - mode
+      - sources_used
+      - items_found
+      - items_in_digest
+      - items_sent
+      - telegram_message_id
+      - articles
+    expected_schedule: weekday_digest
+    expected_digest_file: ./digests/2026-04-03-daily.md
+
+parity_conditions:
+  - exported delivery_log articles come from daily_brief.story_ids resolved through story_brief canonical_url
+  - exported dedupe seen entries mark exported daily stories as sent
+  - legacy files stay export targets and never become runtime inputs again

@@ -1,0 +1,45 @@
+fixture_id: legacy_export_weekly_window
+bridge_id: legacy_exports
+
+inputs:
+  run_manifest: ./.state/runs/2026-04-03/build_weekly_digest__20260403T170000Z__telegram_weekly_digest.json
+  weekly_brief: ./.state/briefs/weekly/2026-W14__telegram_weekly_digest.json
+  supporting_daily_briefs:
+    - ./.state/briefs/daily/2026-03-30__telegram_digest.json
+    - ./.state/briefs/daily/2026-03-31__telegram_digest.json
+    - ./.state/briefs/daily/2026-04-01__telegram_digest.json
+    - ./.state/briefs/daily/2026-04-02__telegram_digest.json
+    - ./.state/briefs/daily/2026-04-03__telegram_digest.json
+  story_lookup_root: ./.state/stories/
+  reference_digest_markdown: ./digests/2026-W14-weekly-digest.md
+
+expected_legacy_exports:
+  dedupe_store:
+    output_path: ./.state/dedupe.json
+    top_level_keys:
+      - _schema_notes
+      - seen
+      - title_hashes
+    digest_date_rule: derive week-end date from 2026-W14 when no daily digest date exists for a story
+  delivery_log:
+    output_path: ./.state/delivery-log.json
+    top_level_keys:
+      - _schema_notes
+      - runs
+    required_run_fields:
+      - run_id
+      - schedule
+      - mode
+      - sources_used
+      - items_found
+      - items_in_digest
+      - items_sent
+      - telegram_message_id
+      - articles
+    expected_schedule: weekly_digest
+    expected_digest_file: ./digests/2026-W14-weekly-digest.md
+
+parity_conditions:
+  - exported delivery_log articles come from weekly_brief.story_ids resolved through story_brief canonical_url
+  - supporting daily briefs may enrich daily digest_date selection but are not required runtime inputs for weekly generation itself
+  - bridge remains append-only and does not restore legacy files as the source of truth

@@ -1,0 +1,99 @@
+version: 1
+role: export_only_compatibility_bridge
+
+source_of_truth:
+  mode: shard_artifacts_only
+  canonical_inputs:
+    - ./.state/runs/
+    - ./.state/enriched/
+    - ./.state/stories/
+    - ./.state/briefs/daily/
+    - ./.state/briefs/weekly/
+  reverse_dependencies_forbidden:
+    - ./.state/dedupe.json
+    - ./.state/delivery-log.json
+
+bridge_guards:
+  legacy_files_are_exports_only: true
+  old_critical_path_reentry_forbidden: true
+  exporter_runs_after_primary_artifacts_exist: true
+  additive_behavior_only: true
+
+exports:
+  dedupe_store:
+    output_path: ./.state/dedupe.json
+    format: json
+    top_level_keys:
+      - _schema_notes
+      - seen
+      - title_hashes
+    source_artifacts:
+      primary:
+        - enriched_item[]
+        - story_brief
+      support:
+        - daily_brief
+        - weekly_brief
+    mapping_rules:
+      seen_entry_format:
+        - canonical_url
+        - metadata_map
+      key_resolution:
+        canonical_url: story_brief.canonical_url
+      metadata_fields:
+        title: prefer enriched_item.title, else story_brief.title_snapshot
+        title_hash: deterministic hash from normalized export title
+        story_id: story_brief.story_id
+        first_seen: story_brief.first_seen
+        published: enriched_item.published
+        sent: true when story_id appears in exported daily_brief.story_ids or weekly_brief.story_ids
+        digest_date: prefer earliest matching daily_brief.digest_date, else derived week-end date from weekly_brief.week_id
+        companies: enriched_item.companies
+        topic_tags: enriched_item.topic_tags
+        event_type: enriched_item.event_type
+        raw_snippet: enriched_item.raw_snippet when present
+        priority_score: enriched_item.priority_score
+        confidence: enriched_item.confidence
+        stakeholder_scores: enriched_item.stakeholder_scores when present
+        analyst_summary: enriched_item.analyst_summary
+        why_it_matters: enriched_item.why_it_matters
+        avito_implication: enriched_item.avito_implication
+        enriched_at: enriched_item.enriched_at
+      optional_legacy_fields:
+        fetch_strategy_used: omit unless a future shard artifact exposes it explicitly
+      title_hash_index:
+        key: exported title_hash
+        value: canonical_url
+
+  delivery_log:
+    output_path: ./.state/delivery-log.json
+    format: json
+    top_level_keys:
+      - _schema_notes
+      - runs
+    source_artifacts:
+      primary:
+        - run_manifest
+      support:
+        - daily_brief
+        - weekly_brief
+        - story_brief
+        - enriched_item[]
+    mapping_rules:
+      run_entry_fields:
+        run_id: run_manifest.run_id
+        schedule: derived from delivery_profile via schedule bindings, else preserved from run manifest notes
+        mode: run_manifest.mode
+        sources_used: prefer run_manifest.source_groups, else unique story_brief.source_ids for exported story_ids
+        items_found: prefer run_manifest.counts.discovered, else counts.shortlisted, else counts.selected
+        items_in_digest: count of exported daily_brief.story_ids or weekly_brief.story_ids
+        items_sent: prefer run_manifest.counts.delivered, else 0
+        telegram_message_id: prefer brief.delivery_metadata.telegram_message_id, else null
+        digest_file: brief.markdown_path
+        stakeholder_profile: brief.delivery_profile
+        articles: story_brief.canonical_url in exported section order
+      export_scope:
+        supported_windows:
+          - daily digest window
+          - weekly digest window
+        run_export_is_append_only: true

@@ -32,9 +32,14 @@ files:
     valid_artifacts: ./config/runtime/state-fixtures/valid_artifacts.yaml
     path_resolution: ./config/runtime/state-fixtures/path_resolution.yaml
   migration_plan: ./config/runtime/migration_plan.md
+  legacy_exports: ./config/runtime/legacy_exports.yaml
+  legacy_compatibility_notes: ./config/runtime/legacy_compatibility.md
   migration_fixtures:
     recent_runs: ./config/runtime/migration-fixtures/recent_runs.yaml
     rollback_checklist: ./config/runtime/migration-fixtures/rollback_checklist.yaml
+  legacy_export_fixtures:
+    daily_window: ./config/runtime/legacy-export-fixtures/daily_window.yaml
+    weekly_window: ./config/runtime/legacy-export-fixtures/weekly_window.yaml
   mode_contracts:
     monitor_sources: ./config/runtime/mode-contracts/monitor_sources.yaml
     scrape_and_enrich_gate: ./config/runtime/mode-contracts/scrape_and_enrich_gate.yaml
