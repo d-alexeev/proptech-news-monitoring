@@ -11,14 +11,14 @@
 
 После завершения основного refactor-плана остаются два связанных направления:
 
-1. Внешний агент, который реально запускается в другом рантайме, не должен самовольно менять свои prompts/config/adapters/contracts, даже если нашёл workaround.
+1. Внешний агент, который реально запускается в другом рантайме, не должен самовольно менять свои prompts/config/adapters/contracts, даже если он нашёл workaround.
 2. Репозиторию нужна актуальная документация по обновлённой архитектуре, способам запуска и режимам работы.
 
 Главный принцип:
 
 - master source of truth для любых runtime-изменений остаётся в этом git-репозитории;
-- внешний агент только наблюдает, фиксирует проблему и формирует structured `change_request`;
-- реальные изменения проектируются, планируются, реализуются и коммитятся здесь, через Codex.
+- внешний агент может применять только временный in-run workaround, если это явно разрешено policy и не приводит к persistent file mutation;
+- любые постоянные изменения должны приходить обратно в этот репозиторий через structured `change_request` и далее через Codex + git.
 
 ## Requirements
 
@@ -31,20 +31,24 @@
 | `F5` | Должна появиться актуальная документация по обновлённой архитектуре проекта. |
 | `F6` | Должна появиться актуальная документация по способам запуска и режимам работы `Claude Cowork`-агента. |
 | `F7` | Legacy docs должны быть либо выровнены с новой архитектурой, либо явно помечены как legacy/archived. |
+| `F8` | Каждый `change_request` должен быть привязан к конкретному run/failure context как минимум через `run_id`, `mode`, `stage`, `url` и evidence refs. |
+| `F9` | У `change_request` должен быть lifecycle/status model с ownership transitions для triage, planning и implementation. |
+| `F10` | Должно быть явно определено, когда временный in-run workaround допустим, а когда агент обязан остановиться и выпустить только `change_request`. |
 
 ## Program-Level Acceptance Criteria
 
 - В репозитории есть зафиксированная policy, что внешний агент не self-mutate runtime files.
-- Есть canonical `change_request` artifact со schema, storage path и fixture coverage.
-- Есть описанный intake workflow: `change_request -> planning -> implementation -> validation -> commit`.
+- Есть canonical `change_request` artifact со schema, storage path, lifecycle fields и fixture coverage.
+- Есть описанный intake workflow: `change_request -> triage -> planning -> implementation -> validation -> commit`.
+- Для source-facing режимов есть guardrails, которые разрешают escalation artifact и запрещают silent self-mutation.
 - `README.md` и operator docs больше не выглядят как документация к старому monolithic runner path без caveats.
-- Документация по режимам, запуску и rerun flows согласована с [`config/runtime/runtime_manifest.yaml`](./config/runtime/runtime_manifest.yaml) и [`cowork/`](./cowork).
+- Документация по архитектуре, режимам, запуску и rerun flows согласована с [`config/runtime/runtime_manifest.yaml`](./config/runtime/runtime_manifest.yaml) и [`cowork/`](./cowork).
 
 ## Global Non-Goals
 
 - Не менять уже закрытый milestone-plan `M0-M19`.
 - Не выполнять production cutover автоматически.
-- Не разрешать внешнему агенту self-healing через правку runtime-файлов в обход git-managed master repo.
+- Не разрешать внешнему агенту persistent self-healing через правку runtime-файлов в обход git-managed master repo.
 - Не внедрять внешний ticketing system, issue tracker integration или automation platform в рамках этого follow-up.
 
 ## Review Protocol
@@ -60,58 +64,66 @@
 
 | Milestone | Status |
 | --- | --- |
-| `FM1` | pending |
-| `FM2` | pending |
-| `FM3` | pending |
-| `FM4` | pending |
-| `FM5` | pending |
-| `FM6` | pending |
+| `TF1` | pending |
+| `TF2` | pending |
+| `TF3` | pending |
+| `TF4` | pending |
+| `TF5` | pending |
+| `TF6` | pending |
+| `TF7` | pending |
+| `TF8` | pending |
 
 ## Milestone Overview
 
 | ID | Est. | Depends On | Main Output |
 | --- | --- | --- | --- |
-| `FM1` | `1h` | — | External change request policy and ownership boundary |
-| `FM2` | `1.5h` | `FM1` | `change_request` schema, state path, sample artifact |
-| `FM3` | `2h` | `FM2` | Runtime integration for failure escalation and no-self-mutation guards |
-| `FM4` | `1.5h` | `FM1`, `FM3` | Codex intake and planning workflow |
-| `FM5` | `2h` | `FM2`, `FM4` | Canonical docs for updated runtime architecture and mode catalog |
-| `FM6` | `2h` | `FM5` | Launch/rerun docs and legacy docs alignment |
+| `TF1` | `1h` | — | Policy boundary for external agent behavior |
+| `TF2` | `1h` | `TF1` | `change_request` schema and lifecycle |
+| `TF3` | `1.5h` | `TF2` | State path, collection layout, and sample request fixtures |
+| `TF4` | `1.5h` | `TF1`, `TF3` | Source-facing mode integration and no-self-mutation guards |
+| `TF5` | `1h` | `TF2`, `TF4` | Codex intake and planning workflow |
+| `TF6` | `1.5h` | `TF3`, `TF5` | Canonical runtime architecture docs and mode catalog |
+| `TF7` | `1.5h` | `TF6` | Launch, rerun, and dry-run docs |
+| `TF8` | `1.5h` | `TF6`, `TF7` | Legacy docs alignment or archival markers |
 
 ## Detailed Milestones
 
-### FM1. External Change Request Policy
+### TF1. Policy Boundary for External Agent Behavior
 
 - Estimate: `1h`
 - Depends on: `—`
 - Deliverable:
-  - `change_request` policy for the external runner
+  - policy doc for the external runner
   - explicit ownership boundary between external runner and Codex-managed repo
 - Acceptance criteria:
-  - явно сказано, что внешний runtime agent не self-patch'ит prompts/config/adapters/contracts;
-  - policy определяет trigger conditions, когда вместо local workaround persistence создаётся `change_request`;
+  - policy явно запрещает persistent self-patching of prompts/config/adapters/contracts;
+  - policy перечисляет minimum trigger classes for `change_request` creation:
+    - scrape failure
+    - blocked/manual source
+    - adapter gap
+    - discovered workaround requiring persistent repo change
+  - policy явно определяет allowed vs forbidden temporary in-run workaround behavior;
   - policy фиксирует, что master source of truth остаётся в этом репозитории.
 - Tests:
-  - checklist review: policy covers scrape failure, blocked/manual source, adapter gap, discovered workaround;
-  - wording review: нет двусмысленного разрешения на self-modification;
-  - file reference review: policy указывает canonical ownership boundary.
+  - checklist review that all four trigger classes are covered;
+  - wording review that there is no ambiguous permission for self-modification;
+  - ownership review that external runner and Codex responsibilities are separated.
 - Non-goals:
   - не вводить schema-level state artifact;
   - не менять mode contracts beyond policy references.
 
-### FM2. `change_request` Schema and State Path
+### TF2. `change_request` Schema and Lifecycle
 
-- Estimate: `1.5h`
-- Depends on: `FM1`
+- Estimate: `1h`
+- Depends on: `TF1`
 - Deliverable:
   - canonical `change_request` artifact definition
-  - storage path and schema
-  - sample artifact fixture
+  - lifecycle/status model
 - Acceptance criteria:
-  - определён canonical path: `./.state/change-requests/{request_date}/{request_id}.json` или эквивалент;
-  - schema содержит обязательные поля:
+  - schema содержит обязательные fields:
     - `request_id`
     - `created_at`
+    - `run_id`
     - `mode`
     - `stage`
     - `source_id`
@@ -126,69 +138,109 @@
     - `evidence_refs`
     - `severity`
     - `status`
-  - `change_request` вписан в state layout и shared contracts.
+    - `owner`
+  - lifecycle/status model задан явно, минимум:
+    - `new`
+    - `triaged`
+    - `planned`
+    - `implemented`
+    - `rejected`
+  - ownership transitions between external runner and Codex-side triage описаны явно;
+  - schema ссылается на policy из `TF1`.
 - Tests:
   - schema coverage review on all required fields;
-  - path-resolution check for the change-request collection;
-  - sample artifact validation in state fixtures.
+  - lifecycle review that each status has a clear owner;
+  - sample artifact review for one complete request object.
 - Non-goals:
-  - не интегрировать `change_request` в mode contracts;
-  - не проектировать Codex triage workflow.
+  - не задавать storage path в state layout;
+  - не интегрировать `change_request` в mode contracts.
 
-### FM3. Failure Escalation Runtime Integration
-
-- Estimate: `2h`
-- Depends on: `FM2`
-- Deliverable:
-  - mode-contract support for sanctioned `change_request` escalation
-  - fixtures for operational failure cases
-  - no-self-mutation guards
-- Acceptance criteria:
-  - relevant mode contracts допускают `change_request` как sanctioned outcome;
-  - есть fixtures минимум для:
-    - blocked/manual source case
-    - scrape failure with workaround suggestion
-    - adapter gap with suggested target files and tests
-  - mode contracts явно запрещают silent local mutation of prompt/config/adapter files.
-- Tests:
-  - fixture validation for all new failure-to-change-request scenarios;
-  - guard review that no mode claims write access to runtime source files;
-  - contract linkage review against state schema and shared policy.
-- Non-goals:
-  - не реализовывать auto-fix execution;
-  - не менять benchmark harness.
-
-### FM4. Codex Intake and Planning Workflow
+### TF3. State Path and Sample Request Fixtures
 
 - Estimate: `1.5h`
-- Depends on: `FM1`, `FM3`
+- Depends on: `TF2`
+- Deliverable:
+  - canonical storage path for `change_request`
+  - state layout integration
+  - sample fixtures and state-fixture coverage
+- Acceptance criteria:
+  - определён canonical path: `./.state/change-requests/{request_date}/{request_id}.json` или эквивалент;
+  - `change_request` collection добавлен в state layout и shared contracts;
+  - есть минимум два sample fixtures:
+    - scrape failure with workaround suggestion
+    - blocked/manual source case
+  - fixtures покрывают required schema fields, включая `run_id`, `status`, `owner`, `tests_to_add`.
+- Tests:
+  - path-resolution check for the change-request collection;
+  - fixture validation against schema;
+  - valid-artifacts review that required fields are fully covered.
+- Non-goals:
+  - не интегрировать `change_request` во все mode contracts;
+  - не проектировать Codex intake workflow.
+
+### TF4. Source-Facing Runtime Integration
+
+- Estimate: `1.5h`
+- Depends on: `TF1`, `TF3`
+- Deliverable:
+  - mode-contract support for sanctioned `change_request` escalation
+  - no-self-mutation guards in source-facing modes
+- Acceptance criteria:
+  - following modes explicitly support `change_request` escalation:
+    - `monitor_sources`
+    - `scrape_and_enrich`
+    - `breaking_alert`
+  - those same modes explicitly forbid silent local mutation of prompt/config/adapter files;
+  - there is at least one fixture for:
+    - adapter gap
+    - scrape failure with workaround suggestion
+    - blocked/manual source escalation
+  - contract linkage between mode outputs and `change_request` schema is explicit.
+- Tests:
+  - fixture validation for all declared source-facing failure scenarios;
+  - guard review that no covered mode claims write access to runtime source files;
+  - contract linkage review against state schema and policy.
+- Non-goals:
+  - не интегрировать `change_request` в non-source-facing modes;
+  - не реализовывать auto-fix execution.
+
+### TF5. Codex Intake and Planning Workflow
+
+- Estimate: `1h`
+- Depends on: `TF2`, `TF4`
 - Deliverable:
   - Codex-side intake workflow for incoming `change_request`
   - planning and review path from request to commit
 - Acceptance criteria:
-  - описано, как `change_request` превращается в milestone-scoped task;
-  - описано, кто и как решает, какие файлы менять;
+  - workflow явно покрывает stages:
+    - intake
+    - triage
+    - plan update
+    - implementation
+    - validation
+    - commit
+  - описано, кто решает, какие файлы менять;
   - описано, как `tests_to_add` превращается в verification scope;
   - workflow явно заканчивается reviewable commit'ом в этом repo.
 - Tests:
   - dry-run walkthrough on one synthetic `change_request`;
-  - checklist review that workflow covers intake, triage, planning, implementation, validation, commit;
-  - guard review that external agent and Codex responsibilities не смешиваются.
+  - checklist review that all six stages are present;
+  - guard review that external runner and Codex responsibilities не смешиваются.
 - Non-goals:
   - не внедрять automation platform;
   - не создавать issue tracker integration.
 
-### FM5. Canonical Docs for Updated Runtime
+### TF6. Canonical Runtime Docs and Mode Catalog
 
-- Estimate: `2h`
-- Depends on: `FM2`, `FM4`
+- Estimate: `1.5h`
+- Depends on: `TF3`, `TF5`
 - Deliverable:
-  - updated canonical docs for runtime architecture
+  - canonical docs for updated runtime architecture
   - mode catalog for the current `Claude Cowork` design
   - corrected `README.md`
 - Acceptance criteria:
   - есть актуальное описание updated runtime architecture;
-  - есть отдельное описание всех режимов работы:
+  - есть отдельное canonical описание всех режимов:
     - `monitor_sources`
     - `scrape_and_enrich`
     - `build_daily_digest`
@@ -196,77 +248,106 @@
     - `build_weekly_digest`
     - `breaking_alert`
     - `stakeholder_fanout`
-  - `README.md` больше не выглядит как инструкция к старому monolithic runner path;
-  - canonical docs ссылаются на [`config/runtime/runtime_manifest.yaml`](./config/runtime/runtime_manifest.yaml) и [`cowork/`](./cowork) как на основной runtime layer.
+  - `README.md` явно указывает на [`config/runtime/runtime_manifest.yaml`](./config/runtime/runtime_manifest.yaml) и [`cowork/`](./cowork) как canonical runtime layer;
+  - `README.md` больше не подаёт legacy monolithic runner path как основной current-state путь.
 - Tests:
   - docs consistency review against runtime manifest and mode prompts;
-  - link check for all new canonical doc references;
+  - link check for all canonical doc references;
   - manual sanity review that mode descriptions match current contracts.
 - Non-goals:
   - не переписывать benchmark datasets;
   - не делать product/marketing rewrite.
 
-### FM6. Launch, Rerun, and Legacy Docs Alignment
+### TF7. Launch, Rerun, and Dry-Run Docs
 
-- Estimate: `2h`
-- Depends on: `FM5`
+- Estimate: `1.5h`
+- Depends on: `TF6`
 - Deliverable:
-  - актуальная документация по способам запуска и rerun flows
-  - legacy docs alignment or archival markers
+  - актуальная документация по способам запуска
+  - rerun and dry-run reference
 - Acceptance criteria:
   - есть актуальное описание способов запуска:
     - regular schedules
     - manual reruns
     - downstream-only modes
     - regression/parity dry-runs
-  - legacy docs либо переписаны, либо явно помечены как `legacy` / `archived`;
-  - документы не создают конфликт между canonical runtime layer и legacy bridge files;
-  - явно отражено, что этот repo является source-of-truth слоем, а не обязательно местом фактического запуска runner'а.
+  - launch/rerun docs согласованы с [`config/runtime/schedule_bindings.yaml`](./config/runtime/schedule_bindings.yaml);
+  - docs явно отражают, что repo является source-of-truth слоем, а не обязательно местом фактического запуска runner'а.
 - Tests:
-  - docs consistency review against [`config/runtime/schedule_bindings.yaml`](./config/runtime/schedule_bindings.yaml);
-  - grep/checklist review for stale unqualified `runner --config config/monitoring.yaml` style instructions;
-  - link check for updated runbook/launch docs.
+  - docs consistency review against schedule bindings and runtime manifest;
+  - grep/checklist review for stale unqualified launch instructions;
+  - link check for launch/rerun references.
 - Non-goals:
   - не выполнять реальный cutover;
-  - не скрывать legacy behavior там, где оно ещё нужно как compatibility reference.
+  - не переписывать legacy docs beyond references needed for launch clarity.
+
+### TF8. Legacy Docs Alignment or Archival
+
+- Estimate: `1.5h`
+- Depends on: `TF6`, `TF7`
+- Deliverable:
+  - legacy docs alignment or archival markers
+  - conflict-free documentation surface
+- Acceptance criteria:
+  - `README`, `runbook`, `agent-spec`, `rss-api-audit` больше не создают конфликт между canonical runtime layer и legacy bridge files;
+  - каждый legacy-sensitive doc либо:
+    - переписан под current architecture,
+    - либо явно помечен как `legacy` / `archived`;
+  - не остаётся unqualified `runner --config config/monitoring.yaml` style instructions, выглядящих как canonical path.
+- Tests:
+  - grep/checklist review for stale legacy-first launch commands;
+  - docs consistency review across canonical and legacy-marked files;
+  - manual sanity review that a new reader can distinguish current vs legacy path.
+- Non-goals:
+  - не скрывать legacy behavior там, где оно ещё нужно как compatibility reference;
+  - не выполнять реальный cutover.
 
 ## Requirement-to-Milestone Coverage Matrix
 
 | Requirement | Covered By |
 | --- | --- |
-| `F1` | `FM1`, `FM4`, `FM6` |
-| `F2` | `FM1`, `FM3` |
-| `F3` | `FM2`, `FM3` |
-| `F4` | `FM4` |
-| `F5` | `FM5`, `FM6` |
-| `F6` | `FM5`, `FM6` |
-| `F7` | `FM6` |
+| `F1` | `TF1`, `TF5`, `TF6`, `TF8` |
+| `F2` | `TF1`, `TF4` |
+| `F3` | `TF2`, `TF3`, `TF4` |
+| `F4` | `TF5` |
+| `F5` | `TF6`, `TF8` |
+| `F6` | `TF6`, `TF7` |
+| `F7` | `TF8` |
+| `F8` | `TF2`, `TF3` |
+| `F9` | `TF2`, `TF5` |
+| `F10` | `TF1`, `TF4` |
 
 ## Dependency Graph
 
 ```mermaid
 graph TD
-  FM1["FM1 Change Request Policy"]
-  FM2["FM2 change_request Schema"]
-  FM3["FM3 Failure Escalation Integration"]
-  FM4["FM4 Codex Intake Workflow"]
-  FM5["FM5 Canonical Runtime Docs"]
-  FM6["FM6 Launch and Legacy Docs Alignment"]
+  TF1["TF1 Policy Boundary"]
+  TF2["TF2 Schema and Lifecycle"]
+  TF3["TF3 State Path and Fixtures"]
+  TF4["TF4 Source-Facing Integration"]
+  TF5["TF5 Codex Intake Workflow"]
+  TF6["TF6 Canonical Runtime Docs"]
+  TF7["TF7 Launch and Dry-Run Docs"]
+  TF8["TF8 Legacy Docs Alignment"]
 
-  FM1 --> FM2
-  FM2 --> FM3
-  FM1 --> FM4
-  FM3 --> FM4
-  FM2 --> FM5
-  FM4 --> FM5
-  FM5 --> FM6
+  TF1 --> TF2
+  TF2 --> TF3
+  TF1 --> TF4
+  TF3 --> TF4
+  TF2 --> TF5
+  TF4 --> TF5
+  TF3 --> TF6
+  TF5 --> TF6
+  TF6 --> TF7
+  TF6 --> TF8
+  TF7 --> TF8
 ```
 
 ## Suggested Next Step
 
-Если этот follow-up признаётся актуальным, первый implementation milestone должен быть `FM1`.
+Если этот follow-up признаётся актуальным, первый implementation milestone должен быть `TF1`.
 
 Причина:
 
-- без policy и ownership boundary нельзя безопасно вводить `change_request` schema;
+- без policy boundary нельзя безопасно вводить lifecycle и storage schema;
 - без этого docs refresh рискует описать процесс, который ещё не закреплён контрактно.
