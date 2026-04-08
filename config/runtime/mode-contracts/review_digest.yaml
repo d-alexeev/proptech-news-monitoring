@@ -1,0 +1,62 @@
+mode_id: review_digest
+
+purpose:
+  - review a produced daily or weekly digest as a QA step
+  - compare digest output against kept and dropped compact artifacts
+  - emit grouped QA findings and next-run recommendations without rewriting the digest
+
+depends_on:
+  daily_rendering_contract: ./config/runtime/mode-contracts/build_daily_digest_rendering.yaml
+  state_layout: ./config/runtime/state_layout.yaml
+  state_schemas: ./config/runtime/state_schemas.yaml
+
+allowed_runtime_inputs:
+  - target digest markdown file
+  - parent daily_brief or weekly_brief
+  - parent run_manifest
+  - kept and dropped compact artifacts from the parent selection/render package
+  - shared mission and contract briefs
+
+forbidden_runtime_inputs:
+  - ./.state/raw/
+  - ./.state/shortlists/
+  - ./.state/articles/
+  - full article bodies
+  - source adapters
+  - stakeholder profiles
+  - README
+  - docs/*
+  - benchmark/*
+
+review_categories:
+  missed_signals:
+    description: candidate signals absent from the digest despite sufficient relevance
+  duplication_risk:
+    description: repeated or overlapping story coverage that should have been merged or downgraded
+  weak_reasoning:
+    description: claims, prioritization, or Avito implications that are not well supported by compact evidence
+  source_gaps:
+    description: coverage holes caused by source mix, filtering, or missing follow-up confirmation
+  next_run_recommendations:
+    description: concise operator-facing actions for the next run or prompt/config tuning
+
+review_rules:
+  must_not_rewrite_digest: true
+  actionable_grouping_required: true
+  full_text_access: forbidden
+  output_is_qa_report_only: true
+
+output_contract:
+  qa_review_report:
+    schema: qa_review_report
+    collection: reviews
+    path_template: ./.state/reviews/{review_date}/{parent_run_id}__{review_kind}.json
+  run_manifest:
+    schema: run_manifest
+    collection: runs
+    path_template: ./.state/runs/{review_date}/{run_id}.json
+
+non_goals:
+  - no digest rewrite
+  - no Telegram delivery
+  - no new story selection or reranking

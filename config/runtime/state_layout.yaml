@@ -81,7 +81,7 @@ collections:
     shard_keys: [review_date, parent_run_id, review_kind]
     lookup_keys: [parent_run_id, review_kind, review_date]
     notes:
-      - review-specific schema is detailed later with the review mode milestone
+      - review-specific schema is defined in state_schemas under qa_review_report
       - stored separately from digest briefs to keep QA output isolated
 
   articles:

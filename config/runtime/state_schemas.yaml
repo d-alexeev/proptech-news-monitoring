@@ -250,6 +250,50 @@ artifacts:
     notes:
       - trend synthesis details are expanded later with the weekly milestones
 
+  qa_review_report:
+    shard_collection: reviews
+    producer_modes: [review_digest]
+    consumer_modes: []
+    required_fields:
+      - name: review_id
+        type: string
+      - name: parent_run_id
+        type: string
+      - name: review_kind
+        type: enum[daily_digest,weekly_digest]
+      - name: review_date
+        type: date
+      - name: generated_at
+        type: datetime
+      - name: target_digest_path
+        type: string
+      - name: target_brief_id
+        type: string
+      - name: missed_signals
+        type: list[map]
+      - name: duplication_risk
+        type: list[map]
+      - name: weak_reasoning
+        type: list[map]
+      - name: source_gaps
+        type: list[map]
+      - name: next_run_recommendations
+        type: list[string]
+    optional_fields:
+      - name: target_delivery_profile
+        type: string
+      - name: critical_findings_count
+        type: integer
+      - name: warning_findings_count
+        type: integer
+      - name: summary
+        type: string
+      - name: review_notes
+        type: list[string]
+    notes:
+      - qa_review_report is a QA-only artifact and must not replace the target digest
+      - findings must be grouped into actionable categories rather than a rewritten editorial output
+
   run_manifest:
     shard_collection: runs
     producer_modes:

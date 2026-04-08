@@ -1,0 +1,38 @@
+fixture_id: review_digest_seeded_omission
+mode_id: review_digest
+
+inputs:
+  review_date: 2026-04-08
+  parent_run_id: build_daily_digest__20260408T090000Z__telegram_digest
+  review_kind: daily_digest
+  digest_path: ./digests/2026-04-08-daily.md
+  digest_markdown_excerpt: |
+    ## Главные события
+
+    ### 1. Zillow extends rollout of its AI-led discovery feature
+    Key product continuation story.
+  daily_brief:
+    brief_id: daily__2026-04-08__telegram_digest
+    story_ids:
+      - story_zillow_ai_feature
+      - story_dubizzle_transactions_2026
+    top_story_ids:
+      - story_zillow_ai_feature
+      - story_dubizzle_transactions_2026
+    weak_signal_ids: []
+    story_cards:
+      - story_id: story_zillow_ai_feature
+        section: top_stories
+        title: Zillow extends rollout of its AI-led discovery feature
+      - story_id: story_dubizzle_transactions_2026
+        section: top_stories
+        title: Dubizzle deepens property transaction tooling in MENA
+  dropped_compact_artifacts: []
+
+expected:
+  qa_review_report_path: ./.state/reviews/2026-04-08/build_daily_digest__20260408T090000Z__telegram_digest__daily_digest.json
+  missed_signals:
+    - story_id: story_dubizzle_transactions_2026
+      reason: Present in kept story cards but absent from digest markdown.
+  duplication_risk: []
+  critical_findings_count: 1

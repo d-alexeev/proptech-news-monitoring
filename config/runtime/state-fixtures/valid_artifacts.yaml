@@ -93,6 +93,24 @@ artifacts:
     story_ids: [story_zillow_ai_feature]
     trend_ids: [trend_ai_search_adoption]
 
+  qa_review_report:
+    review_id: review_digest__20260408T092000Z__daily_digest
+    parent_run_id: build_daily_digest__20260408T070000Z__telegram_digest
+    review_kind: daily_digest
+    review_date: 2026-04-08
+    generated_at: 2026-04-08T09:20:00Z
+    target_digest_path: ./digests/2026-04-08-daily.md
+    target_brief_id: daily__2026-04-08__telegram_digest
+    missed_signals: []
+    duplication_risk: []
+    weak_reasoning: []
+    source_gaps: []
+    next_run_recommendations:
+      - Keep source-status notes compact unless the day is empty.
+    critical_findings_count: 0
+    warning_findings_count: 0
+    summary: No critical QA findings.
+
   run_manifest:
     run_id: monitor_sources__20260408T060000Z__daily_core
     mode: monitor_sources

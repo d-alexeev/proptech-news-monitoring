@@ -41,6 +41,7 @@ files:
     scrape_and_enrich_output: ./config/runtime/mode-contracts/scrape_and_enrich_output.yaml
     build_daily_digest_selection: ./config/runtime/mode-contracts/build_daily_digest_selection.yaml
     build_daily_digest_rendering: ./config/runtime/mode-contracts/build_daily_digest_rendering.yaml
+    review_digest: ./config/runtime/mode-contracts/review_digest.yaml
   mode_fixtures:
     monitor_sources_shortlist: ./config/runtime/mode-fixtures/monitor_sources_shortlist.yaml
     monitor_sources_duplicate_story: ./config/runtime/mode-fixtures/monitor_sources_duplicate_story.yaml
@@ -53,5 +54,8 @@ files:
     build_daily_digest_contextual_continuation: ./config/runtime/mode-fixtures/build_daily_digest_contextual_continuation.yaml
     build_daily_digest_render_top_and_weak: ./config/runtime/mode-fixtures/build_daily_digest_render_top_and_weak.yaml
     build_daily_digest_parity_window: ./config/runtime/mode-fixtures/build_daily_digest_parity_window.yaml
+    review_digest_seeded_omission: ./config/runtime/mode-fixtures/review_digest_seeded_omission.yaml
+    review_digest_seeded_duplication: ./config/runtime/mode-fixtures/review_digest_seeded_duplication.yaml
+    review_digest_clean_case: ./config/runtime/mode-fixtures/review_digest_clean_case.yaml
   stakeholder_profiles_index: ./config/runtime/stakeholder-profiles/index.yaml
   stakeholder_profiles_dir: ./config/runtime/stakeholder-profiles
