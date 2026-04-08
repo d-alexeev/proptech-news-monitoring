@@ -38,7 +38,16 @@ artifacts:
     event_type: product_launch
     priority_score: 82
     confidence: 0.88
+    analyst_summary: Zillow launched a new AI-led discovery feature for home search.
+    why_it_matters: This changes search UX and can alter user intent capture.
+    avito_implication: Avito should watch conversational and intent-led discovery patterns.
     story_id: story_zillow_ai_feature
+    body_status: full
+    article_file: ./.state/articles/2026-04/2026-04-08_zillow-launches-example-product-feature.md
+    evidence_points:
+      - Zillow launched a new AI-led discovery feature in production.
+      - The feature reframes search around user intent rather than rigid filters.
+    source_quality: primary_source
 
   story_brief:
     story_id: story_zillow_ai_feature

@@ -1,0 +1,109 @@
+mode_id: scrape_and_enrich
+
+purpose:
+  - fetch article body content only for shortlisted items that passed the full-text gate
+  - normalize fetch outcomes into a compact downstream-ready enriched record
+  - capture evidence and story linkage without performing final digest selection
+
+depends_on:
+  full_text_gate_contract: ./config/runtime/mode-contracts/scrape_and_enrich_gate.yaml
+
+full_text_authority:
+  only_full_text_consumer_mode: scrape_and_enrich
+  forbidden_other_full_text_consumers:
+    - monitor_sources
+    - build_daily_digest
+    - build_weekly_digest
+    - review_digest
+    - breaking_alert
+    - stakeholder_fanout
+
+allowed_runtime_inputs:
+  - fetch queue derived from shortlisted_item[] only
+  - resolved adapter files from source_map
+  - shared briefs
+
+processing_stages:
+  - name: fetch_and_normalize_body
+    outputs:
+      - body_status
+      - article_file
+      - normalized_text_or_fallback
+  - name: extract_and_classify
+    outputs:
+      - companies
+      - regions
+      - topic_tags
+      - event_type
+      - source_quality
+  - name: score_and_summarize
+    outputs:
+      - priority_score
+      - confidence
+      - analyst_summary
+      - why_it_matters
+      - avito_implication
+  - name: evidence_and_story_update
+    outputs:
+      - evidence_points
+      - story_id
+      - story_brief updates
+
+body_status_policy:
+  full:
+    trigger: body text extracted and above the minimum useful-body threshold
+    confidence_range: [0.70, 1.00]
+    evidence_points_rule: 2_to_4_required
+    article_file_rule: non_null_required
+  snippet_fallback:
+    trigger: full body unavailable or below threshold, but snippet/open metadata still exists
+    confidence_range: [0.45, 0.69]
+    evidence_points_rule: 1_to_2_allowed
+    article_file_rule: non_null_preferred
+  paywall_stub:
+    trigger: paywall, access denial, or stub page without reliable body text
+    confidence_range: [0.20, 0.44]
+    evidence_points_rule: zero_required
+    article_file_rule: nullable
+
+downstream_required_enriched_fields:
+  - run_id
+  - source_id
+  - url
+  - canonical_url
+  - title
+  - published
+  - enriched_at
+  - companies
+  - regions
+  - topic_tags
+  - event_type
+  - priority_score
+  - confidence
+  - analyst_summary
+  - why_it_matters
+  - avito_implication
+  - story_id
+  - body_status
+  - article_file
+  - evidence_points
+  - source_quality
+
+output_contract:
+  enriched_shard:
+    schema: enriched_item[]
+    collection: enriched
+    path_template: ./.state/enriched/{run_date}/{run_id}.json
+  story_updates:
+    schema: story_brief
+    collection: stories
+    path_template: ./.state/stories/{first_seen_month}/{story_id}.json
+  run_manifest:
+    schema: run_manifest
+    collection: runs
+    path_template: ./.state/runs/{run_date}/{run_id}.json
+
+non_goals:
+  - no final story ranking
+  - no daily or weekly digest rendering
+  - no stakeholder personalization

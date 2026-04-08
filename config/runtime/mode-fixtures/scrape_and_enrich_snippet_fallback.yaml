@@ -1,0 +1,28 @@
+fixture_id: scrape_and_enrich_snippet_fallback
+mode_id: scrape_and_enrich
+
+inputs:
+  shortlisted_item:
+    run_id: scrape_and_enrich__20260408T061500Z__weekly_context
+    source_id: rightmove_ios
+    url: https://apps.apple.com/gb/app/rightmove-property-search/id323822803
+    canonical_url: https://apps.apple.com/gb/app/rightmove-property-search/id323822803
+    title: Rightmove iOS update
+    published: 2026-04-08
+    raw_snippet: Version 10.39 improves saved search flows and list-management UX.
+    triage_decision: shortlist
+    fetch_strategy: itunes_api
+  fetch_result:
+    body_word_count: 42
+    article_file: ./.state/articles/2026-04/2026-04-08_rightmove-ios-update.md
+    source_quality: mobile_store
+
+expected:
+  enriched_item:
+    body_status: snippet_fallback
+    article_file: ./.state/articles/2026-04/2026-04-08_rightmove-ios-update.md
+    evidence_points:
+      - Version 10.39 updates saved-search and list-management flows.
+    confidence: 0.57
+    source_quality: mobile_store
+    story_id: story_rightmove_ios_20260408

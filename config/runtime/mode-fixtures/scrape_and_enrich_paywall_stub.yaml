@@ -1,0 +1,28 @@
+fixture_id: scrape_and_enrich_paywall_stub
+mode_id: scrape_and_enrich
+
+inputs:
+  shortlisted_item:
+    run_id: scrape_and_enrich__20260408T061500Z__weekly_context
+    source_id: inman_tech_innovation
+    url: https://www.inman.com/2026/04/08/example-paywalled-story/
+    canonical_url: https://www.inman.com/2026/04/08/example-paywalled-story/
+    title: Example paywalled proptech analysis
+    published: 2026-04-08
+    raw_snippet: Short teaser text only.
+    triage_decision: shortlist
+    fetch_strategy: rss
+  fetch_result:
+    status: paywall_or_stub
+    body_word_count: 0
+    article_file:
+    source_quality: trade_media
+
+expected:
+  enriched_item:
+    body_status: paywall_stub
+    article_file:
+    evidence_points: []
+    confidence: 0.32
+    source_quality: trade_media
+    story_id: story_example_paywalled_proptech_analysis

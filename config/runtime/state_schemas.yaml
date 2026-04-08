@@ -114,9 +114,6 @@ artifacts:
         type: integer
       - name: confidence
         type: float
-    optional_fields:
-      - name: raw_snippet
-        type: string
       - name: analyst_summary
         type: string
       - name: why_it_matters
@@ -126,17 +123,21 @@ artifacts:
       - name: story_id
         type: string
       - name: body_status
-        type: string
+        type: enum[full,snippet_fallback,paywall_stub]
       - name: article_file
-        type: string
+        type: string_or_null
       - name: evidence_points
         type: list[string]
       - name: source_quality
+        type: enum[primary_source,industry_analysis,expert_analysis,trade_media,behavioral_signal,mobile_store,manual_blocked]
+    optional_fields:
+      - name: raw_snippet
         type: string
       - name: stakeholder_scores
         type: map
     notes:
-      - full-text-specific optional fields are reserved here and will be finalised later with the enrichment milestone
+      - enriched_item is the compact downstream-ready record for daily, weekly, and alert modes
+      - confidence policy and evidence cardinality are defined in config/runtime/mode-contracts/scrape_and_enrich_output.yaml
 
   story_brief:
     shard_collection: stories

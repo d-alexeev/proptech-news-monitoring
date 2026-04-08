@@ -1,0 +1,29 @@
+fixture_id: scrape_and_enrich_full_body
+mode_id: scrape_and_enrich
+
+inputs:
+  shortlisted_item:
+    run_id: scrape_and_enrich__20260408T061500Z__daily_core
+    source_id: zillow_newsroom
+    url: https://www.zillow.com/news/example-product-feature/
+    canonical_url: https://www.zillow.com/news/example-product-feature/
+    title: Zillow launches example product feature
+    published: 2026-04-08
+    triage_decision: shortlist
+    fetch_strategy: html_scrape
+  fetch_result:
+    body_word_count: 640
+    article_file: ./.state/articles/2026-04/2026-04-08_zillow-launches-example-product-feature.md
+    source_quality: primary_source
+
+expected:
+  enriched_item:
+    body_status: full
+    article_file: ./.state/articles/2026-04/2026-04-08_zillow-launches-example-product-feature.md
+    evidence_points:
+      - Zillow launched a new AI-led discovery feature in production.
+      - The feature reframes search around user intent rather than filters.
+      - Zillow positions the change as reducing decision friction for buyers.
+    confidence: 0.88
+    source_quality: primary_source
+    story_id: story_zillow_ai_feature
