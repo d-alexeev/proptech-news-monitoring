@@ -1,0 +1,48 @@
+fixture_id: build_daily_digest_contextual_continuation
+mode_id: build_daily_digest
+
+inputs:
+  run_id: build_daily_digest__20260408T090000Z__telegram_digest
+  digest_date: 2026-04-08
+  delivery_profile: telegram_digest
+  enriched_items:
+    - story_id: story_zillow_ai_feature
+      canonical_url: https://www.zillow.com/news/example-product-feature/
+      title: Zillow extends rollout of its AI-led discovery feature
+      published: 2026-04-08
+      priority_score: 84
+      confidence: 0.87
+      source_quality: primary_source
+      event_type: rollout_update
+      why_it_matters: The update extends a live product shift already tracked earlier in the week.
+      analyst_summary: Zillow moved from launch messaging to rollout detail and operator impact.
+      avito_implication: Platform search changes should be tracked as a continuing product thesis, not a disconnected headline.
+      story_id_confirmed: true
+  story_briefs:
+    - story_id: story_zillow_ai_feature
+      title_snapshot: Zillow launches example product feature
+      last_seen: 2026-04-08
+      topic_tags: [search, ai, buyer_experience]
+      latest_priority_score: 84
+      last_digest_refs: [daily__2026-04-07__telegram_digest]
+      summary_line: Zillow previously introduced the AI-led discovery feature as a launch story.
+  recent_daily_briefs:
+    - brief_id: daily__2026-04-07__telegram_digest
+      digest_date: 2026-04-07
+      story_ids: [story_zillow_ai_feature]
+      top_story_ids: [story_zillow_ai_feature]
+      weak_signal_ids: []
+      context_refs: [daily__2026-04-03__telegram_digest]
+      selection_notes:
+        - Zillow AI feature entered the digest as a launch story.
+
+expected:
+  selected_story_ids:
+    - story_zillow_ai_feature
+  top_story_ids:
+    - story_zillow_ai_feature
+  weak_signal_ids: []
+  context_refs:
+    - daily__2026-04-07__telegram_digest
+  selection_notes:
+    - story_zillow_ai_feature kept as a contextual continuation using story_brief.last_digest_refs

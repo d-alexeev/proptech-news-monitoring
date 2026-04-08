@@ -1,0 +1,130 @@
+mode_id: build_daily_digest
+
+purpose:
+  - select daily top stories and weak signals from compact enriched artifacts
+  - suppress redundant repeats using recent daily briefs instead of full text
+  - attach contextual continuation from story briefs and compact archive refs before rendering
+
+depends_on:
+  upstream_enrichment_contract: ./config/runtime/mode-contracts/scrape_and_enrich_output.yaml
+  state_layout: ./config/runtime/state_layout.yaml
+  state_schemas: ./config/runtime/state_schemas.yaml
+
+shared_context:
+  briefs:
+    - ./cowork/shared/mission_brief.md
+    - ./cowork/shared/taxonomy_and_scoring.md
+    - ./cowork/shared/contracts.md
+
+runtime_state_inputs:
+  enriched_items:
+    description: compact enriched items for the current digest window
+    allowed_fields:
+      - run_id
+      - source_id
+      - canonical_url
+      - title
+      - published
+      - companies
+      - topic_tags
+      - event_type
+      - priority_score
+      - confidence
+      - analyst_summary
+      - why_it_matters
+      - avito_implication
+      - story_id
+      - body_status
+      - evidence_points
+      - source_quality
+  story_briefs:
+    description: compact story memory used for contextualization and same-story linkage
+    max_lookback_days: 30
+    allowed_fields:
+      - story_id
+      - title_snapshot
+      - last_seen
+      - topic_tags
+      - latest_priority_score
+      - last_digest_refs
+      - summary_line
+  recent_daily_briefs:
+    description: compact digest memory used for anti-repeat decisions
+    max_lookback_days: 7
+    allowed_fields:
+      - brief_id
+      - digest_date
+      - story_ids
+      - top_story_ids
+      - weak_signal_ids
+      - context_refs
+      - selection_notes
+
+allowed_runtime_inputs:
+  - enriched items for the current digest window
+  - matching story briefs for candidate story IDs
+  - recent daily briefs for anti-repeat and continuity checks
+  - shared mission, taxonomy, and contract briefs
+
+forbidden_runtime_inputs:
+  - ./.state/raw/
+  - ./.state/shortlists/
+  - ./.state/articles/
+  - digest markdown archive
+  - full article bodies
+  - README
+  - docs/*
+  - benchmark/*
+  - stakeholder profiles
+
+selection_policy:
+  primary_ranking_fields:
+    - priority_score
+    - confidence
+    - source_quality
+    - why_it_matters
+  required_story_identity: story_id
+  compact_artifact_only: true
+
+anti_repeat_policy:
+  exact_story_repeat:
+    lookup_source: recent_daily_briefs.story_ids
+    default_action: suppress_or_downgrade
+    allowed_override: materially_new_development
+  prior_top_story_repeat:
+    lookup_source: recent_daily_briefs.top_story_ids
+    default_action: context_only_or_drop
+  material_change_signals:
+    - event_type changed
+    - priority_score meaningfully increased
+    - new evidence points not reflected in recent daily briefs
+    - new source confirms or expands the same story
+
+contextualization_policy:
+  preferred_context_sources:
+    - story_briefs.last_digest_refs
+    - story_briefs.summary_line
+    - recent_daily_briefs.context_refs
+  context_output_fields:
+    - context_refs
+    - selection_notes
+  full_archive_access: forbidden
+  article_body_access: forbidden
+
+selection_stage_outputs:
+  selected_story_ids:
+    description: all stories kept for same-run rendering
+  top_story_ids:
+    description: stories promoted to top coverage
+  weak_signal_ids:
+    description: lower-priority stories retained as weak signals
+  context_refs:
+    description: compact archive references attached to continuation stories
+  selection_notes:
+    description: justification notes for anti-repeat and contextualization decisions
+
+non_goals:
+  - no markdown rendering
+  - no daily_brief emission
+  - no weekly trend synthesis
+  - no stakeholder personalization

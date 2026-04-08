@@ -1,0 +1,60 @@
+fixture_id: build_daily_digest_repeated_story
+mode_id: build_daily_digest
+
+inputs:
+  run_id: build_daily_digest__20260408T090000Z__telegram_digest
+  digest_date: 2026-04-08
+  delivery_profile: telegram_digest
+  enriched_items:
+    - story_id: story_rightmove_agent_lawsuit_2026
+      canonical_url: https://www.onlinemarketplaces.com/articles/rightmove-sued-for-1-5-billion/
+      title: Rightmove lawsuit receives another follow-up filing
+      published: 2026-04-08
+      priority_score: 72
+      confidence: 0.81
+      source_quality: trade_media
+      event_type: legal_follow_up
+      why_it_matters: Follow-up development on an already covered marketplace conflict.
+      analyst_summary: A new filing extends the same Rightmove lawsuit story.
+      avito_implication: Competitive marketplace disputes remain relevant, but this is not a fresh category-level signal.
+      story_id_confirmed: true
+    - story_id: story_zillow_rentals_bundle_2026
+      canonical_url: https://www.zillow.com/news/example-rentals-bundle/
+      title: Zillow expands bundled rentals tools
+      published: 2026-04-08
+      priority_score: 86
+      confidence: 0.89
+      source_quality: primary_source
+      event_type: product_launch
+      why_it_matters: Product bundling changes buyer and renter workflow economics.
+      analyst_summary: Zillow is packaging more rentals workflow steps into one operator surface.
+      avito_implication: Bundled operator tooling is strategically relevant for Avito-like platform experience.
+      story_id_confirmed: true
+  story_briefs:
+    - story_id: story_rightmove_agent_lawsuit_2026
+      title_snapshot: Rightmove sued for £1.5 billion
+      last_seen: 2026-04-07
+      topic_tags: [agent_relations, regulation]
+      latest_priority_score: 74
+      last_digest_refs: [daily__2026-04-07__telegram_digest]
+      summary_line: The Rightmove lawsuit story was already covered as a major UK marketplace conflict.
+  recent_daily_briefs:
+    - brief_id: daily__2026-04-07__telegram_digest
+      digest_date: 2026-04-07
+      story_ids: [story_rightmove_agent_lawsuit_2026, story_zillow_search_update_2026]
+      top_story_ids: [story_rightmove_agent_lawsuit_2026]
+      weak_signal_ids: []
+      context_refs: [daily__2026-04-04__telegram_digest]
+      selection_notes:
+        - Rightmove lawsuit was already promoted as a top story on April 7.
+
+expected:
+  selected_story_ids:
+    - story_zillow_rentals_bundle_2026
+  top_story_ids:
+    - story_zillow_rentals_bundle_2026
+  weak_signal_ids: []
+  suppressed_story_ids:
+    - story_rightmove_agent_lawsuit_2026
+  selection_notes:
+    - story_rightmove_agent_lawsuit_2026 suppressed as a recent repeat from daily brief memory
