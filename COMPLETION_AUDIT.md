@@ -260,6 +260,69 @@
 
 - завершение artifact plan превратится в управляемое операционное решение
 
+### 6. Добавить workflow внешних change requests от запущенного агента
+
+Почему это актуально:
+
+- master source of truth для изменений должен оставаться в этом репозитории под контролем Codex и git;
+- агент, который реально запускается в другом месте, будет сталкиваться с operational failures, blocked sources, layout changes, anti-bot issues и находить workaround'ы;
+- если такой агент начнёт сам менять свои prompts/config локально, быстро появится drift между production runtime и version-controlled source of truth.
+
+Что нужно:
+
+- ввести отдельный artifact типа `change_request`, который агент формирует вместо самостоятельной правки runtime-файлов;
+- зафиксировать правило для external runner agent:
+  - не изменять prompts, adapters, config и contracts самостоятельно;
+  - при неудаче или найденном workaround создавать structured change request;
+- включить в change request обязательные поля:
+  - `request_id`
+  - `created_at`
+  - `mode`
+  - `stage`
+  - `source_id`
+  - `url`
+  - `failure_type`
+  - `symptoms`
+  - `suspected_cause`
+  - `workaround_found`
+  - `proposed_change_scope`
+  - `suggested_target_files`
+  - `tests_to_add`
+  - `evidence_refs`
+  - `severity`
+  - `status`
+- спроектировать canonical storage path, например:
+  - `./.state/change-requests/{request_date}/{request_id}.json`
+- отдельно определить Codex-side workflow:
+  - review incoming change request
+  - convert it into milestone-scoped plan
+  - decide whether to patch adapters, prompts, config, contracts, or tests
+  - commit the approved fix in this repository
+
+Какие файлы, скорее всего, придётся менять:
+
+- [`config/runtime/state_layout.yaml`](./config/runtime/state_layout.yaml)
+- [`config/runtime/state_schemas.yaml`](./config/runtime/state_schemas.yaml)
+- [`config/runtime/state-fixtures/valid_artifacts.yaml`](./config/runtime/state-fixtures/valid_artifacts.yaml)
+- [`cowork/shared/contracts.md`](./cowork/shared/contracts.md)
+- новый shared policy file, например `cowork/shared/change_request_policy.md`
+- mode prompts, где runner может сталкиваться с scrape/fetch/adapter failures
+- отдельный operator doc, например `docs/change-request-workflow.md`
+
+Какие тесты и fixtures понадобятся:
+
+- fixture на scrape failure с URL и workaround suggestion;
+- fixture на blocked/manual source, где change request обязателен;
+- fixture на adapter gap, где агент предлагает target files и tests to add;
+- guard test, что runtime mode не мутирует собственные prompt/config files;
+- validation, что Codex-side triage получает все обязательные поля.
+
+Результат:
+
+- production runtime остаётся наблюдателем и эскалатором проблем, но не источником truth;
+- все реальные fixes продолжают проходить через Codex, review и git history;
+- operational learning из внешнего запуска начинает попадать обратно в master repo в управляемом виде.
+
 ## Bottom Line
 
 Текущая ветка полностью закрывает исходный implementation plan из [`PLANS.md`](./PLANS.md).
