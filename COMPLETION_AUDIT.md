@@ -1,377 +1,445 @@
 # COMPLETION_AUDIT.md
 
-## Audit Scope
+## Scope
 
 Этот аудит сравнивает текущую ветку с исходным implementation plan из [`PLANS.md`](./PLANS.md).
 
-Источник истины для аудита:
+Аудит выполнен по состоянию на:
 
-- текущий `HEAD` commit `06568a5`;
-- текущий [`PLANS.md`](./PLANS.md) как план требований и milestone-статусов;
-- фактические файлы репозитория, включая:
-  - [`AGENTS.md`](./AGENTS.md)
-  - [`PLANS.md`](./PLANS.md)
-  - [`cowork/shared/*`](./cowork/shared)
-  - [`cowork/modes/*`](./cowork/modes)
+- `HEAD`: `1b4fbee` (`Define weekly trend synthesis contract`)
+- репозиторий: contract/config/prompt-oriented, практически без исполняемого кода
+
+Источники истины для аудита:
+
+- [`PLANS.md`](./PLANS.md)
+- runtime artifacts under [`config/runtime/`](./config/runtime)
+- runtime prompt pack under [`cowork/`](./cowork)
+- legacy docs and config:
   - [`README.md`](./README.md)
   - [`config/monitoring.yaml`](./config/monitoring.yaml)
   - [`config/stakeholders.yaml`](./config/stakeholders.yaml)
   - [`docs/runbook.md`](./docs/runbook.md)
   - [`docs/agent-spec.md`](./docs/agent-spec.md)
-  - existing runtime state under [`.state`](./.state)
+  - [`docs/rss-api-audit.md`](./docs/rss-api-audit.md)
+- existing digests under [`digests/`](./digests)
+- git history on the current branch
+
+## Status Model
+
+В этом аудите используется следующая интерпретация статусов:
+
+- `Fully implemented`:
+  требование реализовано на уровне repo artifacts, то есть в виде prompts/contracts/config/schemas/fixtures, и для него больше не остаётся незакрытого milestone внутри текущего плана.
+- `Partially implemented`:
+  в репозитории уже есть существенный artifact layer, но требование ещё не доведено до полной формы по плану или зависит от ещё не реализованных milestones.
+- `Not implemented`:
+  в репозитории нет достаточного artifact layer, чтобы считать требование реально введённым.
+
+Важно: `Fully implemented` в этом аудите означает завершённость на уровне артефактов и архитектурных контрактов внутри текущего плана. Это не то же самое, что end-to-end cutover старого пайплайна на новый runtime.
+
+## Overall Summary
+
+- Fully implemented requirements: `10 / 16`
+- Partially implemented requirements: `5 / 16`
+- Not implemented requirements: `1 / 16`
 
 Ключевой вывод:
 
-- `M0`, `M1`, `M2`, `M3` реально отражены в ветке;
-- репозиторий уже содержит planning scaffolding, git hygiene, committed `Claude Cowork` job matrix и runtime instruction-pack;
-- сама runtime-архитектура, contracts, state refactor и orchestration-слой ещё не реализованы.
-
-## Overall Status
-
-- Fully implemented requirements: `2 / 16`
-- Partially implemented requirements: `9 / 16`
-- Not implemented requirements: `5 / 16`
+- `M0-M15` действительно реализованы как planning/config/contract layer.
+- Основной архитектурный каркас уже собран: shared briefs, adapters, split runtime config, shard schemas, migration plan, mode contracts для `monitor_sources`, `scrape_and_enrich`, `build_daily_digest`, `review_digest`, `build_weekly_digest`.
+- Основные пробелы теперь сосредоточены в `breaking_alert`, `stakeholder_fanout`, compatibility bridge и regression gates.
+- Legacy docs всё ещё описывают старый pipeline как будто он остаётся текущим рабочим runtime.
 
 ## Requirement-by-Requirement Audit
 
 | Requirement | Status | Evidence | Notes |
 | --- | --- | --- | --- |
-| R1 | Partially implemented | [`cowork/modes/*`](./cowork/modes) задают allowed/forbidden inputs; shared runtime pack не тянет длинные docs. | Ограничения описаны на уровне prompt contracts, но ещё не enforced runtime-слоем. |
-| R2 | Partially implemented | В [`PLANS.md`](./PLANS.md) есть committed `Claude Cowork Job Matrix`; в [`cowork/modes/*`](./cowork/modes) есть mode prompts. | Нет реальных job definitions, runner wiring или scheduler-facing artifacts. |
-| R3 | Fully implemented | Есть [`cowork/shared/mission_brief.md`](./cowork/shared/mission_brief.md), [`cowork/shared/taxonomy_and_scoring.md`](./cowork/shared/taxonomy_and_scoring.md), [`cowork/shared/contracts.md`](./cowork/shared/contracts.md). | Shared runtime knowledge вынесено в компактный instruction-pack. |
-| R4 | Partially implemented | [`cowork/modes/scrape_and_enrich.md`](./cowork/modes/scrape_and_enrich.md) делает full text единственным primary input для этого режима; остальные mode prompts explicitly forbid article bodies. | Это пока declarative contract, а не фактически работающий pipeline boundary. |
-| R5 | Not implemented | `.state` всё ещё монолитный: `dedupe.json`, `delivery-log.json`, `raw/*.json`. | Sharded state layout не внедрён. |
-| R6 | Partially implemented | [`cowork/shared/contracts.md`](./cowork/shared/contracts.md) фиксирует canonical artifact names; `config/monitoring.yaml` уже содержит partial raw/enriched schema language. | Нет детализированных field-level schemas для `story_brief`, `daily_brief`, `weekly_brief`, `run_manifest`. |
-| R7 | Not implemented | Нет [`cowork/adapters/*`](./cowork). | Source-specific knowledge всё ещё живёт в comments config и больших docs. |
-| R8 | Partially implemented | Есть [`cowork/modes/monitor_sources.md`](./cowork/modes/monitor_sources.md) с purpose, inputs и explicit no-full-text rule. | Нет реального mode execution path и shortlist artifacts в новой архитектуре. |
-| R9 | Partially implemented | Есть [`cowork/modes/build_daily_digest.md`](./cowork/modes/build_daily_digest.md), который требует compact inputs only. | Нет фактической daily pipeline реализации на `enriched_item + story_brief + daily_brief`. |
-| R10 | Partially implemented | Есть [`cowork/modes/build_weekly_digest.md`](./cowork/modes/build_weekly_digest.md), который требует `daily_brief` / `weekly_brief`. | Нет рабочей weekly aggregation/synthesis реализации. |
-| R11 | Partially implemented | Есть [`cowork/modes/review_digest.md`](./cowork/modes/review_digest.md); раньше был только manual review doc. | Нет реального QA mode output contract и execution path. |
-| R12 | Partially implemented | `config/monitoring.yaml` already defines `breaking_alert`; есть [`cowork/modes/breaking_alert.md`](./cowork/modes/breaking_alert.md). | Нет рабочего standalone alert mode поверх compact artifacts. |
-| R13 | Partially implemented | Есть [`cowork/modes/stakeholder_fanout.md`](./cowork/modes/stakeholder_fanout.md), [`config/stakeholders.yaml`](./config/stakeholders.yaml), [`prompts/digest_personalizer.md`](./prompts/digest_personalizer.md). | Нет downstream execution path и brief-based personalization implementation. |
-| R14 | Partially implemented | В [`PLANS.md`](./PLANS.md) есть M7; в [`docs/runbook.md`](./docs/runbook.md) есть some migration notes for existing `.state`. | Нет actual migration/backfill/rollback assets for the refactor. |
-| R15 | Partially implemented | `benchmark/` datasets already exist; `PLANS.md` фиксирует regression milestone. | Нет regression harness, smoke subsets, explicit rollout gates. |
-| R16 | Fully implemented | Git repo initialized; `.gitignore` exists; baseline commit and follow-up commits exist; `PLANS.md` includes git usage rules. | Branch is ready for milestone-scoped work. |
+| `R1` | Partially implemented | [`cowork/modes/`](./cowork/modes), [`PLANS.md`](./PLANS.md), mode contracts under [`config/runtime/mode-contracts/`](./config/runtime/mode-contracts) | Все режимы имеют prompt-level allowed/forbidden inputs, но `breaking_alert` и `stakeholder_fanout` всё ещё без dedicated contracts/fixtures. |
+| `R2` | Partially implemented | Job matrix in [`PLANS.md`](./PLANS.md), schedules in [`config/runtime/schedule_bindings.yaml`](./config/runtime/schedule_bindings.yaml), mode prompts in [`cowork/modes/`](./cowork/modes) | Агент логически разложен на jobs, но runner-facing job definitions и contract coverage для всех jobs ещё не завершены. |
+| `R3` | Fully implemented | [`cowork/shared/mission_brief.md`](./cowork/shared/mission_brief.md), [`cowork/shared/taxonomy_and_scoring.md`](./cowork/shared/taxonomy_and_scoring.md), [`cowork/shared/contracts.md`](./cowork/shared/contracts.md) | Shared runtime knowledge вынесено в компактные shared briefs. |
+| `R4` | Fully implemented | [`config/runtime/mode-contracts/scrape_and_enrich_gate.yaml`](./config/runtime/mode-contracts/scrape_and_enrich_gate.yaml), [`config/runtime/mode-contracts/scrape_and_enrich_output.yaml`](./config/runtime/mode-contracts/scrape_and_enrich_output.yaml), downstream prompts in [`cowork/modes/`](./cowork/modes) | `scrape_and_enrich` объявлен единственным full-text consumer, downstream режимы запрещают `full article bodies` / `./.state/articles/`. |
+| `R5` | Partially implemented | [`config/runtime/state_layout.yaml`](./config/runtime/state_layout.yaml), [`config/runtime/state_schemas.yaml`](./config/runtime/state_schemas.yaml), [`config/runtime/migration_plan.md`](./config/runtime/migration_plan.md) | Sharded state спроектирован, но live critical path ещё не переключён и compatibility bridge ещё не реализован. |
+| `R6` | Fully implemented | [`config/runtime/state_schemas.yaml`](./config/runtime/state_schemas.yaml), [`config/runtime/state-fixtures/valid_artifacts.yaml`](./config/runtime/state-fixtures/valid_artifacts.yaml), [`config/runtime/state_layout.yaml`](./config/runtime/state_layout.yaml) | Основные handoff contracts заданы и покрыты fixture-level schemas. |
+| `R7` | Fully implemented | [`cowork/adapters/source_map.md`](./cowork/adapters/source_map.md), files under [`cowork/adapters/`](./cowork/adapters) | Source-specific knowledge вынесено в компактный adapter layer. |
+| `R8` | Fully implemented | [`config/runtime/mode-contracts/monitor_sources.yaml`](./config/runtime/mode-contracts/monitor_sources.yaml), fixtures under [`config/runtime/mode-fixtures/`](./config/runtime/mode-fixtures), [`cowork/modes/monitor_sources.md`](./cowork/modes/monitor_sources.md) | `monitor_sources` формализован как discovery/triage/shortlist mode без full text. |
+| `R9` | Fully implemented | [`config/runtime/mode-contracts/build_daily_digest_selection.yaml`](./config/runtime/mode-contracts/build_daily_digest_selection.yaml), [`config/runtime/mode-contracts/build_daily_digest_rendering.yaml`](./config/runtime/mode-contracts/build_daily_digest_rendering.yaml), daily fixtures | Daily path зафиксирован через compact artifacts only: selection, anti-repeat, contextualization, rendering, `daily_brief`. |
+| `R10` | Fully implemented | [`config/runtime/mode-contracts/build_weekly_digest_aggregation.yaml`](./config/runtime/mode-contracts/build_weekly_digest_aggregation.yaml), [`config/runtime/mode-contracts/build_weekly_digest_trends.yaml`](./config/runtime/mode-contracts/build_weekly_digest_trends.yaml), weekly fixtures | Weekly path зафиксирован через `daily_brief` + limited `weekly_brief` history, без raw/full-text/archive зависимости. |
+| `R11` | Fully implemented | [`config/runtime/mode-contracts/review_digest.yaml`](./config/runtime/mode-contracts/review_digest.yaml), [`config/runtime/state_schemas.yaml`](./config/runtime/state_schemas.yaml), review fixtures | Есть отдельный QA mode с собственным output artifact `qa_review_report`. |
+| `R12` | Partially implemented | [`cowork/modes/breaking_alert.md`](./cowork/modes/breaking_alert.md), [`config/runtime/schedule_bindings.yaml`](./config/runtime/schedule_bindings.yaml), job matrix in [`PLANS.md`](./PLANS.md) | Режим и расписание есть, `weekly_context` подключён в schedule, но mode contract и fixtures ещё отсутствуют. |
+| `R13` | Partially implemented | [`cowork/modes/stakeholder_fanout.md`](./cowork/modes/stakeholder_fanout.md), profiles under [`config/runtime/stakeholder-profiles/`](./config/runtime/stakeholder-profiles) | Profile layer вынесен, но нет explicit mode contract, fixtures и downstream proof-by-artifact. |
+| `R14` | Fully implemented | [`config/runtime/migration_plan.md`](./config/runtime/migration_plan.md), [`config/runtime/migration-fixtures/recent_runs.yaml`](./config/runtime/migration-fixtures/recent_runs.yaml), [`config/runtime/migration-fixtures/rollback_checklist.yaml`](./config/runtime/migration-fixtures/rollback_checklist.yaml) | Migration/backfill/rollback path оформлен как отдельный artifact set. |
+| `R15` | Not implemented | [`benchmark/`](./benchmark) exists, but no new regression harness artifacts under `config/runtime/` or rollout gates in plan execution outputs | `M19` полностью pending. JTBD smoke gates и cutover checklist ещё не введены как новые refactor artifacts. |
+| `R16` | Fully implemented | [`.gitignore`](./.gitignore), git history up to `1b4fbee`, git usage rules in [`PLANS.md`](./PLANS.md) | Milestone-scoped git workflow и базовая hygiene реально используются. |
 
 ## Fully Implemented Requirements
 
-### R3. Compact shared runtime briefs
+### `R3` — Compact shared runtime briefs
 
-Implemented evidence:
+Evidence:
 
-- shared runtime knowledge moved into:
-  - [`cowork/shared/mission_brief.md`](./cowork/shared/mission_brief.md)
-  - [`cowork/shared/taxonomy_and_scoring.md`](./cowork/shared/taxonomy_and_scoring.md)
-  - [`cowork/shared/contracts.md`](./cowork/shared/contracts.md)
-- mode prompts in [`cowork/modes/*`](./cowork/modes) are compact and reuse shared briefs instead of repeating long narrative context.
+- [`cowork/shared/mission_brief.md`](./cowork/shared/mission_brief.md)
+- [`cowork/shared/taxonomy_and_scoring.md`](./cowork/shared/taxonomy_and_scoring.md)
+- [`cowork/shared/contracts.md`](./cowork/shared/contracts.md)
 
-### R16. Git usage and hygiene
+Why it counts as fully implemented:
 
-Implemented evidence:
+- shared runtime knowledge больше не размазано только по старым docs/prompts;
+- canonical shared context вынесен в отдельный runtime-safe набор файлов.
 
-- repository is a git repo;
-- current branch exists (`main`);
-- commit history exists and is milestone-friendly;
-- [`.gitignore`](./.gitignore) excludes `.env`, `.state/`, `.DS_Store`, editor noise;
-- [`PLANS.md`](./PLANS.md) includes git usage rules and git bootstrap milestone.
+### `R4` — Full text isolated to `scrape_and_enrich`
+
+Evidence:
+
+- [`config/runtime/mode-contracts/scrape_and_enrich_gate.yaml`](./config/runtime/mode-contracts/scrape_and_enrich_gate.yaml)
+- [`config/runtime/mode-contracts/scrape_and_enrich_output.yaml`](./config/runtime/mode-contracts/scrape_and_enrich_output.yaml)
+- downstream mode prompts under [`cowork/modes/`](./cowork/modes)
+
+Why it counts as fully implemented:
+
+- full-text gate задан явно;
+- `scrape_and_enrich` объявлен единственным full-text consumer;
+- остальные режимы контрактно запрещают full article bodies и article archive.
+
+### `R6` — Explicit handoff contracts
+
+Evidence:
+
+- [`config/runtime/state_schemas.yaml`](./config/runtime/state_schemas.yaml)
+- [`config/runtime/state_layout.yaml`](./config/runtime/state_layout.yaml)
+- [`config/runtime/state-fixtures/valid_artifacts.yaml`](./config/runtime/state-fixtures/valid_artifacts.yaml)
+
+Why it counts as fully implemented:
+
+- все основные handoff artifacts из плана имеют schema-level contract;
+- producer/consumer ownership and shard rules уже заданы.
+
+### `R7` — Source adapter layer
+
+Evidence:
+
+- [`cowork/adapters/source_map.md`](./cowork/adapters/source_map.md)
+- adapter files under [`cowork/adapters/`](./cowork/adapters)
+
+Why it counts as fully implemented:
+
+- нестандартные источники вынесены в отдельные adapters;
+- source-specific knowledge больше не живёт только в больших legacy docs.
+
+### `R8` — `monitor_sources` without full text
+
+Evidence:
+
+- [`config/runtime/mode-contracts/monitor_sources.yaml`](./config/runtime/mode-contracts/monitor_sources.yaml)
+- [`config/runtime/mode-fixtures/monitor_sources_shortlist.yaml`](./config/runtime/mode-fixtures/monitor_sources_shortlist.yaml)
+- [`config/runtime/mode-fixtures/monitor_sources_duplicate_story.yaml`](./config/runtime/mode-fixtures/monitor_sources_duplicate_story.yaml)
+
+Why it counts as fully implemented:
+
+- discovery, triage, shortlist outputs и duplicate-linking уже formalized;
+- full text explicitly forbidden in this mode.
+
+### `R9` — Daily digest from compact artifacts only
+
+Evidence:
+
+- [`config/runtime/mode-contracts/build_daily_digest_selection.yaml`](./config/runtime/mode-contracts/build_daily_digest_selection.yaml)
+- [`config/runtime/mode-contracts/build_daily_digest_rendering.yaml`](./config/runtime/mode-contracts/build_daily_digest_rendering.yaml)
+- daily fixtures under [`config/runtime/mode-fixtures/`](./config/runtime/mode-fixtures)
+
+Why it counts as fully implemented:
+
+- daily path закрыт от selection до `daily_brief`;
+- anti-repeat, contextualization и rendering описаны без raw/full-text dependency.
+
+### `R10` — Weekly digest from daily/weekly briefs only
+
+Evidence:
+
+- [`config/runtime/mode-contracts/build_weekly_digest_aggregation.yaml`](./config/runtime/mode-contracts/build_weekly_digest_aggregation.yaml)
+- [`config/runtime/mode-contracts/build_weekly_digest_trends.yaml`](./config/runtime/mode-contracts/build_weekly_digest_trends.yaml)
+- weekly fixtures under [`config/runtime/mode-fixtures/`](./config/runtime/mode-fixtures)
+
+Why it counts as fully implemented:
+
+- weekly aggregation и trend synthesis ограничены `daily_brief` / bounded `weekly_brief`;
+- contract layer explicitly forbids raw/archive/full-text inputs.
+
+### `R11` — Separate `review_digest` QA mode
+
+Evidence:
+
+- [`config/runtime/mode-contracts/review_digest.yaml`](./config/runtime/mode-contracts/review_digest.yaml)
+- `qa_review_report` schema in [`config/runtime/state_schemas.yaml`](./config/runtime/state_schemas.yaml)
+- review fixtures under [`config/runtime/mode-fixtures/`](./config/runtime/mode-fixtures)
+
+Why it counts as fully implemented:
+
+- QA mode существует как отдельный runtime artifact path;
+- output сгруппирован по actionable QA categories, а не подменяет digest.
+
+### `R14` — Migration/backfill/rollback path
+
+Evidence:
+
+- [`config/runtime/migration_plan.md`](./config/runtime/migration_plan.md)
+- [`config/runtime/migration-fixtures/recent_runs.yaml`](./config/runtime/migration-fixtures/recent_runs.yaml)
+- [`config/runtime/migration-fixtures/rollback_checklist.yaml`](./config/runtime/migration-fixtures/rollback_checklist.yaml)
+
+Why it counts as fully implemented:
+
+- переходный путь задокументирован;
+- есть fixture-backed sample cases и rollback checklist.
+
+### `R16` — Git hygiene and milestone-scoped history
+
+Evidence:
+
+- [`.gitignore`](./.gitignore)
+- git history from `746cc2e` to `1b4fbee`
+- git usage rules in [`PLANS.md`](./PLANS.md)
+
+Why it counts as fully implemented:
+
+- git реально используется как основной review/rollback mechanism для refactor work.
 
 ## Partially Implemented Requirements
 
-### R1. Minimal runtime inputs per mode
+### `R1` — Minimal explicit runtime inputs for every mode
 
-What exists:
+Что уже есть:
 
-- allowed/forbidden inputs are explicitly documented in each file under [`cowork/modes/*`](./cowork/modes);
-- the new instruction-pack itself does not reference large docs or benchmark files directly.
+- job matrix в [`PLANS.md`](./PLANS.md);
+- prompt-level allowed/forbidden inputs у всех режимов в [`cowork/modes/`](./cowork/modes);
+- detailed contracts для `monitor_sources`, `scrape_and_enrich`, `build_daily_digest`, `review_digest`, `build_weekly_digest`.
 
-What is missing:
+Что ещё не хватает:
 
-- enforcement in actual runtime execution;
-- proof that the runner loads only those files;
-- artifact-level validation that forbidden inputs are excluded in practice.
+- dedicated contracts/fixtures для `breaking_alert` и `stakeholder_fanout`;
+- единообразного contract coverage для всех runtime modes.
 
-### R2. Separate `Claude Cowork` jobs
+### `R2` — Separate `Claude Cowork` jobs with explicit IO and schedules
 
-What exists:
+Что уже есть:
 
-- committed job matrix in [`PLANS.md`](./PLANS.md);
-- one prompt file per planned runtime mode under [`cowork/modes/*`](./cowork/modes).
+- job matrix in [`PLANS.md`](./PLANS.md);
+- schedules in [`config/runtime/schedule_bindings.yaml`](./config/runtime/schedule_bindings.yaml);
+- per-mode prompts in [`cowork/modes/`](./cowork/modes).
 
-What is missing:
+Что ещё не хватает:
 
-- real job definitions or runner wiring;
-- trigger implementation;
-- schedule binding to a `Claude Cowork` runner.
+- полного contract coverage для всех jobs;
+- runner-facing job definitions или эквивалентного artifact layer для `breaking_alert` и `stakeholder_fanout`.
 
-### R4. Full text isolated to `scrape_and_enrich`
+### `R5` — Sharded state on the critical path
 
-What exists:
+Что уже есть:
 
-- `scrape_and_enrich` is explicitly designated as the only mode allowed to treat full article text as primary input;
-- other mode prompts forbid full article bodies.
+- shard layout and schemas in [`config/runtime/state_layout.yaml`](./config/runtime/state_layout.yaml) and [`config/runtime/state_schemas.yaml`](./config/runtime/state_schemas.yaml);
+- migration plan exists.
 
-What is missing:
+Что ещё не хватает:
 
-- actual pipeline enforcement;
-- artifact contracts proving downstream modes can work without article bodies.
+- compatibility bridge из новых shards в legacy outputs;
+- artifact-level доказательства, что old monoliths больше не нужны live consumers;
+- cutover safety layer from `M18`.
 
-### R6. Handoff contracts
+### `R12` — Separate `breaking_alert` mode with `weekly_context`
 
-What exists:
+Что уже есть:
 
-- canonical artifact names in [`cowork/shared/contracts.md`](./cowork/shared/contracts.md);
-- partial schema language in [`config/monitoring.yaml`](./config/monitoring.yaml);
-- existing `story_id` linkage in current `.state`.
+- prompt under [`cowork/modes/breaking_alert.md`](./cowork/modes/breaking_alert.md);
+- schedule includes `weekly_context` in [`config/runtime/schedule_bindings.yaml`](./config/runtime/schedule_bindings.yaml).
 
-What is missing:
+Что ещё не хватает:
 
-- field-level schemas;
-- producer/consumer specificity;
-- concrete `run_manifest`, `story_brief`, `daily_brief`, `weekly_brief` shapes.
+- explicit mode contract;
+- fixtures for true positive, false positive, duplicate suppression;
+- output contract for alert payload.
 
-### R8. `monitor_sources`
+### `R13` — Downstream `stakeholder_fanout`
 
-What exists:
+Что уже есть:
 
-- a dedicated runtime mode prompt with no-full-text restriction and expected outputs.
+- prompt under [`cowork/modes/stakeholder_fanout.md`](./cowork/modes/stakeholder_fanout.md);
+- split profile configs under [`config/runtime/stakeholder-profiles/`](./config/runtime/stakeholder-profiles).
 
-What is missing:
+Что ещё не хватает:
 
-- actual `raw_candidate` / `shortlisted_item` emission path;
-- binding to source-group config and checkpoints in real execution.
-
-### R9. Daily digest on compact artifacts
-
-What exists:
-
-- dedicated daily mode prompt that limits inputs to compact artifacts.
-
-What is missing:
-
-- actual compact-artifact pipeline;
-- real `daily_brief`;
-- selection/context implementation over new artifacts.
-
-### R10. Weekly digest on daily/weekly briefs
-
-What exists:
-
-- dedicated weekly mode prompt built around `daily_brief` and `weekly_brief`.
-
-What is missing:
-
-- actual `daily_brief` / `weekly_brief` artifacts;
-- aggregation and trend synthesis implementation.
-
-### R11. `review_digest`
-
-What exists:
-
-- dedicated QA mode prompt;
-- legacy manual review material in [`docs/daily-digest-mechanism-review.md`](./docs/daily-digest-mechanism-review.md).
-
-What is missing:
-
-- execution path;
-- structured QA output artifact;
-- integration after daily/weekly generation.
-
-### R12. `breaking_alert`
-
-What exists:
-
-- config-level alert scheduling and threshold;
-- dedicated mode prompt.
-
-What is missing:
-
-- standalone execution path on compact artifacts;
-- suppression logic and alert payload generation in implemented form.
-
-### R13. `stakeholder_fanout`
-
-What exists:
-
-- dedicated downstream mode prompt;
-- stakeholder config and personalization prompt.
-
-What is missing:
-
-- execution path from `daily_brief` / `weekly_brief`;
-- one-profile-per-run implementation;
-- delivery or artifact generation in the new architecture.
-
-### R14. Migration / backfill / rollback
-
-What exists:
-
-- plan milestone;
-- some migration discussion in legacy runbook.
-
-What is missing:
-
-- actual migration assets;
-- backfill procedure tied to new contracts;
-- rollback artifact and cutover mechanics.
-
-### R15. Regression gates
-
-What exists:
-
-- benchmark datasets;
-- dedicated milestone in plan.
-
-What is missing:
-
-- runnable harness;
-- smoke subset definition;
-- explicit pass/fail rollout gates.
+- explicit mode contract;
+- profile-based fixtures;
+- artifact-level proof that fanout uses only `daily_brief` / `weekly_brief`.
 
 ## Not Implemented Requirements
 
-### R5. Sharded runtime state
+### `R15` — Regression gates and benchmark/smoke checks before cutover
 
-Not implemented because `.state` still uses the old monolithic structure and no new shard directories or contracts exist.
+Что уже есть:
 
-### R7. Source adapter pack
+- legacy benchmark materials under [`benchmark/`](./benchmark).
 
-Not implemented because there are no adapter files yet; source-specific operational logic still lives in config comments and large docs.
+Чего нет:
+
+- refactor-specific regression harness;
+- smoke subsets for `JTBD-06/07/08/09`;
+- cutover checklist as rollout gate artifact;
+- parity thresholds and failure policy.
+
+Итог:
+
+- `R15` остаётся полностью незавершённым и напрямую зависит от `M19`.
 
 ## Misleading Documentation and Status Claims
 
-### 1. `README.md` still suggests a runnable local `runner`, but no runner implementation exists in the repo
+### 1. [`README.md`](./README.md) описывает старый runtime как будто он всё ещё основной
 
-Evidence:
+Проблемы:
 
-- [`README.md`](./README.md) shows commands like `runner --config ...`;
-- the repository still contains no runner binary, wrapper, or runnable entrypoint.
+- называет [`config/monitoring.yaml`](./config/monitoring.yaml) “основным конфигом”, хотя canonical runtime source of truth уже перенесён в [`config/runtime/`](./config/runtime);
+- показывает запуск через `runner --config ...`, но `runner` в репозитории отсутствует;
+- описывает старую структуру `.state` с `dedupe.json` / `delivery-log.json` как центральную runtime-модель;
+- по-прежнему завязан на legacy `prompts/*`, а не на `cowork/shared/*` и `cowork/modes/*`.
 
-Why this is misleading:
+### 2. [`docs/runbook.md`](./docs/runbook.md) продолжает описывать legacy pipeline как текущий
 
-- after M2/M3 the repo now clearly looks like a prompt/runtime-architecture project, but the README still reads like an executable packaged service.
+Проблемы:
 
-Recommended correction:
+- использует `monitor-list.json` + [`config/monitoring.yaml`](./config/monitoring.yaml) как main runtime path;
+- описывает contextualization через `delivery-log.json + digests/` и `prompts/contextualizer.md`, что расходится с новой daily/weekly contract architecture;
+- многократно ссылается на `save_article.py`, которого в репозитории нет;
+- предполагает прямое обновление `dedupe.json`, хотя новое состояние уже спроектировано как shard-based.
 
-- either add the actual runner integration artifacts;
-- or rewrite the README to say these are expected runner interfaces, not bundled executables.
+### 3. [`docs/agent-spec.md`](./docs/agent-spec.md) смешивает старую и новую архитектуру
 
-### 2. `docs/runbook.md` and `docs/rss-api-audit.md` still reference `save_article.py`, but the file does not exist
+Проблемы:
 
-Evidence:
+- контекстуализация всё ещё описана через `delivery-log.json + digests/`;
+- weekly trends всё ещё привязаны к `prompts/trend_synthesizer.md` и полному архиву выпусков;
+- сущности данных и pipeline steps опираются на старый enrichment path и `monitoring.yaml`;
+- есть статусные утверждения вроде “alert mode — сконфигурирован” и “memory of previous sends — dedupe.json”, которые больше не соответствуют целевой архитектуре ветки.
 
-- both docs instruct the user to run `python3 save_article.py ...`;
-- `save_article.py` is absent from the repository.
+### 4. [`docs/rss-api-audit.md`](./docs/rss-api-audit.md) и related docs описывают несуществующий operational tooling
 
-Why this is misleading:
+Проблемы:
 
-- the docs imply a real helper script exists for article persistence.
+- содержат инструкции по `save_article.py`, которого нет;
+- предполагают, что `dedupe.json` остаётся рабочим местом записи для full-text metadata;
+- местами описывают old critical path как актуальный.
 
-Recommended correction:
+### 5. [`config/monitoring.yaml`](./config/monitoring.yaml) корректно помечен как legacy bridge, но всё ещё выглядит как “главный runtime-конфиг”
 
-- either add the script;
-- or replace those steps with the intended `Claude Cowork` / manual flow.
+Проблемы:
 
-### 3. `docs/agent-spec.md` claims the pipeline runs in production mode
+- внутри файла остаётся большой объём legacy runtime semantics;
+- без чтения [`config/runtime/runtime_manifest.yaml`](./config/runtime/runtime_manifest.yaml) легко ошибочно принять его за canonical source of truth.
 
-Evidence:
+### 6. Статус в [`PLANS.md`](./PLANS.md) может быть неверно интерпретирован
 
-- the document says: `Пайплайн запущен и работает в production-режиме`.
+Что именно может ввести в заблуждение:
 
-Why this is misleading:
+- `M0-M15 = completed` верно для contract/design-layer milestones;
+- это не означает, что branch уже содержит end-to-end cutover старого пайплайна на новый runtime;
+- без явной оговорки читатель может решить, что operational implementation почти завершена, хотя `M16-M19` и docs-alignment ещё не сделаны.
 
-- this branch does not yet contain the implemented `Claude Cowork` refactor;
-- it contains plans and runtime prompts, but not the actual new orchestration or state model.
+Итог:
 
-Recommended correction:
-
-- distinguish clearly between legacy/manual operation and implemented refactor state on this branch.
-
-### 4. Old `Cowork` terminology still exists in legacy docs
-
-Evidence:
-
-- several docs still refer to `Cowork` rather than `Claude Cowork`.
-
-Why this is misleading:
-
-- the branch now explicitly names the target runner as `Claude Cowork` in [`AGENTS.md`](./AGENTS.md), [`PLANS.md`](./PLANS.md), and the new instruction-pack;
-- the mixed terminology makes it unclear whether the docs refer to the same execution environment.
-
-Recommended correction:
-
-- normalize naming in legacy docs where the intended runner is the same system.
-
-### 5. `PLANS.md` program-level acceptance criteria still read like current-state facts
-
-Why this is misleading:
-
-- many bullets in `Program-Level Acceptance Criteria` describe the target architecture, not the current implemented branch state.
-- after M2/M3 this is less misleading than before, but still not fully accurate.
-
-Recommended correction:
-
-- label them explicitly as target-state acceptance criteria for the full refactor.
+- главный риск сейчас не в отсутствии артефактов, а в том, что legacy docs создают ложную картину “старый pipeline всё ещё canonical”.
 
 ## Exact Next Tasks Needed for Full Completion
 
-### Immediate next milestone tasks
+### 1. Implement `M16` — `breaking_alert`
 
-1. Implement `M4`: create [`cowork/adapters/*`](./cowork) and extract source-specific operational knowledge from:
-   - [`docs/rss-api-audit.md`](./docs/rss-api-audit.md)
-   - [`docs/runbook.md`](./docs/runbook.md)
-   - relevant comments in [`config/monitoring.yaml`](./config/monitoring.yaml)
-2. Define source-to-adapter mapping and make it reviewable as a compact runtime asset.
+Нужно добавить:
 
-### Core architecture tasks still required
+- [`config/runtime/mode-contracts/breaking_alert.yaml`](./config/runtime/mode-contracts)
+- fixtures:
+  - true positive high-signal from `weekly_context`
+  - false positive high-score but not breaking
+  - duplicate follow-up suppression
+- manifest linkage in [`config/runtime/runtime_manifest.yaml`](./config/runtime/runtime_manifest.yaml)
+- prompt sync in [`cowork/modes/breaking_alert.md`](./cowork/modes/breaking_alert.md)
 
-3. Implement `M5`: split runtime config into smaller runtime source-of-truth artifacts.
-4. Implement `M6`: define and add detailed field-level schemas plus sharded state layout.
-5. Implement `M7`: add migration, backfill, and rollback artifacts for the state refactor.
-6. Implement `M8`: create actual `monitor_sources` execution contract and outputs.
-7. Implement `M9`: enforce full-text gating only after shortlist and wire adapter resolution.
-8. Implement `M10`: create actual `scrape_and_enrich` outputs, including `evidence_points`, `body_status`, `article_file`, and updated story memory.
-9. Implement `M11`: implement daily selection, anti-repeat, and contextualization on compact artifacts.
-10. Implement `M12`: emit real daily markdown digest plus structured `daily_brief`.
-11. Implement `M13`: implement the standalone `review_digest` QA flow.
-12. Implement `M14`: implement weekly aggregation from `daily_brief`.
-13. Implement `M15`: implement weekly trend synthesis and `weekly_brief`.
-14. Implement `M16`: implement standalone `breaking_alert`.
-15. Implement `M17`: implement downstream `stakeholder_fanout`.
-16. Implement `M18`: add compatibility exports from new shards to old stores.
-17. Implement `M19`: add regression harness, smoke subsets, parity checks, and cutover gates.
+Критерий завершения:
 
-### Documentation correction tasks still required
+- `R12` становится fully implemented.
 
-18. Update [`README.md`](./README.md) to clarify that `runner --config ...` is an expected interface, not a repo-provided binary, unless such a binary is added.
-19. Update [`docs/runbook.md`](./docs/runbook.md) and [`docs/rss-api-audit.md`](./docs/rss-api-audit.md) to remove or replace missing `save_article.py` references unless the script is added.
-20. Update legacy docs to normalize `Cowork` vs `Claude Cowork` naming where they refer to the same runner.
-21. Update [`docs/agent-spec.md`](./docs/agent-spec.md) to distinguish:
-   - legacy/manual operation;
-   - planned refactor architecture;
-   - actually implemented branch state.
+### 2. Implement `M17` — `stakeholder_fanout`
 
-## Final Assessment
+Нужно добавить:
 
-Current branch is no longer just a planning baseline.
+- [`config/runtime/mode-contracts/stakeholder_fanout.yaml`](./config/runtime/mode-contracts)
+- fixtures:
+  - product vs strategy differentiation
+  - one-profile-per-run validation
+  - no raw/full-text guard
+- manifest linkage
+- prompt sync in [`cowork/modes/stakeholder_fanout.md`](./cowork/modes/stakeholder_fanout.md)
 
-What is genuinely implemented now:
+Критерий завершения:
 
-- git bootstrap and repo hygiene;
-- milestone discipline in `PLANS.md`;
-- committed `Claude Cowork` job matrix;
-- compact shared runtime briefs;
-- compact per-mode runtime prompt skeletons.
+- `R13` становится fully implemented;
+- `R1` и `R2` продвигаются к полному покрытию всех runtime modes.
 
-What is still not implemented:
+### 3. Implement `M18` — Legacy Exports and Compatibility Bridge
 
-- source adapter layer;
-- split runtime config;
-- sharded state;
-- migration path;
-- real compact-artifact pipeline for daily/weekly/review/alert/personalization;
-- regression and rollout machinery.
+Нужно добавить:
 
-In short:
+- explicit export contracts from shard-era artifacts to legacy `dedupe.json` and `delivery-log.json`
+- parity fixtures for one daily and one weekly window
+- compatibility notes for old consumers
 
-- the branch now contains the first real implementation layer of the refactor: runtime instruction architecture;
-- it does not yet contain the operational runtime system that those instructions describe.
+Критерий завершения:
+
+- `R5` становится fully implemented;
+- появляется доказуемый bridge between new shards and old readers.
+
+### 4. Implement `M19` — Regression Harness and Rollout Gates
+
+Нужно добавить:
+
+- smoke subsets for `JTBD-06`, `JTBD-07`, `JTBD-08`, `JTBD-09`
+- parity window definition
+- failure thresholds
+- rollout/cutover checklist
+
+Критерий завершения:
+
+- `R15` становится fully implemented.
+
+### 5. Do a docs-alignment pass immediately after `M16-M19`
+
+Нужно обновить как минимум:
+
+- [`README.md`](./README.md)
+- [`docs/runbook.md`](./docs/runbook.md)
+- [`docs/agent-spec.md`](./docs/agent-spec.md)
+- [`docs/rss-api-audit.md`](./docs/rss-api-audit.md)
+- при необходимости comments in [`config/monitoring.yaml`](./config/monitoring.yaml) and [`config/stakeholders.yaml`](./config/stakeholders.yaml)
+
+Что именно исправить:
+
+- убрать ссылки на отсутствующий `runner`;
+- убрать ссылки на отсутствующий `save_article.py`;
+- явно пометить legacy docs как legacy, если они не переписываются полностью;
+- перенести описание canonical runtime на `config/runtime/*` and `cowork/*`.
+
+### 6. Refresh the completion audit after `M16-M19`
+
+Нужно повторно проверить:
+
+- статусы `R1`, `R2`, `R5`, `R12`, `R13`, `R15`;
+- соответствие docs новому runtime;
+- чистоту branch state и корректность финального milestone coverage.
+
+## Final Audit Verdict
+
+Текущая ветка уже закрывает большую часть архитектурного refactor plan на уровне артефактов:
+
+- shared runtime briefs, adapters, split config, shard schemas, migration path, daily/weekly/review contracts уже есть;
+- старый монолитный pipeline больше не является единственной описанной архитектурой;
+- `M16-M19` остаются последним обязательным блоком до полного завершения плана.
+
+Но ветка ещё не должна считаться полностью завершённой:
+
+- `breaking_alert` и `stakeholder_fanout` остаются без полного contract/fixture слоя;
+- compatibility bridge и regression gates не реализованы;
+- legacy docs пока сильно отстают от фактического состояния refactor branch.
