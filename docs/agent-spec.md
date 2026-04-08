@@ -1,5 +1,21 @@
 # Спецификация агента
 
+> Legacy detailed specification.
+>
+> Этот документ полезен как расширенный business/context reference, но он не
+> является canonical entrypoint для текущего runtime-дизайна.
+>
+> Current canonical docs:
+>
+> - [config/runtime/runtime_manifest.yaml](../config/runtime/runtime_manifest.yaml)
+> - [docs/runtime-architecture.md](./runtime-architecture.md)
+> - [docs/mode-catalog.md](./mode-catalog.md)
+> - [docs/launch-rerun-dry-run.md](./launch-rerun-dry-run.md)
+>
+> Ссылки на `monitor-list.json`, `config/monitoring.yaml`, legacy `prompts/` и
+> старый pipeline-path ниже должны трактоваться как historical or compatibility
+> reference.
+
 ## 1. Задача агента
 
 Агент мониторит мировой рынок proptech и выдает краткую, полезную для бизнеса сводку. Приоритет отдается не "интересным" новостям, а тем сигналам, которые могут:

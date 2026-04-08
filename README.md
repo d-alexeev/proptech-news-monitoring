@@ -99,7 +99,7 @@ Policy и workflow:
 | [docs/launch-rerun-dry-run.md](./docs/launch-rerun-dry-run.md) | Canonical reference по schedules, manual reruns и regression/parity dry-runs |
 | [cowork/](./cowork) | Canonical runtime instructions: shared briefs, modes and adapters |
 | [docs/agent-spec.md](./docs/agent-spec.md) | Legacy detailed spec; useful as reference, but not current canonical runtime layer |
-| [docs/runbook.md](./docs/runbook.md) | Legacy operator/runbook reference; launch/rerun alignment продолжается отдельно |
+| [docs/runbook.md](./docs/runbook.md) | Legacy operator reference; current launch docs are in `docs/launch-rerun-dry-run.md` |
 | [docs/llm-jtbd-analysis.md](./docs/llm-jtbd-analysis.md) | Каталог LLM-задач (JTBD) |
 | [docs/rss-api-audit.md](./docs/rss-api-audit.md) | Legacy source audit reference |
 | [benchmark/README.md](benchmark/README.md) | LLM benchmark: метрики и инструкция |

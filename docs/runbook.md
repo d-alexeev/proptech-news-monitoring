@@ -1,9 +1,23 @@
 # Runbook
 
+> Legacy / compatibility reference.
+>
+> Этот файл сохранён как операторский reference для старого и переходного
+> pipeline-path, но не является canonical описанием текущего runtime-дизайна.
+>
+> Current canonical docs:
+>
+> - [config/runtime/runtime_manifest.yaml](../config/runtime/runtime_manifest.yaml)
+> - [docs/runtime-architecture.md](./runtime-architecture.md)
+> - [docs/mode-catalog.md](./mode-catalog.md)
+> - [docs/launch-rerun-dry-run.md](./launch-rerun-dry-run.md)
+>
+> Legacy команды и поля ниже должны читаться только как compatibility reference.
+
 ## Что уже готово
 
 - Полный реестр источников: [monitor-list.json](../monitor-list.json)
-- Боевой конфиг мониторинга: [config/monitoring.yaml](../config/monitoring.yaml)
+- Legacy aggregate config: [config/monitoring.yaml](../config/monitoring.yaml)
 - Шаблон переменных окружения: [.env.example](../.env.example)
 
 ## Как использовать
@@ -13,7 +27,7 @@
    - `TELEGRAM_BOT_TOKEN`
    - `TELEGRAM_CHAT_ID`
    - `TELEGRAM_MESSAGE_THREAD_ID`, если канал использует тему
-2. Использовать [config/monitoring.yaml](../config/monitoring.yaml) как главный runtime-конфиг агента.
+2. Для legacy compatibility path использовать [config/monitoring.yaml](../config/monitoring.yaml) только как aggregate reference, а не как current canonical runtime layer.
 3. Для ежедневной сводки запускать группу `daily_core`.
 4. Для weekly digest запускать `daily_core` и `weekly_context`.
 5. Для alert-режима проверять `daily_core` каждый час и отправлять сообщение, если `priority_score >= 85`.
@@ -36,9 +50,9 @@
 9. Если `pipeline.stakeholder_personalization.enabled = true`: запустить персонализацию (см. раздел ниже).
 10. Отправить итог через `delivery.telegram_profiles.*`.
 
-## Ручной прогон и Cowork как раннер
+## Ручной прогон и Cowork как legacy reference
 
-Если pipeline запускается вручную или через Cowork (без автоматического раннера), следовать тому же порядку шагов явно:
+Если pipeline запускается вручную или через Cowork в legacy/manual режиме, следовать тому же порядку шагов явно. Для current-state launch mappings использовать [docs/launch-rerun-dry-run.md](./launch-rerun-dry-run.md).
 
 **Шаг 4 — семантическая дедупликация.** Для каждого candidate item, прошедшего URL-фильтр, подать в `semantic_deduplicator.md`:
 ```
@@ -82,13 +96,15 @@ previous_weeks_articles: содержимое digests/ за последние 4
 - Если сводка уходит в topic/thread, передавай `message_thread_id`.
 - В конфиге уже включено разбиение длинных digest-сообщений на несколько частей.
 
-## Минимальный интерфейс раннера
+## Legacy runner interface reference
 
-Раннеру достаточно поддержать три аргумента:
+В старом wrapper path раннеру было достаточно поддержать три аргумента:
 
-- `--config config/monitoring.yaml`
+- `--config <legacy aggregate config path>`
 - `--schedule weekday_digest | weekly_digest | breaking_alert`
 - `--dry-run`
+
+Current-state canonical launch behavior задаётся через [config/runtime/schedule_bindings.yaml](../config/runtime/schedule_bindings.yaml) и [docs/launch-rerun-dry-run.md](./launch-rerun-dry-run.md), а не через этот legacy интерфейс как source-of-truth.
 
 ## Хранение полных текстов статей
 
@@ -142,7 +158,7 @@ Full article text here...
 - **`skip_if_paywall: true`** — если вернулось < `min_body_words` (150) слов: сохранить только frontmatter + однострочное сообщение `> ⚠️ Paywall or stub — full text not available.`
 - **Поле `article_file`** в `dedupe.json` — относительный путь к файлу, добавляется после успешного сохранения.
 
-### Ручной прогон (Cowork)
+### Ручной прогон (Cowork, legacy/manual reference)
 
 При ручном запуске через Cowork:
 

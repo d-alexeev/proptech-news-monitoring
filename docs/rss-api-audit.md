@@ -1,5 +1,20 @@
 # RSS / API Audit — PropTech Monitor Sources
 
+> Legacy source-audit reference.
+>
+> Этот документ фиксирует результаты ручного source audit и compatibility notes,
+> но не заменяет current canonical runtime layer.
+>
+> Current canonical source-of-truth for active source behavior:
+>
+> - [config/runtime/runtime_manifest.yaml](../config/runtime/runtime_manifest.yaml)
+> - [config/runtime/source-groups/daily_core.yaml](../config/runtime/source-groups/daily_core.yaml)
+> - [config/runtime/source-groups/weekly_context.yaml](../config/runtime/source-groups/weekly_context.yaml)
+> - [cowork/adapters/](../cowork/adapters)
+>
+> Поля и рекомендации ниже нужно читать как audit/reference surface, а не как
+> единственное текущее описание runtime-конфигурации.
+
 **Проведено:** 2026-04-05 (обновлено 2026-04-07)
 **Метод проверки:** Chrome navigation + read_page (accessibility tree) + JavaScript DOM inspection
 **Итог:** 7 подтверждённых RSS-фидов, 2 iTunes API, 1 html_scrape (Python), 1 Supabase API (Chrome JS), 7 источников только через Chrome, 1 заблокирован sandbox'ом.
