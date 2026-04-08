@@ -1,0 +1,25 @@
+fixture_id: build_weekly_digest_short_history
+mode_id: build_weekly_digest
+
+inputs:
+  run_id: build_weekly_digest__20260410T170000Z__telegram_weekly_digest
+  week_id: 2026-W15
+  run_date: 2026-04-10
+  weekly_delivery_profile: telegram_weekly_digest
+  weekday_delivery_profile: telegram_digest
+  current_week_daily_briefs:
+    - ./.state/briefs/daily/2026-04-06__telegram_digest.json
+    - ./.state/briefs/daily/2026-04-07__telegram_digest.json
+    - ./.state/briefs/daily/2026-04-08__telegram_digest.json
+  prior_weekly_briefs:
+    - ./.state/briefs/weekly/2026-W14__telegram_weekly_digest.json
+
+expected:
+  included_daily_brief_paths:
+    - ./.state/briefs/daily/2026-04-06__telegram_digest.json
+    - ./.state/briefs/daily/2026-04-07__telegram_digest.json
+    - ./.state/briefs/daily/2026-04-08__telegram_digest.json
+  included_daily_brief_count: 3
+  short_history_mode: true
+  aggregation_notes:
+    - Proceed with reduced daily brief set when fewer than five daily briefs are available in the target week.

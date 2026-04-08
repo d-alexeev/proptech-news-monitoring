@@ -1,0 +1,66 @@
+mode_id: build_weekly_digest
+
+purpose:
+  - build the weekly input set from current-week daily briefs
+  - load only limited prior weekly memory for continuity
+  - prepare an ordered aggregation package before trend synthesis and final weekly rendering
+
+depends_on:
+  daily_rendering_contract: ./config/runtime/mode-contracts/build_daily_digest_rendering.yaml
+  schedule_bindings: ./config/runtime/schedule_bindings.yaml
+  state_layout: ./config/runtime/state_layout.yaml
+  state_schemas: ./config/runtime/state_schemas.yaml
+
+allowed_runtime_inputs:
+  - current-week daily_brief files for the target ISO week
+  - limited prior weekly_brief history
+  - weekly and weekday delivery profile bindings from schedule config
+  - shared mission, taxonomy, and contract briefs
+
+forbidden_runtime_inputs:
+  - ./.state/raw/
+  - ./.state/shortlists/
+  - ./.state/enriched/
+  - ./.state/articles/
+  - raw candidates
+  - full article bodies
+  - full digest archive
+  - stakeholder profiles
+  - README
+  - docs/*
+  - benchmark/*
+
+weekly_window_policy:
+  target_week_id_source: explicit input week_id
+  daily_brief_inclusion_rule: include daily_brief only if digest_date belongs to target ISO week
+  daily_brief_profile_rule: include only weekday digest delivery profile from schedule bindings
+  run_cutoff_rule: include only daily_brief with digest_date less than or equal to the weekly run date
+  ordering_rule: sort included daily_brief files by digest_date ascending
+  max_daily_briefs: 7
+
+limited_history_policy:
+  prior_weekly_brief_profile_rule: include only weekly digest delivery profile from schedule bindings
+  max_prior_weekly_briefs: 4
+  allowed_prior_weekly_fields:
+    - brief_id
+    - week_id
+    - story_ids
+    - top_story_ids
+    - prior_week_refs
+    - section_order
+  full_history_access: forbidden
+
+aggregation_stage_outputs:
+  included_daily_brief_paths:
+    description: ordered list of daily briefs that belong to the current weekly window
+  weekly_story_union:
+    description: union of story_ids across included daily briefs
+  carry_over_week_refs:
+    description: compact references to a limited number of prior weekly briefs
+  aggregation_notes:
+    description: notes about missing days, short weeks, or profile mismatches
+
+non_goals:
+  - no trend synthesis
+  - no weekly_brief emission
+  - no stakeholder fanout

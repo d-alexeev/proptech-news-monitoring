@@ -1,0 +1,30 @@
+fixture_id: build_weekly_digest_full_week
+mode_id: build_weekly_digest
+
+inputs:
+  run_id: build_weekly_digest__20260403T170000Z__telegram_weekly_digest
+  week_id: 2026-W14
+  run_date: 2026-04-03
+  weekly_delivery_profile: telegram_weekly_digest
+  weekday_delivery_profile: telegram_digest
+  current_week_daily_briefs:
+    - ./.state/briefs/daily/2026-03-30__telegram_digest.json
+    - ./.state/briefs/daily/2026-03-31__telegram_digest.json
+    - ./.state/briefs/daily/2026-04-01__telegram_digest.json
+    - ./.state/briefs/daily/2026-04-02__telegram_digest.json
+    - ./.state/briefs/daily/2026-04-03__telegram_digest.json
+  prior_weekly_briefs:
+    - ./.state/briefs/weekly/2026-W13__telegram_weekly_digest.json
+
+expected:
+  included_daily_brief_paths:
+    - ./.state/briefs/daily/2026-03-30__telegram_digest.json
+    - ./.state/briefs/daily/2026-03-31__telegram_digest.json
+    - ./.state/briefs/daily/2026-04-01__telegram_digest.json
+    - ./.state/briefs/daily/2026-04-02__telegram_digest.json
+    - ./.state/briefs/daily/2026-04-03__telegram_digest.json
+  included_daily_brief_count: 5
+  carry_over_week_refs:
+    - weekly__2026-W13__telegram_weekly_digest
+  aggregation_notes:
+    - Included all weekday daily briefs in ISO week 2026-W14 up to the weekly run date.
