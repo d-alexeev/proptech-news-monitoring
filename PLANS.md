@@ -83,7 +83,8 @@
 | M13 | completed |
 | M14 | completed |
 | M15 | completed |
-| M16-M19 | pending |
+| M16 | completed |
+| M17-M19 | pending |
 
 ## Shared Milestone Review Template
 

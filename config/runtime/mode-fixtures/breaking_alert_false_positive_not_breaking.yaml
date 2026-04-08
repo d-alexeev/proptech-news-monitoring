@@ -1,0 +1,34 @@
+fixture_id: breaking_alert_false_positive_not_breaking
+mode_id: breaking_alert
+
+inputs:
+  run_id: breaking_alert__20260407T120000Z__hourly
+  run_date: 2026-04-07
+  source_groups:
+    - daily_core
+    - weekly_context
+  alert_thresholds:
+    min_priority_score: 85
+  schedule_binding:
+    delivery_profile: telegram_alert
+  recent_enriched_items:
+    - source_id: aim_group_real_estate_intelligence
+      source_group: daily_core
+      story_id: story_property_finder_refinement_2026
+      title: Property Finder prefers refinement over expansion
+      published: 2026-04-07
+      priority_score: 84
+      confidence: 0.80
+      event_type: strategy_update
+      source_quality: industry_analysis
+      evidence_points:
+        - Property Finder is emphasizing monetization depth over geographic expansion.
+  recent_story_briefs: []
+
+expected:
+  delivery_profile: telegram_alert
+  alert_story_ids: []
+  suppressed_story_ids:
+    - story_property_finder_refinement_2026
+  suppression_notes:
+    - story_property_finder_refinement_2026 stayed below the breaking alert threshold

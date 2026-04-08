@@ -1,0 +1,73 @@
+mode_id: breaking_alert
+
+purpose:
+  - evaluate recent enriched items for immediate high-priority delivery
+  - allow high-signal items from weekly_context to alert without waiting for the weekly digest
+  - suppress obvious same-story follow-up noise using compact story memory only
+
+depends_on:
+  enrichment_contract: ./config/runtime/mode-contracts/scrape_and_enrich_output.yaml
+  runtime_thresholds: ./config/runtime/runtime_thresholds.yaml
+  schedule_bindings: ./config/runtime/schedule_bindings.yaml
+  state_layout: ./config/runtime/state_layout.yaml
+
+allowed_runtime_inputs:
+  - recent enriched items within the alert lookback window
+  - recent story briefs for same-story suppression
+  - alert thresholds from runtime thresholds
+  - breaking_alert schedule binding and delivery profile
+  - shared mission, taxonomy, and contract briefs
+
+forbidden_runtime_inputs:
+  - ./.state/raw/
+  - ./.state/shortlists/
+  - ./.state/articles/
+  - ./.state/briefs/
+  - raw candidates
+  - full article bodies
+  - whole daily or weekly archive
+  - digest markdown files as context input
+  - stakeholder profiles
+  - README
+  - docs/*
+  - benchmark/*
+
+trigger_policy:
+  allowed_source_groups:
+    - daily_core
+    - weekly_context
+  min_priority_score_from: runtime_thresholds.alerts.breaking_alert.min_priority_score
+  delivery_profile_from: schedule_bindings.breaking_alert.delivery_profile
+  no_dependency_on_digest_generation: true
+
+duplicate_suppression_policy:
+  identity_key: story_id
+  lookup_source: recent story_briefs only
+  default_action: suppress_duplicate_follow_up
+  suppress_when:
+    - same story_id was seen very recently and the item is a follow-up without material change
+  material_change_signals:
+    - priority_score meaningfully increased
+    - event_type changed
+    - evidence_points add a materially new fact
+    - source_quality upgraded the confidence of the story
+
+output_contract:
+  alert_payload:
+    delivery_only: true
+    required_fields:
+      - run_id
+      - delivery_profile
+      - alert_story_ids
+      - alert_items
+      - suppressed_story_ids
+      - suppression_notes
+  run_manifest:
+    schema: run_manifest
+    collection: runs
+    path_template: ./.state/runs/{run_date}/{run_id}.json
+
+non_goals:
+  - no full digest assembly
+  - no weekly archive reads
+  - no stakeholder-specific alert variants

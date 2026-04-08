@@ -1,0 +1,40 @@
+fixture_id: breaking_alert_duplicate_followup
+mode_id: breaking_alert
+
+inputs:
+  run_id: breaking_alert__20260408T100000Z__hourly
+  run_date: 2026-04-08
+  source_groups:
+    - daily_core
+    - weekly_context
+  alert_thresholds:
+    min_priority_score: 85
+  schedule_binding:
+    delivery_profile: telegram_alert
+  recent_enriched_items:
+    - source_id: onlinemarketplaces
+      source_group: daily_core
+      story_id: story_rightmove_agent_lawsuit_2026
+      title: Rightmove lawsuit receives another follow-up filing
+      published: 2026-04-08
+      priority_score: 89
+      confidence: 0.82
+      event_type: legal_follow_up
+      source_quality: trade_media
+      evidence_points:
+        - A follow-up filing extended the same Rightmove agent lawsuit story.
+  recent_story_briefs:
+    - story_id: story_rightmove_agent_lawsuit_2026
+      last_seen: 2026-04-07
+      latest_priority_score: 90
+      event_types_seen:
+        - legal_follow_up
+      summary_line: The Rightmove agent lawsuit was already surfaced as a high-signal marketplace conflict.
+
+expected:
+  delivery_profile: telegram_alert
+  alert_story_ids: []
+  suppressed_story_ids:
+    - story_rightmove_agent_lawsuit_2026
+  suppression_notes:
+    - story_rightmove_agent_lawsuit_2026 suppressed as an obvious same-story follow-up without material change
