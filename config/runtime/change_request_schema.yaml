@@ -1,0 +1,115 @@
+version: 1
+artifact_id: change_request
+artifact_class: follow_up_escalation
+
+policy_ref: ./cowork/shared/change_request_policy.md
+storage_path_status: deferred_to_TF3
+
+required_fields:
+  - name: request_id
+    type: string
+    description: Stable identifier for the request artifact.
+  - name: created_at
+    type: datetime
+    description: When the external runner created the request.
+  - name: run_id
+    type: string
+    description: Run identifier that produced the failure context.
+  - name: mode
+    type: string
+    description: Runtime mode where the issue occurred.
+  - name: stage
+    type: string
+    description: Pipeline stage within the mode where the issue surfaced.
+  - name: source_id
+    type: string_or_null
+    description: Source identifier when the issue is tied to a configured source.
+  - name: url
+    type: string
+    description: Primary URL that failed or required a workaround.
+  - name: failure_type
+    type: enum[scrape_failure,blocked_or_manual_source,adapter_gap,persistent_workaround_required]
+    description: Canonical failure category from the external runner policy.
+  - name: symptoms
+    type: list[string]
+    description: Observable runtime symptoms and error signals.
+  - name: suspected_cause
+    type: string
+    description: Best-effort explanation of what likely broke.
+  - name: workaround_found
+    type: string_or_null
+    description: Temporary in-run workaround used or proposed, if any.
+  - name: proposed_change_scope
+    type: list[string]
+    description: Categories of repo changes likely needed to fix the issue.
+  - name: suggested_target_files
+    type: list[string]
+    description: Candidate repo files or modules to inspect or change.
+  - name: tests_to_add
+    type: list[string]
+    description: Verification or fixture additions recommended for the fix.
+  - name: evidence_refs
+    type: list[string]
+    description: References to logs, artifacts, screenshots, or related records.
+  - name: severity
+    type: enum[low,medium,high,critical]
+    description: Operational severity of the issue.
+  - name: status
+    type: enum[new,triaged,planned,implemented,rejected]
+    description: Lifecycle state of the request.
+  - name: owner
+    type: enum[external_runner,codex_triage,codex_planning,codex_implementation]
+    description: Current owner responsible for the next action.
+
+lifecycle:
+  statuses:
+    new:
+      owner: external_runner
+      meaning: Request has been emitted by the external runner and awaits Codex-side intake.
+    triaged:
+      owner: codex_triage
+      meaning: Request has been reviewed and classified for next-step planning.
+    planned:
+      owner: codex_planning
+      meaning: Request has been accepted and converted into a planned implementation task.
+    implemented:
+      owner: codex_implementation
+      meaning: Repo changes have been made and validated for the accepted fix.
+    rejected:
+      owner: codex_triage
+      meaning: Request will not be implemented as proposed and is closed with rationale.
+  transitions:
+    - from: new
+      to: triaged
+      actor: codex_triage
+    - from: triaged
+      to: planned
+      actor: codex_planning
+    - from: triaged
+      to: rejected
+      actor: codex_triage
+    - from: planned
+      to: implemented
+      actor: codex_implementation
+
+ownership_notes:
+  external_runner:
+    may_create_requests: true
+    may_change_status_to:
+      - new
+    may_not_change_status_to:
+      - triaged
+      - planned
+      - implemented
+      - rejected
+  codex_side:
+    owns_intake_after_creation: true
+    expected_roles:
+      - codex_triage
+      - codex_planning
+      - codex_implementation
+
+notes:
+  - This milestone defines schema and lifecycle only.
+  - Storage path and state layout integration are deferred to TF3.
+  - Mode-contract integration is deferred to TF4.

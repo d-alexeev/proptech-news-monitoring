@@ -65,7 +65,7 @@
 | Milestone | Status |
 | --- | --- |
 | `TF1` | completed |
-| `TF2` | pending |
+| `TF2` | completed |
 | `TF3` | pending |
 | `TF4` | pending |
 | `TF5` | pending |

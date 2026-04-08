@@ -1,0 +1,28 @@
+request_id: change_request__20260408T093500Z__zillow_newsroom_html
+created_at: 2026-04-08T09:35:00Z
+run_id: scrape_and_enrich__20260408T093000Z__weekday_digest
+mode: scrape_and_enrich
+stage: full_text_fetch
+source_id: zillow_newsroom
+url: https://zillow.mediaroom.com/2026-04-08-example-story
+failure_type: adapter_gap
+symptoms:
+  - declared adapter found the page but failed to extract the main article body
+  - fallback snippet was insufficient to preserve evidence_points quality
+suspected_cause: site markup changed and the adapter selectors no longer match the content blocks
+workaround_found: manually target the embedded article container for this run without changing adapter files on disk
+proposed_change_scope:
+  - source_adapter_update
+  - fixture_update
+suggested_target_files:
+  - cowork/adapters/zillow_newsroom_html.md
+  - config/runtime/mode-fixtures/scrape_and_enrich_full_body.yaml
+tests_to_add:
+  - add a fixture covering the new article container layout for zillow newsroom pages
+  - validate that evidence_points extraction still produces 2-4 items for full body cases
+evidence_refs:
+  - run_log:scrape_and_enrich__20260408T093000Z__weekday_digest
+  - screenshot:zillow_newsroom_layout_shift
+severity: high
+status: new
+owner: external_runner
