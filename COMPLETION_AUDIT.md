@@ -46,9 +46,9 @@
   - [docs/mode-catalog.md](./docs/mode-catalog.md)
   - [docs/launch-rerun-dry-run.md](./docs/launch-rerun-dry-run.md)
 - legacy-sensitive docs:
-  - [docs/runbook.md](./docs/runbook.md)
   - [docs/agent-spec.md](./docs/agent-spec.md)
   - [docs/rss-api-audit.md](./docs/rss-api-audit.md)
+  - (docs/runbook.md removed in legacy cleanup)
 - вторичный doc surface:
   - [docs/llm-jtbd-analysis.md](./docs/llm-jtbd-analysis.md)
   - [docs/daily-digest-mechanism-review.md](./docs/daily-digest-mechanism-review.md)
@@ -133,7 +133,7 @@
 | `F4` | Fully implemented | [config/runtime/change_request_intake_workflow.md](./config/runtime/change_request_intake_workflow.md), [config/runtime/change-request-fixtures/intake_dry_run.yaml](./config/runtime/change-request-fixtures/intake_dry_run.yaml) | Codex-side intake workflow описан и имеет dry-run walkthrough. |
 | `F5` | Fully implemented | [docs/runtime-architecture.md](./docs/runtime-architecture.md), [README.md](./README.md) | Canonical architecture docs добавлены и связаны с runtime manifest. |
 | `F6` | Fully implemented | [docs/mode-catalog.md](./docs/mode-catalog.md), [docs/launch-rerun-dry-run.md](./docs/launch-rerun-dry-run.md), [README.md](./README.md) | Есть актуальные docs по режимам и способам запуска/перезапуска. |
-| `F7` | Partially implemented | legacy markers in [docs/runbook.md](./docs/runbook.md), [docs/agent-spec.md](./docs/agent-spec.md), [docs/rss-api-audit.md](./docs/rss-api-audit.md) | Основные legacy-sensitive docs выровнены, но вторичный doc surface всё ещё содержит старые `dedupe.json` / `delivery-log.json` narrative без legacy marker. |
+| `F7` | Partially implemented | legacy markers in [docs/agent-spec.md](./docs/agent-spec.md), [docs/rss-api-audit.md](./docs/rss-api-audit.md); `docs/runbook.md` removed in legacy cleanup | Основные legacy-sensitive docs выровнены, но вторичный doc surface всё ещё содержит старые `dedupe.json` / `delivery-log.json` narrative без legacy marker. |
 | `F8` | Fully implemented | required fields in [config/runtime/change_request_schema.yaml](./config/runtime/change_request_schema.yaml), sample fixture, path lookup keys in [config/runtime/state_layout.yaml](./config/runtime/state_layout.yaml) | `run_id`, `mode`, `stage`, `url` и `evidence_refs` зафиксированы как обязательные поля. |
 | `F9` | Fully implemented | lifecycle and transitions in [config/runtime/change_request_schema.yaml](./config/runtime/change_request_schema.yaml), workflow ownership in [config/runtime/change_request_intake_workflow.md](./config/runtime/change_request_intake_workflow.md) | Lifecycle/status model и ownership transitions заданы явно. |
 | `F10` | Partially implemented | allowed vs forbidden workaround rules in [cowork/shared/change_request_policy.md](./cowork/shared/change_request_policy.md), escalation hooks in source-facing mode contracts | Правило оформлено в repo policy, но нет external-runner rehearsal, подтверждающего фактическое соблюдение этой границы. |
@@ -182,7 +182,6 @@
 - [docs/llm-jtbd-analysis.md](./docs/llm-jtbd-analysis.md)
 - [docs/daily-digest-mechanism-review.md](./docs/daily-digest-mechanism-review.md)
 - [docs/benchmark-design.md](./docs/benchmark-design.md)
-- `docs/llm-jtbd-analysis — копия.md`
 
 по-прежнему ссылаются на `dedupe.json`, `delivery-log.json` и старый narrative
 как на текущую operational модель без явного legacy marker.
@@ -197,9 +196,8 @@
 
 Проблема:
 
-- [docs/runbook.md](./docs/runbook.md) и
-  [docs/rss-api-audit.md](./docs/rss-api-audit.md) теперь честно помечены как
-  legacy/reference
+- [docs/rss-api-audit.md](./docs/rss-api-audit.md) теперь честно помечен как
+  legacy/reference (а `docs/runbook.md` удалён в legacy cleanup)
 - но внутри всё ещё есть подробные шаги с `save_article.py`, которого в
   репозитории нет
 
@@ -283,8 +281,6 @@ repo-side contract/docs layer.
   - [docs/llm-jtbd-analysis.md](./docs/llm-jtbd-analysis.md)
   - [docs/daily-digest-mechanism-review.md](./docs/daily-digest-mechanism-review.md)
   - [docs/benchmark-design.md](./docs/benchmark-design.md)
-  - `docs/llm-jtbd-analysis — копия.md`
-
 Результат:
 
 - `F7` станет действительно закрытым для всего заметного doc surface, а не

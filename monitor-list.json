@@ -194,7 +194,7 @@
         ],
         "content_note": "articles: full_content (HTML, 3-6K chars). podcasts: full_content = описание + '--- TRANSCRIPT ---' + полный транскрипт с временными метками (40-150K chars) — ИСПОЛЬЗОВАТЬ full_content, НЕ summary_200. Если full_content < 800 chars — транскрипт ещё не загружен (stub): сохранять с fetch_failed=true, has_transcript=false. metadata.audioUrl = прямая ссылка на аудиофайл.",
         "save_script": "save_article.py",
-        "workflow_doc": "docs/rss-api-audit.md §Tier 2.7 / docs/runbook.md §library.mikedp.com"
+        "workflow_doc": "docs/rss-api-audit.md §Tier 2.7"
       },
       "rss_feed": null
     },
