@@ -1,21 +1,39 @@
-# Adapter: Zillow Newsroom HTML
+# Adapter: Zillow Newsroom
 
 Applies to:
 
 - `zillow_newsroom`
 
-Use this adapter for the Zillow product-innovation newsroom category.
+## Fetch strategy
 
-Rules:
+Use the Zillow Mediaroom RSS feed as the primary discovery surface:
 
-- use the configured category URL as the discovery surface and keep scope limited to product innovation;
-- do not try RSS discovery because `/news/feed/` redirects to HTML and the site exposes no usable feed;
-- treat browser-style Chrome access as unreliable because PerimeterX can return `px-captcha` blocks;
-- prefer neutral HTML fetching with a non-browser `RSS reader` style user agent;
-- do not require `Accept-Encoding: gzip` handling assumptions from the caller;
-- use article pages only after shortlist selection, not for broad discovery.
+- feed URL: `https://zillow.mediaroom.com/press-releases?pagetemplate=rss`
+- fetch_strategy: `rss`
+- tool: `tools/rss_fetch.py` with the default user agent (no special headers required)
 
-Notes:
+The former path (`https://www.zillow.com/news/category/product-innovation/` as
+an `html_scrape` target) is blocked by PerimeterX and returns a 403 `px-captcha`
+body to both browser-style Chrome access and neutral RSS-reader user agents as
+of 2026-04-21. That path must not be retried.
 
-- this adapter exists because the source is server-rendered but hostile to normal browser-style automation;
-- keep press releases and non-product newsroom sections out of scope unless the source config changes.
+## Rules
+
+- use the Mediaroom RSS feed for broad discovery, no full HTML scraping;
+- article bodies may be fetched from `zillow.mediaroom.com/<slug>` in
+  `scrape_and_enrich` only, not during discovery;
+- keep scope to product, market, and company-policy items; exclude agent-hires
+  and investor-relations routine filings unless they surface product signals;
+- if the Mediaroom feed returns `soft_fail=blocked_or_paywall` or `timeout`, do
+  not fall back to the `www.zillow.com/news/...` path — emit a `change_request`
+  and continue the run without this source.
+
+## Notes
+
+- Mediaroom is Zillow's canonical press-release surface and is not behind
+  PerimeterX;
+- the old product-innovation category page was a useful topical filter but is
+  no longer reachable by automation — topical filtering is now the enrich-stage
+  classifier's job;
+- if we ever need per-category filtering again, the Mediaroom site exposes
+  `?pagetemplate=rss` on category pages as well, e.g. `...category/products`.

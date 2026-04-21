@@ -26,19 +26,25 @@ sources:
     source_name: "Mike DelPrete"
     source_type: independent_expert_analysis
     priority: 1
-    cadence_hint: twice_weekly
-    fetch_strategy: chrome_scrape
+    cadence_hint: weekly_to_monthly
+    fetch_strategy: html_scrape
     landing_urls:
-      - https://library.mikedp.com/
+      - https://www.mikedp.com/articles
+    # library.mikedp.com is now a SPA shell and must not be used for
+    # discovery; see cowork/adapters/mike_delprete_library.md. It may still be
+    # fetched in scrape_and_enrich for specific long-form items.
 
   - id: zillow_newsroom
-    source_name: "Zillow Newsroom — Product Innovation"
+    source_name: "Zillow Newsroom — Mediaroom"
     source_type: company_primary_source
     priority: 1
     cadence_hint: "2-3_times_per_week"
-    fetch_strategy: html_scrape
+    fetch_strategy: rss
+    rss_feed: https://zillow.mediaroom.com/press-releases?pagetemplate=rss
     landing_urls:
-      - https://www.zillow.com/news/category/product-innovation/
+      - https://zillow.mediaroom.com/press-releases
+    # Former www.zillow.com/news/category/product-innovation/ path is blocked by
+    # PerimeterX (px-captcha). See cowork/adapters/zillow_newsroom_html.md.
 
   - id: costar_homes
     source_name: "CoStar Group / Homes.com"
@@ -68,17 +74,26 @@ sources:
     priority: 1
     cadence_hint: weekly_and_on_results
     fetch_strategy: blocked
+    blocked_mode: manual_only_permanent
+    manual_intake_cadence_days: 30
+    manual_intake_last_checked: null  # populate on first human intake
     landing_urls:
       - https://www.rea-group.com/investor-centre/
+    # Suppresses per-run change_requests; runner emits manual_intake_reminder
+    # only when now >= last_checked + cadence. See
+    # cowork/adapters/blocked_manual_access.md § manual_only_permanent.
 
   - id: rightmove_plc
     source_name: "Rightmove PLC"
     source_type: company_primary_source
     priority: 2
-    cadence_hint: weekly_and_on_results
-    fetch_strategy: chrome_scrape
+    cadence_hint: quarterly_and_on_results
+    fetch_strategy: html_scrape
     landing_urls:
       - https://plc.rightmove.co.uk/
+    # Static HTML already contains the dated RNS PDF anchors; see
+    # cowork/adapters/rightmove_plc.md. Chrome is unreliable here (intermittent
+    # error-frame) and not needed.
 
   - id: similarweb_global_real_estate
     source_name: "Similarweb - Global Real Estate Rankings"
