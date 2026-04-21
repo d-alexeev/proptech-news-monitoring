@@ -5,6 +5,7 @@
 
 # Runtime state and caches
 .state/
+.state-*/
 *.log
 
 # Python cache, if helper scripts appear later

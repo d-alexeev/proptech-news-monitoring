@@ -94,6 +94,7 @@ Policy и workflow:
 | Документ | Назначение |
 |---|---|
 | [config/runtime/runtime_manifest.yaml](./config/runtime/runtime_manifest.yaml) | Canonical runtime entrypoint: contracts, fixtures, config slices and references |
+| [docs/cowork-onboarding.md](./docs/cowork-onboarding.md) | Онбординг: запуск в новой сессии и развёртывание на новой машине + готовый bootstrap prompt |
 | [docs/runtime-architecture.md](./docs/runtime-architecture.md) | Canonical описание текущей runtime-архитектуры |
 | [docs/mode-catalog.md](./docs/mode-catalog.md) | Canonical каталог режимов `Claude Cowork` |
 | [docs/launch-rerun-dry-run.md](./docs/launch-rerun-dry-run.md) | Canonical reference по schedules, manual reruns и regression/parity dry-runs |
