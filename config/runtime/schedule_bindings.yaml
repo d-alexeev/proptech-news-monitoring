@@ -24,7 +24,8 @@ delivery_profiles:
     bot_token_env: TELEGRAM_BOT_TOKEN
     chat_id_env: TELEGRAM_CHAT_ID
     message_thread_id_env: TELEGRAM_MESSAGE_THREAD_ID
-    parse_mode: Markdown
+    parse_mode: MarkdownV2
+    auto_escape: true
     disable_web_page_preview: true
     split_long_messages: true
     max_message_length: 3800
@@ -34,7 +35,8 @@ delivery_profiles:
     bot_token_env: TELEGRAM_BOT_TOKEN
     chat_id_env: TELEGRAM_CHAT_ID
     message_thread_id_env: TELEGRAM_MESSAGE_THREAD_ID
-    parse_mode: Markdown
+    parse_mode: MarkdownV2
+    auto_escape: true
     disable_web_page_preview: true
     split_long_messages: true
     max_message_length: 3800
@@ -44,7 +46,8 @@ delivery_profiles:
     bot_token_env: TELEGRAM_BOT_TOKEN
     chat_id_env: TELEGRAM_CHAT_ID
     message_thread_id_env: TELEGRAM_MESSAGE_THREAD_ID
-    parse_mode: Markdown
+    parse_mode: MarkdownV2
+    auto_escape: true
     disable_web_page_preview: true
     split_long_messages: false
     max_message_length: 2500
