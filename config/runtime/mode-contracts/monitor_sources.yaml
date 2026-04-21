@@ -99,6 +99,17 @@ change_request_escalation:
   trigger_conditions:
     - configured source resolves to a blocked/manual access adapter or equivalent runtime limitation
     - declared discovery path cannot proceed without manual or out-of-band access
+  suppression:
+    # Sources declared with blocked_mode=manual_only_permanent (see
+    # cowork/adapters/blocked_manual_access.md) do not emit a change_request
+    # every run; the runner emits a manual_intake_reminder at the declared
+    # cadence instead. A change_request is still required if the manual-intake
+    # backlog exceeds 2× cadence or the landing URL stops resolving.
+    - condition: "source.blocked_mode == 'manual_only_permanent'"
+      action: emit_manual_intake_reminder_on_cadence_instead
+      cadence_field: manual_intake_cadence_days
+      last_checked_field: manual_intake_last_checked
+      fallback_change_request_when: backlog_exceeds_2x_cadence
   expected_fields:
     - run_id
     - mode
