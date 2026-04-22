@@ -71,21 +71,19 @@ TELEGRAM_API_BASE = "https://api.telegram.org"
 BUILT_IN_PROFILES: dict[str, dict] = {
     "telegram_digest": {
         "enabled": True,
-        "parse_mode": "MarkdownV2",
+        "parse_mode": "HTML",
         "disable_web_page_preview": True,
         "split_long_messages": True,
         "max_message_length": 3800,
         "title_template": "PropTech Monitor | {date}",
-        "auto_escape": True,
     },
     "telegram_weekly_digest": {
         "enabled": True,
-        "parse_mode": "MarkdownV2",
+        "parse_mode": "HTML",
         "disable_web_page_preview": True,
         "split_long_messages": True,
         "max_message_length": 3800,
         "title_template": "PropTech Weekly | {date}",
-        "auto_escape": True,
     },
     "telegram_alert": {
         "enabled": True,
@@ -149,6 +147,287 @@ def escape_body_for_markdown_v2(body: str) -> str:
         cursor = m.end()
     out.append(_escape_mdv2(body[cursor:]))
     return "".join(out)
+
+# ---------------------------------------------------------------------------
+# HTML conversion helpers (for parse_mode=HTML profiles)
+# ---------------------------------------------------------------------------
+
+# Telegram HTML supports: <b>, <i>, <u>, <s>, <a href>, <code>, <pre>.
+# We map the GFM subset used in digests to this set.
+
+_HEADING_RE = re.compile(r"^#{1,6}\s+(.+)$", re.MULTILINE)
+_BOLD_DOUBLE_RE = re.compile(r"\*\*(.+?)\*\*")
+_BOLD_SINGLE_RE = re.compile(r"(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)")
+_LINK_RE = re.compile(r"\[([^\[\]]+)\]\(([^()\s]+)\)")
+_CODE_RE = re.compile(r"`([^`\n]+)`")
+_HR_RE = re.compile(r"^---+\s*$", re.MULTILINE)
+
+# Characters that must be escaped in HTML plain-text segments.
+_HTML_ESCAPE = str.maketrans({"&": "&amp;", "<": "&lt;", ">": "&gt;"})
+
+# Pipe-table detection.
+_PIPE_ROW_RE = re.compile(r"^\|.+\|[ \t]*$")
+_PIPE_SEP_RE = re.compile(r"^\|[-:| \t]+\|[ \t]*$")
+
+
+def _escape_html(text: str) -> str:
+    return text.translate(_HTML_ESCAPE)
+
+
+def _convert_pipe_tables(body: str) -> str:
+    """Convert GFM pipe tables to Telegram-friendly bullet lists.
+
+    Detects blocks of consecutive | rows, identifies the optional header row
+    and separator, and emits data rows as `• cell1 | cell2 | …`.  Inline
+    formatting within cells is left intact for later processing by
+    _convert_inline().
+    """
+    lines = body.split("\n")
+    result: list[str] = []
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        if not _PIPE_ROW_RE.match(line):
+            result.append(line)
+            i += 1
+            continue
+        # Collect consecutive pipe rows into a table block
+        block: list[str] = []
+        while i < len(lines) and _PIPE_ROW_RE.match(lines[i]):
+            block.append(lines[i])
+            i += 1
+        # Classify rows: separator rows are structural, rest are data/header
+        sep_indices = {j for j, r in enumerate(block) if _PIPE_SEP_RE.match(r.strip())}
+        parsed: list[list[str]] = []
+        for j, row in enumerate(block):
+            if j in sep_indices:
+                continue
+            cells = [c.strip() for c in row.strip().strip("|").split("|")]
+            parsed.append(cells)
+        # rows[0] = header when there was a separator at index 1; skip it in output
+        # (Telegram can't render table headers distinctly, just treat all as data)
+        has_header = bool(sep_indices) and min(sep_indices, default=99) == 1
+        data_rows = parsed[1:] if (has_header and len(parsed) > 1) else parsed
+        for row in data_rows:
+            content = " | ".join(c for c in row if c)
+            if content:
+                result.append(f"• {content}")
+    return "\n".join(result)
+
+
+def convert_md_to_html(body: str) -> str:
+    """Convert a GFM-subset digest body to Telegram HTML.
+
+    Handles (in order):
+    - `---` horizontal rules → removed
+    - GFM pipe tables → bullet list (`• cell1 | cell2 | …`)
+    - `# / ## / ###` headings → <b>TEXT</b>
+    - `[text](url)` links → <a href="url">text</a>
+    - `**bold**` and `*bold*` → <b>bold</b>
+    - `code` → <code>code</code>
+    - Plain-text segments → HTML-escaped (&, <, >)
+
+    The conversion is line-aware for headings/HRs/tables and span-aware for
+    inline formatting so that plain-text characters are escaped without
+    double-processing already-converted spans.
+    """
+    # Step 1: horizontal rules → removed (before any inline processing)
+    body = _HR_RE.sub("", body)
+
+    # Step 1.5: pipe tables → bullet list (before heading/inline steps)
+    body = _convert_pipe_tables(body)
+
+    # Step 2: headings → <b>…</b>
+    body = _HEADING_RE.sub(lambda m: f"<b>{_escape_html(m.group(1))}</b>", body)
+
+    # Step 3: process inline spans per line to escape plain text correctly.
+    # We tokenise each "segment" between recognised spans so that punctuation
+    # in prose is HTML-escaped while span content is handled separately.
+    def _convert_inline(text: str) -> str:
+        # Order matters: links first (contain parens that would confuse bold),
+        # then double-star bold, then single-star bold, then code.
+        combined = re.compile(
+            r"(?P<link>\[(?P<ltext>[^\[\]]+)\]\((?P<lurl>[^()\s]+)\))"
+            r"|(?P<bold2>\*\*(?P<b2text>.+?)\*\*)"
+            r"|(?P<bold1>(?<!\*)\*(?!\*)(?P<b1text>.+?)(?<!\*)\*(?!\*))"
+            r"|(?P<code>`(?P<ctext>[^`\n]+)`)"
+        )
+        out: list[str] = []
+        cursor = 0
+        for m in combined.finditer(text):
+            # Escape plain text before this span
+            out.append(_escape_html(text[cursor:m.start()]))
+            if m.group("link"):
+                out.append(
+                    f'<a href="{_escape_html(m.group("lurl"))}">'
+                    f"{_escape_html(m.group('ltext'))}</a>"
+                )
+            elif m.group("bold2"):
+                out.append(f"<b>{_escape_html(m.group('b2text'))}</b>")
+            elif m.group("bold1"):
+                out.append(f"<b>{_escape_html(m.group('b1text'))}</b>")
+            elif m.group("code"):
+                out.append(f"<code>{_escape_html(m.group('ctext'))}</code>")
+            cursor = m.end()
+        out.append(_escape_html(text[cursor:]))
+        return "".join(out)
+
+    # Apply inline conversion to lines that were NOT already converted to tags
+    # by the heading step (those start with "<b>" and end with "</b>").
+    lines = body.split("\n")
+    result: list[str] = []
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("<b>") and stripped.endswith("</b>"):
+            result.append(line)  # heading already converted, leave as-is
+        else:
+            result.append(_convert_inline(line))
+    return "\n".join(result)
+
+
+# Pattern for blockquote lines that contain .state/ path references.
+# These are operator notes that must not appear in subscriber-facing messages.
+_OPERATOR_NOTE_RE = re.compile(
+    r"^>[ \t].*\.state/.*$", re.MULTILINE
+)
+
+# Pattern for a full run_id in the digest footer line.
+# Captures the mode name and replaces the full timestamped id with just the mode.
+_RUN_ID_RE = re.compile(
+    r"\brun:\s*(build_\w+?)__\d{8}T\d{6}Z__\w+"
+)
+
+
+def strip_operator_content(body: str) -> str:
+    """Remove blockquote lines that contain .state/ path references.
+
+    These lines are operator context notes (e.g. references to previous runs)
+    that should appear in run_manifest but not in subscriber-facing messages.
+    A blank line is left in place to preserve paragraph spacing.
+    """
+    return _OPERATOR_NOTE_RE.sub("", body)
+
+
+def strip_run_id_from_footer(body: str) -> str:
+    """Replace the full run_id in the footer with just the mode name.
+
+    Converts:
+      run: build_daily_digest__20260422T230500Z__daily_core
+    to:
+      run: build_daily_digest
+    """
+    return _RUN_ID_RE.sub(r"run: \1", body)
+
+
+# ---------------------------------------------------------------------------
+# Pre-send validation
+# ---------------------------------------------------------------------------
+
+_VALIDATE_RULES: list[dict] = [
+    {
+        "check_id": "raw_md_heading",
+        "pattern": re.compile(r"^#{1,6}\s+.+$", re.MULTILINE),
+        "symptom": "Raw markdown heading(s) not converted to <b> — will display as literal # text",
+        "severity": "error",
+    },
+    {
+        "check_id": "raw_hr",
+        "pattern": re.compile(r"^-{3,}\s*$", re.MULTILINE),
+        "symptom": "Horizontal rule(s) not removed — will display as literal ---",
+        "severity": "error",
+    },
+    {
+        "check_id": "raw_double_star",
+        "pattern": re.compile(r"\*\*[^*\n]+\*\*"),
+        "symptom": "Double-star bold (**text**) not converted to <b> — will display as literal **",
+        "severity": "error",
+    },
+    {
+        "check_id": "pipe_table",
+        "pattern": re.compile(r"^\|.+\|[ \t]*$", re.MULTILINE),
+        "symptom": "Pipe table row(s) not converted — renders as raw | col | text in Telegram",
+        "severity": "warning",
+    },
+    {
+        "check_id": "state_path_leak",
+        "pattern": re.compile(r"\.state/"),
+        "symptom": "Operator .state/ path leaked into subscriber-facing content",
+        "severity": "error",
+    },
+    {
+        "check_id": "full_run_id",
+        "pattern": re.compile(r"\bbuild_\w+?__\d{8}T\d{6}Z__\w+"),
+        "symptom": "Full timestamped run_id not stripped — exposes internal run metadata",
+        "severity": "warning",
+    },
+]
+
+
+def validate_html_output(html: str) -> list[dict]:
+    """Check converted HTML for formatting issues before Telegram delivery.
+
+    Runs each rule in _VALIDATE_RULES against the final output.  Returns a
+    list of issue dicts (empty list = clean).  Each dict has keys:
+      check_id, severity ('error' | 'warning'), symptom, match_count, examples.
+
+    Errors indicate content that will definitely look broken in Telegram.
+    Warnings indicate content that is suboptimal but may still be readable.
+    """
+    issues: list[dict] = []
+    for rule in _VALIDATE_RULES:
+        matches = rule["pattern"].findall(html)
+        if matches:
+            issues.append({
+                "check_id": rule["check_id"],
+                "severity": rule["severity"],
+                "symptom": rule["symptom"],
+                "match_count": len(matches),
+                "examples": [str(m)[:120] for m in matches[:3]],
+            })
+    return issues
+
+
+def write_presend_cr(
+    issues: list[dict],
+    *,
+    profile: str,
+    date: str,
+    repo_root: Path | None = None,
+) -> Path:
+    """Write an auto-generated pre-send validation CR.
+
+    The CR is written to .state/change-requests/{date}/cr_presend_validation__{ts}.json.
+    Returns the path of the written file.
+    """
+    root = repo_root or REPO_ROOT
+    ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    cr_dir = root / ".state" / "change-requests" / date
+    cr_dir.mkdir(parents=True, exist_ok=True)
+    cr_path = cr_dir / f"cr_presend_validation__{ts}.json"
+
+    worst = "error" if any(i["severity"] == "error" for i in issues) else "warning"
+    cr = {
+        "request_id": f"cr_presend_validation__{ts}",
+        "created_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "profile": profile,
+        "stage": "pre_send_validation",
+        "failure_type": "validation_error",
+        "severity": worst,
+        "symptoms": [i["symptom"] for i in issues],
+        "issues": issues,
+        "status": "new",
+        "owner": "telegram_send",
+        "notes": (
+            "Auto-generated by validate_html_output() in tools/telegram_send.py. "
+            "Fix the root cause in convert_md_to_html() or the digest template, "
+            "then re-run. Use --force to bypass validation and send anyway."
+        ),
+    }
+    cr_path.write_text(json.dumps(cr, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return cr_path
+
+
+# ---------------------------------------------------------------------------
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCHEDULE_PATH = REPO_ROOT / "config" / "runtime" / "schedule_bindings.yaml"
@@ -259,6 +538,11 @@ def _parse_cli() -> argparse.Namespace:
     p.add_argument("--date", help="substituted into title_template, default=today UTC")
     p.add_argument("--no-title", action="store_true", help="don't prepend title line")
     p.add_argument("--dry-run", action="store_true", help="don't hit Telegram API")
+    p.add_argument(
+        "--force",
+        action="store_true",
+        help="send even if pre-send validation finds issues (CR is still written)",
+    )
     return p.parse_args()
 
 
@@ -281,18 +565,52 @@ def main() -> None:
     date_str = args.date or datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
     use_mdv2 = (profile.get("parse_mode") or "").lower() == "markdownv2"
+    use_html = (profile.get("parse_mode") or "").upper() == "HTML"
     auto_escape = bool(profile.get("auto_escape", use_mdv2))
 
-    if auto_escape and use_mdv2:
+    if use_html:
+        # Strip operator-only content before HTML conversion
+        body = strip_operator_content(body)
+        body = strip_run_id_from_footer(body)
+        body = convert_md_to_html(body)
+
+        # Pre-send validation: check the converted HTML for formatting issues.
+        issues = validate_html_output(body)
+        if issues:
+            cr_path = write_presend_cr(issues, profile=args.profile, date=date_str)
+            error_count = sum(1 for i in issues if i["severity"] == "error")
+            warn_count = sum(1 for i in issues if i["severity"] == "warning")
+            summary = f"{error_count} error(s), {warn_count} warning(s)"
+            print(
+                f"pre-send validation: {summary} — CR written to {cr_path}",
+                file=sys.stderr,
+            )
+            for issue in issues:
+                print(
+                    f"  [{issue['severity']}] {issue['check_id']}: {issue['symptom']} "
+                    f"(×{issue['match_count']})",
+                    file=sys.stderr,
+                )
+            if error_count > 0 and not args.force and not args.dry_run:
+                print(
+                    "Blocked: fix validation errors or re-run with --force to send anyway.",
+                    file=sys.stderr,
+                )
+                sys.exit(3)
+    elif auto_escape and use_mdv2:
         body = escape_body_for_markdown_v2(body)
 
     if not args.no_title:
         title_tpl = profile.get("title_template") or ""
         if title_tpl:
             title_line = title_tpl.format(date=date_str)
-            if auto_escape and use_mdv2:
-                title_line = _escape_mdv2(title_line)
-            body = f"*{title_line}*\n\n{body.lstrip()}"
+            if use_html:
+                title_line = _escape_html(title_line)
+                body = f"<b>{title_line}</b>\n\n{body.lstrip()}"
+            else:
+                if auto_escape and use_mdv2:
+                    title_line = _escape_mdv2(title_line)
+                body = f"*{title_line}*\n\n{body.lstrip()}"
 
     limit = int(profile.get("max_message_length", 3800))
     if profile.get("split_long_messages", True):

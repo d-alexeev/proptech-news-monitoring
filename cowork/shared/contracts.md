@@ -24,3 +24,11 @@ Contract rules:
 - when an external runner cannot proceed without a persistent repo change, it should emit a `change_request` rather than mutate source-of-truth files.
 
 If a mode cannot complete using its declared inputs, that is a contract problem and should be surfaced explicitly.
+
+## Delivery contracts
+
+Telegram delivery format rules (parse_mode, GFM-to-HTML mapping, operator content strip rules)
+are documented in `cowork/adapters/telegram_format.md`.
+
+Digest file write rule: always use full overwrite (`Write`), never `Edit`.
+See `cowork/modes/build_daily_digest.md` → "Delivery constraints" for details.
