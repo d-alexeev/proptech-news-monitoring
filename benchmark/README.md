@@ -11,7 +11,7 @@ benchmark/
 ├── README.md                           ← этот файл
 └── datasets/
     ├── jtbd-07-classification/         ← Phase 1 (запускать первым)
-    │   ├── inputs.jsonl                  30 случаев
+    │   ├── inputs.jsonl                  45 случаев
     │   ├── golden.jsonl                  эталонные классификации
     │   └── metadata.json                 метрики, edge cases, пороги
     ├── jtbd-09-breaking-alert/         ← Phase 1
@@ -19,13 +19,17 @@ benchmark/
     │   ├── golden.jsonl                  is_breaking + rationale
     │   └── metadata.json
     ├── jtbd-08-scoring/                ← Phase 2
-    │   ├── inputs.jsonl                  15 случаев (полный текст статей)
+    │   ├── inputs.jsonl                  16 случаев
     │   ├── golden.jsonl                  5-мерные оценки + total_score
     │   └── metadata.json
-    └── jtbd-06-deduplication/          ← Phase 2
-        ├── inputs.jsonl                  15 пар (article_new + corpus)
-        ├── golden.jsonl                  is_duplicate + duplicate_type
-        └── metadata.json
+    ├── jtbd-06-deduplication/          ← Phase 2
+    │   ├── inputs.jsonl                  15 пар (article_new + corpus)
+    │   ├── golden.jsonl                  is_duplicate + duplicate_type
+    │   └── metadata.json
+    └── jtbd-15-contextualization/      ← Phase 2 starter set
+        ├── inputs.jsonl                  3 случая (article_new + corpus)
+        ├── golden.jsonl                  ranked context + context roles
+        └── metadata.json                 метрики, роли контекста, пороги
 ```
 
 ## Быстрый старт
@@ -56,6 +60,7 @@ for case in inputs:
 | 09 — Breaking alert | Hard metrics | Precision | ≥ 0.85 |
 | 08 — Скоринг релевантности | Correlation | Spearman ρ | ≥ 0.75 |
 | 06 — Дедупликация | Hard metrics | F1 | ≥ 0.80 |
+| 15 — Контекстуализация | Retrieval + LLM-as-Judge | Precision@3 | ≥ 0.85 |
 
 ## Важные тест-кейсы (не пропускать при анализе)
 
@@ -65,11 +70,12 @@ for case in inputs:
 - **jtbd06-006** — семантический дубль с разными заголовками и источниками (must detect)
 - **jtbd06-012** — Авито AI search vs international peers (НЕЛЬЗЯ подавлять как дубль)
 - **jtbd08-013, jtbd08-015** — portability_to_avito=10, внутренние продукты Авито
+- **jtbd15-002** — CoStar/Domain consolidation: важно восстановить цепочку и shareholder pressure context
 
 ## Источники данных
 
 Все тест-кейсы основаны на реальных данных проекта:
-- `.state/dedupe.json` — 30+ реальных статей с метаданными
+- `.state/dedupe.json` и sharded state exports — реальные статьи с метаданными
 - `digests/2026-W14-weekly-digest.md` — 6 статей с оценками приоритета
 - `config/runtime/runtime_thresholds.yaml` — веса скоринга и критерии отбора
 
@@ -80,4 +86,5 @@ for case in inputs:
 1. Валидация golden set двумя экспертами домена (PM + Strategy Avito)
 2. Первый прогон на `claude-sonnet-4-6` как baseline
 3. Расширение JTBD-07 до 50+ случаев для статистически значимых per-class метрик
-4. Добавление Phase 2 датасетов: JTBD-11 (суммаризация), JTBD-12 (импликации)
+4. Расширение JTBD-15 до 15–20 случаев
+5. Добавление Phase 2 датасетов: JTBD-11 (суммаризация), JTBD-12 (импликации)
