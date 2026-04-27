@@ -584,28 +584,119 @@ def score_synthesis(rows: list[dict[str, Any]], golden: list[dict[str, Any]]) ->
 
 
 def score_article_synthesis_schema(rows: list[dict[str, Any]], golden: list[dict[str, Any]]) -> dict[str, Any]:
+    gold_by_id = {row["id"]: row for row in golden}
     cases: list[dict[str, Any]] = []
+    relevance_correct = 0
+    relevance_total = 0
+    must_points_covered = 0
+    must_points_total = 0
+    high_relevance_distractors = 0
+    forbidden_claim_hits: list[dict[str, str]] = []
     scored = 0
     for row in rows:
         if not row.get("parse_ok") or row.get("error"):
             cases.append({"id": row["id"], "status": "error", "error": row.get("error")})
             continue
+        gold = gold_by_id[row["id"]]
+        gold_labels = {item["article_id"]: item for item in gold["article_labels"]}
+        pred_labels = {item["article_id"]: item for item in row["pred"]["article_summaries"]}
+        case_must_total = 0
+        case_must_covered = 0
+        case_relevance_correct = 0
+        article_results = []
+        for article_id, gold_item in gold_labels.items():
+            pred_item = pred_labels[article_id]
+            relevance_total += 1
+            relevance_match = pred_item["relevance"] == gold_item["relevance"]
+            if relevance_match:
+                relevance_correct += 1
+                case_relevance_correct += 1
+            pred_text = article_prediction_text(pred_item)
+            covered_points = []
+            for point in gold_item.get("must_cover_points", []):
+                must_points_total += 1
+                case_must_total += 1
+                if text_overlap(point["statement"], pred_text) >= 0.22:
+                    must_points_covered += 1
+                    case_must_covered += 1
+                    covered_points.append(point["point_id"])
+            if gold_item["article_role"] == "distractor" and pred_item["relevance"] == "high":
+                high_relevance_distractors += 1
+            article_forbidden_hits = []
+            for claim in gold_item.get("must_not_claim", []):
+                if normalized_contains_or_overlap(claim, pred_text):
+                    hit = {"case_id": row["id"], "article_id": article_id, "claim": claim}
+                    forbidden_claim_hits.append(hit)
+                    article_forbidden_hits.append(claim)
+            article_results.append(
+                {
+                    "article_id": article_id,
+                    "gold_relevance": gold_item["relevance"],
+                    "pred_relevance": pred_item["relevance"],
+                    "relevance_match": relevance_match,
+                    "covered_must_point_ids": covered_points,
+                    "must_point_count": len(gold_item.get("must_cover_points", [])),
+                    "forbidden_claim_hits": article_forbidden_hits,
+                }
+            )
         scored += 1
         cases.append(
             {
                 "id": row["id"],
-                "status": "schema_ok",
+                "status": "ok",
                 "article_summary_count": row.get("pred_article_summary_count"),
+                "relevance_accuracy": round(case_relevance_correct / len(gold_labels), 4) if gold_labels else 0.0,
+                "must_point_recall": round(case_must_covered / case_must_total, 4) if case_must_total else 1.0,
+                "articles": article_results,
             }
         )
+    relevance_accuracy = relevance_correct / relevance_total if relevance_total else 0.0
+    must_point_recall = must_points_covered / must_points_total if must_points_total else 0.0
     return {
         "n_cases_total": len(rows),
         "n_scored": scored,
         "schema_valid_rate": round(scored / len(rows), 4) if rows else 0.0,
+        "article_relevance_accuracy": round(relevance_accuracy, 4),
+        "must_point_recall": round(must_point_recall, 4),
+        "high_relevance_distractors": high_relevance_distractors,
+        "forbidden_claim_hit_count": len(forbidden_claim_hits),
+        "forbidden_claim_hits": forbidden_claim_hits,
         "n_api_or_parse_errors": len(rows) - scored,
         "cases": cases,
-        "scoring_warning": "Article synthesis AS5a only validates schema, article coverage, IDs, and enums; deterministic quality scoring is added in AS5b.",
+        "scoring_warning": "Article synthesis scoring is deterministic v1; semantic quality still requires expert or LLM judge review.",
     }
+
+
+def article_prediction_text(item: dict[str, Any]) -> str:
+    parts = [
+        item.get("request_specific_summary", ""),
+        item.get("avito_implication", ""),
+        " ".join(item.get("caveats", [])),
+    ]
+    for thesis in item.get("theses", []):
+        parts.extend([thesis.get("statement", ""), thesis.get("evidence", "")])
+    return " ".join(parts)
+
+
+def tokenize(text: str) -> set[str]:
+    stop = {
+        "the", "and", "for", "that", "with", "this", "from", "into", "can", "not",
+        "или", "для", "что", "это", "как", "and", "are", "but", "should", "article",
+    }
+    return {token for token in re.findall(r"[A-Za-zА-Яа-я0-9]+", text.lower()) if len(token) > 3 and token not in stop}
+
+
+def text_overlap(expected: str, actual: str) -> float:
+    expected_tokens = tokenize(expected)
+    if not expected_tokens:
+        return 0.0
+    return len(expected_tokens & tokenize(actual)) / len(expected_tokens)
+
+
+def normalized_contains_or_overlap(claim: str, actual: str) -> bool:
+    normalized_claim = " ".join(re.findall(r"[A-Za-zА-Яа-я0-9]+", claim.lower()))
+    normalized_actual = " ".join(re.findall(r"[A-Za-zА-Яа-я0-9]+", actual.lower()))
+    return normalized_claim in normalized_actual or text_overlap(claim, actual) >= 0.72
 
 
 def write_markdown(report: dict[str, Any], path: Path) -> None:
@@ -622,7 +713,7 @@ def write_markdown(report: dict[str, Any], path: Path) -> None:
         if report["meta"]["benchmark"] == "request-synthesis":
             primary = scores["avg_thesis_recall_by_evidence_overlap"]
         elif report["meta"]["benchmark"] == "request-article-synthesis":
-            primary = scores["schema_valid_rate"]
+            primary = scores["must_point_recall"]
         else:
             primary = scores["avg_recall"]
         lines.append(

@@ -333,7 +333,7 @@ Non-goals:
 
 ### AS5b — Deterministic Scorer v1
 
-Status: planned
+Status: completed
 
 Goal: add baseline scoring for the new benchmark.
 
