@@ -362,6 +362,19 @@ The artifact defines 6-10 discovery facets per request, the LLM relevance
 judge labels, required judgment fields, an uncertainty bucket, and three manual
 sample applications including a same-keyword irrelevant trap.
 
+## Candidate Discovery Draft Artifact
+
+RD4 creates:
+
+```text
+benchmark/datasets/request-article-retrieval/candidate_discovery_draft.json
+```
+
+The artifact contains BM25/full-text rankings, facet-based draft relevance
+review, selection summaries for top BM25, uncertain, sampled low-score, and
+raw-derived candidates, plus candidate groups: `likely_relevant`, `possible`,
+`distractor`, and `reject`.
+
 ## Candidate Discovery Method
 
 The candidate pool must normalize all available local artifacts:
@@ -424,7 +437,8 @@ corpus grows enough that BM25 plus LLM review misses analogues.
 | RD1 | complete | Dataset contract locked in this file: artifact schemas, stable ids, provenance enum, bucket rules, and mock input/golden pair. |
 | RD2 | complete | Generated candidate inventory with 225 unique candidates, 72 raw-only candidates, URL dedupe, provenance counts, and inherited nested raw source metadata. |
 | RD3 | complete | Added per-request facet maps, judge rubric, uncertainty bucket, and manual sample applications. |
-| RD4-RD9 | pending | Not implemented yet. |
+| RD4 | complete | Generated discovery draft lists for all 4 requests with at least 107 candidates considered per request and at least 33 distractors per request. |
+| RD5a-RD9 | pending | Not implemented yet. |
 
 ## Milestone Details
 
