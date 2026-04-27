@@ -163,7 +163,7 @@ Non-goals:
 
 ### AS3a — Article Relevance Golden
 
-Status: planned
+Status: completed
 
 Goal: label article relevance, article role, and support type.
 
