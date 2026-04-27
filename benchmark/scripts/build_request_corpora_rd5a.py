@@ -20,6 +20,73 @@ DEFAULT_CASES = ["reqret-001", "reqret-002", "reqret-003", "reqret-004"]
 TARGET_CORPUS_SIZE = 50
 MIN_DISTRACTOR_RATIO = 0.30
 
+BODY_EXCERPT_OVERRIDES = {
+    "art_5d20bf2093": (
+        "Local NML analogue (.state/raw/nml_2025.md:6338, Plus Group creates "
+        "AI bot for Cian, Avito and DomClick real estate portals): Plus Group "
+        "launched an AI bot for realtor chats on major Russian real estate "
+        "portals. It responds 24/7, collects budget, space, location and "
+        "contacts, creates a CRM client profile, escalates to a contact center "
+        "when needed, and is positioned as a way to prevent lost chats and "
+        "improve lead conversion without extra ad spend or staffing."
+    ),
+    "art_bcc494b3d9": (
+        "Local NML analogue (.state/raw/nml.md:1780, Property sites race to "
+        "replace filters: Finn launches hybrid chat-and-map tool): Finn is "
+        "piloting AI-first home search with a conversational interface, "
+        "interactive map and live property previews. The product uses "
+        "natural-language understanding to surface buyer intent, asks follow-up "
+        "questions, uses proprietary listing, pricing and behavioral data, and "
+        "is framed as a shift from filter-based search to personalized "
+        "discovery."
+    ),
+    "art_471dc4626e": (
+        "Local NML analogue (.state/raw/nml_2025.md:1830, Zillow rolling back "
+        "NAR listing preference): Zillow began rolling back a policy that "
+        "separated NAR-member listings from FSBO, auction and other non-NAR "
+        "inventory. The change responds to MLS policy shifts and the broader "
+        "legal and industry debate over listing display, consumer access, NAR "
+        "rules and portal control after earlier litigation involving Zillow, "
+        "NAR and REX."
+    ),
+    "art_6b7b3fd7b1": (
+        "Local NML analogue (.state/raw/nml_2025.md:5227, ImmoScout24 launches "
+        "AI assistant HeyImmo): ImmoScout24 launched HeyImmo, an AI assistant "
+        "for owners, tenants, buyers and renters. It gives personalized "
+        "property recommendations, helps assess market prices and financing, "
+        "supports tenants with utility bills and rent-increase questions, and "
+        "helps owners and landlords with value improvement and market context."
+    ),
+    "art_8ddecd35bd": (
+        "Local NML analogue (.state/raw/nml_2025.md:465, Compass to launch "
+        "private-listing property marketplace): Compass planned a client-facing "
+        "marketplace for exclusive listings unavailable on public portals. The "
+        "product supports seller clients who want private marketing before MLS "
+        "exposure and gives Compass-represented buyers access to inventory they "
+        "cannot find on Zillow, Realtor.com or other portals, reinforcing "
+        "Compass's private-listing strategy."
+    ),
+    "art_0269b4b80c": (
+        "Local NML analogue (.state/raw/nml.md:1780, Property sites race to "
+        "replace filters: Finn launches hybrid chat-and-map tool): Finn's AI "
+        "search pilot shows how portals are moving toward conversational "
+        "discovery rather than static filters. The system combines chat, map "
+        "and property previews, asks proactive questions about budget and "
+        "property type, and uses marketplace data to infer deeper buyer intent "
+        "and create more relevant search results."
+    ),
+    "art_daf0b0d0d9": (
+        "Local NML analogue (.state/raw/nml.md:636, Compass fails to get "
+        "injunction against Zillow ban): A federal judge rejected Compass's "
+        "request for an injunction against Zillow's policy banning listings "
+        "that were privately marketed before public portal exposure. The case "
+        "is a close analogue to Compass/NWMLS private-listing conflict because "
+        "it centers on pocket listings, portal access rules, seller choice and "
+        "competition between brokerage inventory strategies and open-market "
+        "policies."
+    ),
+}
+
 
 def load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
@@ -44,7 +111,9 @@ def display_path(path: Path) -> str:
 def candidate_card(candidate: dict[str, Any]) -> dict[str, Any]:
     card = {
         "article_id": candidate["article_id"],
-        "body_excerpt": candidate.get("body_excerpt"),
+        "body_excerpt": BODY_EXCERPT_OVERRIDES.get(
+            candidate["article_id"], candidate.get("body_excerpt")
+        ),
         "normalized_url": candidate["normalized_url"],
         "published": candidate.get("published"),
         "title": candidate.get("title"),

@@ -10,6 +10,7 @@
   "corpus_construction_rules": {
     "corpus_size_per_case": "40-70 articles",
     "dedupe_key": "normalized_url",
+    "failed_fetch_policy": "Known failed-fetch body excerpts in inputs.jsonl are replaced with transparent local NML analogue excerpts when exact source text is unavailable.",
     "minimum_distractor_ratio": 0.3,
     "text_policy": "compact article cards only; full article text is not a default model input"
   },

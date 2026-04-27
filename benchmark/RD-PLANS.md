@@ -242,6 +242,9 @@ Article-card fields:
 | `published` | required, nullable | Published date or timestamp when available. |
 | `title` | required, nullable | Article title from the best available local artifact. |
 
+Known failed-fetch excerpts may be replaced with transparent `Local NML
+analogue` excerpts when exact source text is unavailable in local artifacts.
+
 The retrieval-facing article card intentionally excludes `url`, `source_id`,
 `source_name`, `lead_or_summary`, `provenance`, `analyst_summary`,
 `why_it_matters`, `avito_implication`, `topic_tags`, `event_type`,
