@@ -135,6 +135,7 @@ Each selected article should have review-only selection metadata:
 | `selection_rationale` | required | Short explanation of why the article is in the 12-article set. |
 | `full_text_source_path` | required | Local source path used for `body_full_text`. |
 | `full_text_quality` | required | One of `exact`, `near_exact`, `local_summary`, `analogue`, or `unusable`. |
+| `full_text_quality_notes` | required | Short explanation of text quality, source fit, and any limitations. |
 | `full_text_char_count` | required | Character count after cleaning. |
 | `cleaning_notes` | optional | Boilerplate stripping, truncation, or source caveats. |
 
@@ -291,7 +292,7 @@ Non-goals:
 ### P2-2 - Define Full-Text Policy and Extraction Contract
 
 Estimate: 1-2 hours.
-Status: planned.
+Status: completed.
 
 Goal: make full-text usage safe, reviewable, and bounded before selecting the
 ND article set.

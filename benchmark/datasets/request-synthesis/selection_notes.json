@@ -1,0 +1,77 @@
+{
+  "benchmark_id": "request-synthesis",
+  "case_id": "syn-nd-001",
+  "full_text_policy": {
+    "boilerplate_cleanup_rules": [
+      "Remove navigation, cookie, subscription, share, and newsletter boilerplate.",
+      "Remove repeated source labels and duplicated article headers.",
+      "Remove warning markers such as Fetch failed, Paywall, and warning symbols from model-facing text.",
+      "Remove source/provenance prefixes from model-facing text while preserving provenance in selection_notes.json.",
+      "Keep article-body evidence, dates, company names, product mechanics, quoted claims, and risk/caveat language."
+    ],
+    "minimum_body_full_text_chars": 1500,
+    "quality_enum": [
+      "exact",
+      "near_exact",
+      "local_summary",
+      "analogue",
+      "unusable"
+    ],
+    "quality_rules": {
+      "analogue": "Allowed only for nuance or distractor roles unless expert review explicitly approves otherwise.",
+      "core": "Core evidence articles must use exact or near_exact full text.",
+      "local_summary": "Allowed only for nuance or distractor roles unless expert review explicitly approves otherwise.",
+      "unusable": "Article must be replaced before model-facing inputs are built."
+    },
+    "short_source_exception_policy": "If the local source artifact is shorter than 1,500 characters, the exception must be documented with full_text_quality_notes.",
+    "soft_cap_body_full_text_chars": 20000,
+    "soft_cap_exception_policy": "Text longer than the soft cap can be retained only with cleaning notes explaining why truncation would remove important evidence."
+  },
+  "schema_examples": [
+    {
+      "article_id": "art_0000000000",
+      "cleaning_notes": "Removed navigation boilerplate and repeated title.",
+      "covered_topic_codes": [
+        "nd-intent-signals"
+      ],
+      "full_text_char_count": 6400,
+      "full_text_quality": "exact",
+      "full_text_quality_notes": "Complete local article text is available after boilerplate cleanup.",
+      "full_text_source_path": ".state/articles/example-exact.md",
+      "replacement_required": false,
+      "selection_rationale": "Example of a core evidence article with complete text.",
+      "selection_role": "core"
+    },
+    {
+      "article_id": "art_1111111111",
+      "cleaning_notes": "Merged local article excerpt with matching raw item text.",
+      "covered_topic_codes": [
+        "nd-lead-routing"
+      ],
+      "full_text_char_count": 2800,
+      "full_text_quality": "near_exact",
+      "full_text_quality_notes": "Local text appears to preserve the article body but may omit minor source formatting.",
+      "full_text_source_path": ".state/raw/nml.md",
+      "replacement_required": false,
+      "selection_rationale": "Example of a usable article whose text comes from raw local material.",
+      "selection_role": "core"
+    },
+    {
+      "article_id": "art_2222222222",
+      "cleaning_notes": "Only warning or paywall stub was available locally.",
+      "covered_topic_codes": [
+        "nd-risk"
+      ],
+      "full_text_char_count": 0,
+      "full_text_quality": "unusable",
+      "full_text_quality_notes": "No usable local full text is available; this article must be replaced before inputs are built.",
+      "full_text_source_path": ".state/articles/example-unusable.md",
+      "replacement_required": true,
+      "selection_rationale": "Example of an article that cannot enter model-facing inputs.",
+      "selection_role": "nuance"
+    }
+  ],
+  "schema_version": "request_synthesis_selection_notes_v1",
+  "selected_articles": [],
+  "status": "policy_defined_no_articles_selected"
+}

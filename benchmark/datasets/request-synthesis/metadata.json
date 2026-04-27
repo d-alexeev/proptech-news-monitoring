@@ -6,13 +6,37 @@
   "created_at": "2026-04-27",
   "expert_review_status": "not_started",
   "full_text_inputs": {
+    "boilerplate_cleanup_rules": [
+      "Remove navigation, cookie, subscription, share, and newsletter boilerplate.",
+      "Remove repeated source labels and duplicated article headers.",
+      "Remove warning markers such as Fetch failed, Paywall, and warning symbols from model-facing text.",
+      "Remove source/provenance prefixes from model-facing text while preserving provenance in selection_notes.json.",
+      "Keep article-body evidence, dates, company names, product mechanics, quoted claims, and risk/caveat language."
+    ],
     "enabled": true,
+    "minimum_body_full_text_chars": 1500,
     "pilot_article_limit": 12,
-    "status": "policy_pending"
+    "quality_enum": [
+      "exact",
+      "near_exact",
+      "local_summary",
+      "analogue",
+      "unusable"
+    ],
+    "quality_rules": {
+      "analogue": "Allowed only for nuance or distractor roles unless expert review explicitly approves otherwise.",
+      "core": "Core evidence articles must use exact or near_exact full text.",
+      "local_summary": "Allowed only for nuance or distractor roles unless expert review explicitly approves otherwise.",
+      "unusable": "Article must be replaced before model-facing inputs are built."
+    },
+    "short_source_exception_policy": "If the local source artifact is shorter than 1,500 characters, the exception must be documented in selection_notes.json with full_text_quality_notes.",
+    "soft_cap_body_full_text_chars": 20000,
+    "soft_cap_exception_policy": "Text longer than the soft cap can be retained only with cleaning notes explaining why truncation would remove important evidence.",
+    "status": "policy_defined"
   },
   "milestone_status": {
     "P2-1": "completed",
-    "P2-2": "planned",
+    "P2-2": "completed",
     "P2-3": "planned",
     "P2-4": "planned",
     "P2-5": "planned",
