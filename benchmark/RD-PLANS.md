@@ -350,6 +350,18 @@ Each candidate follows the RD1 article-card contract and additionally includes
 `artifact_refs` so reviewers can trace which local source artifacts contributed
 to the merged candidate card.
 
+## Facets and Rubric Artifact
+
+RD3 creates:
+
+```text
+benchmark/datasets/request-article-retrieval/facets_and_rubric.json
+```
+
+The artifact defines 6-10 discovery facets per request, the LLM relevance
+judge labels, required judgment fields, an uncertainty bucket, and three manual
+sample applications including a same-keyword irrelevant trap.
+
 ## Candidate Discovery Method
 
 The candidate pool must normalize all available local artifacts:
@@ -411,7 +423,8 @@ corpus grows enough that BM25 plus LLM review misses analogues.
 | RD0 | complete | Planning artifact created in `benchmark/RD-PLANS.md`. |
 | RD1 | complete | Dataset contract locked in this file: artifact schemas, stable ids, provenance enum, bucket rules, and mock input/golden pair. |
 | RD2 | complete | Generated candidate inventory with 225 unique candidates, 72 raw-only candidates, URL dedupe, provenance counts, and inherited nested raw source metadata. |
-| RD3-RD9 | pending | Not implemented yet. |
+| RD3 | complete | Added per-request facet maps, judge rubric, uncertainty bucket, and manual sample applications. |
+| RD4-RD9 | pending | Not implemented yet. |
 
 ## Milestone Details
 

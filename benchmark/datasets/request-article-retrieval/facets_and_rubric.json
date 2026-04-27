@@ -1,0 +1,228 @@
+{
+  "benchmark_id": "request-article-retrieval",
+  "schema_version": "facets_rubric_v1",
+  "facet_maps": {
+    "reqret-001": {
+      "name": "New Developments / Data-Driven CPA",
+      "facets": [
+        {
+          "id": "newdev_first_party_intent_data",
+          "label": "First-party or external buyer intent data for new homes demand generation"
+        },
+        {
+          "id": "newdev_ai_lead_scoring",
+          "label": "AI/ML lead scoring or qualification for residential buyers"
+        },
+        {
+          "id": "newdev_lead_lot_operator_matching",
+          "label": "Matching a buyer lead to a residential complex, specific lot, operator, consultant, or developer"
+        },
+        {
+          "id": "newdev_call_center_crm_automation",
+          "label": "Call-center, CRM, or sales automation that improves lead handling"
+        },
+        {
+          "id": "newdev_inventory_data_quality",
+          "label": "New developments inventory data: availability, price, delivery date, floor plans, or lot attributes"
+        },
+        {
+          "id": "newdev_developer_monetization",
+          "label": "Developer monetization through CPA, CPL, quality pricing, guarantees, or budget allocation"
+        },
+        {
+          "id": "newdev_content_platform",
+          "label": "Content platform or rich project/unit pages used to influence buyer decisions"
+        },
+        {
+          "id": "newdev_model_risks",
+          "label": "Risks around paid traffic dependency, lead quality, organic cannibalization, vendor data, or operator dependency"
+        }
+      ]
+    },
+    "reqret-002": {
+      "name": "Owner Monetization in Secondary Sales",
+      "facets": [
+        {
+          "id": "owner_freemium_listing_limits",
+          "label": "Freemium private-seller listing model with visibility, contact, duration, or liquidity limits"
+        },
+        {
+          "id": "owner_paid_visibility_boosts",
+          "label": "Paid boosts, premium placement, or upgraded exposure for owner listings"
+        },
+        {
+          "id": "owner_seller_bundles",
+          "label": "Seller bundles that combine promotion, listing quality, pricing advice, analytics, or deal preparation"
+        },
+        {
+          "id": "owner_ai_pricing_listing_quality",
+          "label": "AI recommendations, pricing tools, photo/visual upgrades, or listing quality diagnostics"
+        },
+        {
+          "id": "owner_trigger_based_upsell",
+          "label": "Upsell triggered by weak demand, stale exposure, low ranking, depleted contacts, or poor price/photo quality"
+        },
+        {
+          "id": "owner_supply_retention_risk",
+          "label": "Evidence about seller supply loss, distrust, cannibalization, or paywall UX risk"
+        },
+        {
+          "id": "owner_private_seller_services",
+          "label": "Legal, safety, deal-prep, document, valuation, or concierge services sold to private sellers"
+        },
+        {
+          "id": "owner_portal_arppu_penetration",
+          "label": "Portal or classifieds revenue expansion through higher ARPPU or paid-product penetration among owners"
+        }
+      ]
+    },
+    "reqret-003": {
+      "name": "RRE TRX / Comfortable Deal",
+      "facets": [
+        {
+          "id": "trx_portal_to_transaction",
+          "label": "Portal or classifieds expansion from listings into transaction enablement"
+        },
+        {
+          "id": "trx_city_by_city_rollout",
+          "label": "Hyperlocal or city-by-city rollout with local operations, teams, or market capture"
+        },
+        {
+          "id": "trx_agent_channel_flywheel",
+          "label": "Agent channel flywheel combining agent acquisition, lead supply, tools, and seller inflow"
+        },
+        {
+          "id": "trx_comfortable_deal_analogue",
+          "label": "Managed sale, seller concierge, safe deal, closing, escrow, legal, mortgage, or deal-room analogue"
+        },
+        {
+          "id": "trx_agent_workspace_tools",
+          "label": "CRM, workspace, matching, professional profiles, payments, AI assistant, or agent productivity tooling"
+        },
+        {
+          "id": "trx_commission_monetization",
+          "label": "Commission, referral, take-rate, mortgage, closing, or transaction-service monetization"
+        },
+        {
+          "id": "trx_local_partner_network",
+          "label": "Partner brokerage, local agent network, or marketplace-to-service-provider operating model"
+        },
+        {
+          "id": "trx_model_risks",
+          "label": "Risks around subsidies, margin, local operations, service quality, take-rate scaling, or classifieds conflict"
+        }
+      ]
+    },
+    "reqret-004": {
+      "name": "LTR / Rent Plus",
+      "facets": [
+        {
+          "id": "ltr_early_access_hidden_supply",
+          "label": "Early access, secret, hidden, pre-market, or priority rental listings"
+        },
+        {
+          "id": "ltr_renter_subscription_bundle",
+          "label": "Paid renter subscription, bundle, premium alerts, or priority contact product"
+        },
+        {
+          "id": "ltr_landlord_supply_incentives",
+          "label": "Landlord supply incentives, free trials, discounts, or reduced low-quality contacts"
+        },
+        {
+          "id": "ltr_quality_verified_inventory",
+          "label": "Verified landlord inventory, listing quality controls, anti-spam, trust, or fraud controls"
+        },
+        {
+          "id": "ltr_ai_rental_concierge",
+          "label": "AI rental concierge, matching, viewing scheduling, or assisted renter workflow"
+        },
+        {
+          "id": "ltr_light_transaction_services",
+          "label": "Lease, insurance, tenant screening, payments, deposit, or other light rental transaction services"
+        },
+        {
+          "id": "ltr_marketplace_liquidity_loop",
+          "label": "Closed liquidity loop where renter revenue funds better supply, quality, or services"
+        },
+        {
+          "id": "ltr_model_risks",
+          "label": "Risks around free buyer experience, ranking, trust, legal/privacy issues, suspicious content, or one-mechanic revenue concentration"
+        }
+      ]
+    }
+  },
+  "judge_rubric": {
+    "score_labels": {
+      "3": {
+        "label": "direct evidence",
+        "meaning": "The article directly validates, refutes, or materially refines the request's investment hypothesis."
+      },
+      "2": {
+        "label": "strong analogue",
+        "meaning": "The article gives a strong adjacent market analogue with a comparable mechanism, even if the asset class or geography differs."
+      },
+      "1": {
+        "label": "peripheral",
+        "meaning": "The article is useful context but does not materially answer the request."
+      },
+      "0": {
+        "label": "irrelevant",
+        "meaning": "The article overlaps on keywords, company, or broad topic but does not help answer the request."
+      }
+    },
+    "required_judgment_fields": [
+      "request_id",
+      "article_id",
+      "score",
+      "matched_facets",
+      "rationale",
+      "uncertainty"
+    ],
+    "uncertainty_bucket": {
+      "id": "uncertain_review",
+      "use_when": [
+        "The article title/summary implies relevance but the compact excerpt is too thin.",
+        "The mechanism is plausible but not explicit enough to choose between score 1 and 2.",
+        "The article may be a strong distractor and needs human adjudication before final bucket assignment."
+      ]
+    }
+  },
+  "sample_applications": [
+    {
+      "request_id": "reqret-001",
+      "article_id": "art_58952c33fa",
+      "article_title": "The AI Sales Agent for New Homes Is Here, And There's No Going Back",
+      "score": 3,
+      "matched_facets": [
+        "newdev_ai_lead_scoring",
+        "newdev_call_center_crm_automation",
+        "newdev_lead_lot_operator_matching"
+      ],
+      "rationale": "Directly addresses AI-assisted new homes sales workflows and lead handling, which maps to buyer qualification and operator matching for Avito New Developments.",
+      "uncertainty": "low"
+    },
+    {
+      "request_id": "reqret-003",
+      "article_id": "art_7b08997fd3",
+      "article_title": "OpenSooq: Building vertical depth from regionwide horizontal footprint",
+      "score": 2,
+      "matched_facets": [
+        "trx_portal_to_transaction",
+        "trx_commission_monetization",
+        "trx_local_partner_network"
+      ],
+      "rationale": "Strong classifieds-to-vertical-depth analogue, but the available card does not prove a full Comfortable Deal-style transaction operating model.",
+      "uncertainty": "medium"
+    },
+    {
+      "request_id": "reqret-002",
+      "article_id": "art_6dd0cbd6be",
+      "article_title": "Avito Jobs launches branded vacancy ads",
+      "score": 0,
+      "matched_facets": [],
+      "rationale": "Same-company and advertising keywords are present, but the article is about jobs ads and does not inform private-owner real estate monetization.",
+      "uncertainty": "low",
+      "trap_type": "same_keyword_irrelevant"
+    }
+  ]
+}
