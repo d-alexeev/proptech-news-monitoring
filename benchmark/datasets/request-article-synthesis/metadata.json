@@ -72,7 +72,7 @@
     "AS1": "completed",
     "AS2": "completed",
     "AS3a": "completed",
-    "AS3b": "planned",
+    "AS3b": "completed",
     "AS4": "planned",
     "AS5a": "planned",
     "AS5b": "planned",
@@ -88,7 +88,9 @@
     "path": "golden.jsonl",
     "record_count": 1,
     "article_label_count": 12,
-    "status": "relevance_labels_defined"
+    "status": "article_thesis_labels_defined",
+    "must_cover_point_count": 14,
+    "must_not_claim_article_count": 12
   },
   "input_selection_profile": {
     "source": "Copied from request-synthesis ND pilot input to keep whole-set and per-article tasks comparable.",

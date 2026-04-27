@@ -204,7 +204,7 @@ Non-goals:
 
 ### AS3b — Article Thesis Golden
 
-Status: planned
+Status: completed
 
 Goal: add expected article-level thesis points and overstatement guards.
 
