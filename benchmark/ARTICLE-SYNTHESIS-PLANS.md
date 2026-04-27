@@ -69,7 +69,7 @@ Non-goals:
 
 ### AS1 — Dataset Contract
 
-Status: planned
+Status: completed
 
 Goal: define `inputs.jsonl`, `golden.jsonl`, `metadata.json`, and
 `output_schema.json` for article-level synthesis.

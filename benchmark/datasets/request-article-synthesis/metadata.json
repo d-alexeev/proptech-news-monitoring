@@ -1,0 +1,82 @@
+{
+  "benchmark_id": "request-article-synthesis",
+  "version": "0.1.0",
+  "schema_version": "request_article_synthesis_metadata_v1",
+  "phase": "phase_2_article_level_synthesis",
+  "status": "contract_defined",
+  "pilot_scope": "ND-only pilot based on reqret-001; other cases deferred until the first case is reviewed.",
+  "case_ids": [
+    "art-syn-nd-001"
+  ],
+  "source_benchmarks": {
+    "retrieval_case_id": "reqret-001",
+    "whole_set_synthesis_case_id": "syn-nd-001"
+  },
+  "artifacts": {
+    "inputs": "inputs.jsonl",
+    "golden": "golden.jsonl",
+    "output_schema": "output_schema.json"
+  },
+  "output_contract": {
+    "article_coverage": "The model must return exactly one article_summaries item for every input article.",
+    "irrelevant_policy": "Irrelevant and distractor articles must be labeled explicitly and must not be converted into substantive supporting theses.",
+    "request_specificity": "Summaries and theses must explain what the article contributes to the Avito New Developments request, not provide a generic article recap.",
+    "full_text_usage": "The model may use body_full_text and body_excerpt, but should cite only article_id evidence, not quote long passages."
+  },
+  "enums": {
+    "relevance": [
+      "high",
+      "medium",
+      "low",
+      "irrelevant"
+    ],
+    "support_type": [
+      "direct_evidence",
+      "analogue",
+      "risk",
+      "background",
+      "distractor"
+    ],
+    "thesis_supports": [
+      "confirms",
+      "weakens",
+      "nuances",
+      "risk",
+      "background"
+    ]
+  },
+  "mock_output_example": {
+    "case_id": "art-syn-nd-001",
+    "article_summaries": [
+      {
+        "article_id": "art_0000000000",
+        "relevance": "medium",
+        "support_type": "analogue",
+        "request_specific_summary": "The article is an analogue for using first-party buyer behavior to prioritize follow-up, but it does not directly validate developer CPA pricing.",
+        "theses": [
+          {
+            "statement": "Behavioral intent signals can help prioritize sales follow-up.",
+            "supports": "confirms",
+            "evidence": "The article describes activity signals being used to decide which lead needs immediate follow-up."
+          }
+        ],
+        "avito_implication": "Useful as an analogue for Avito ND lead scoring, with caution that the monetization model is not direct developer CPA proof.",
+        "caveats": [
+          "Adjacent residential workflow evidence, not a direct new-development portal pricing case."
+        ]
+      }
+    ]
+  },
+  "milestone_status": {
+    "AS0": "completed",
+    "AS1": "completed",
+    "AS2": "planned",
+    "AS3a": "planned",
+    "AS3b": "planned",
+    "AS4": "planned",
+    "AS5a": "planned",
+    "AS5b": "planned",
+    "AS6": "planned",
+    "AS7": "planned"
+  }
+}

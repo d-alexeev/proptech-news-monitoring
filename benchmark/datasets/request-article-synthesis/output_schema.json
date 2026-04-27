@@ -1,0 +1,127 @@
+{
+  "benchmark_id": "request-article-synthesis",
+  "schema_version": "request_article_synthesis_output_v1",
+  "output_format": "json",
+  "response_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "case_id",
+      "article_summaries"
+    ],
+    "properties": {
+      "case_id": {
+        "type": "string",
+        "const": "art-syn-nd-001"
+      },
+      "article_summaries": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "$ref": "#/$defs/article_summary"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "article_id": {
+      "type": "string",
+      "pattern": "^art_[0-9a-f]{10}$"
+    },
+    "article_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "article_id",
+        "relevance",
+        "support_type",
+        "request_specific_summary",
+        "theses",
+        "avito_implication",
+        "caveats"
+      ],
+      "properties": {
+        "article_id": {
+          "$ref": "#/$defs/article_id"
+        },
+        "relevance": {
+          "type": "string",
+          "enum": [
+            "high",
+            "medium",
+            "low",
+            "irrelevant"
+          ]
+        },
+        "support_type": {
+          "type": "string",
+          "enum": [
+            "direct_evidence",
+            "analogue",
+            "risk",
+            "background",
+            "distractor"
+          ]
+        },
+        "request_specific_summary": {
+          "type": "string",
+          "minLength": 1,
+          "description": "What this article contributes to the user request. For irrelevant articles, explain why it should not support the request."
+        },
+        "theses": {
+          "type": "array",
+          "description": "One to three request-specific points for relevant articles. Irrelevant articles may use an empty array.",
+          "items": {
+            "$ref": "#/$defs/thesis"
+          }
+        },
+        "avito_implication": {
+          "type": "string",
+          "description": "Concrete implication for the Avito New Developments hypothesis, or a brief explanation that there is no useful implication."
+        },
+        "caveats": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "thesis": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "statement",
+        "supports",
+        "evidence"
+      ],
+      "properties": {
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        },
+        "supports": {
+          "type": "string",
+          "enum": [
+            "confirms",
+            "weakens",
+            "nuances",
+            "risk",
+            "background"
+          ]
+        },
+        "evidence": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Short grounded evidence note from the article, not a long quote."
+        }
+      }
+    }
+  },
+  "irrelevant_article_rules": [
+    "Use relevance=irrelevant and support_type=distractor for strong distractors.",
+    "Irrelevant articles should usually have an empty theses array.",
+    "Irrelevant articles must not be framed as confirming the Avito ND investment hypothesis."
+  ]
+}
