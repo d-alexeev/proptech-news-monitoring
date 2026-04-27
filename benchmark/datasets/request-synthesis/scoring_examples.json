@@ -1,0 +1,191 @@
+{
+  "benchmark_id": "request-synthesis",
+  "case_id": "syn-nd-001",
+  "examples": [
+    {
+      "expected_pass": true,
+      "id": "good",
+      "reason": "Covers all four must-cover theses, includes risks, grounds claims in supplied article IDs, and avoids overclaiming developer CPA proof.",
+      "sample_output": {
+        "answer_summary": "The corpus supports the ND hypothesis directionally: Avito can plausibly improve CPA economics by converting existing demand better through AI-assisted lead qualification, structured property data, and operator handoff, but developer-specific quality-based CPA is not directly proven.",
+        "avito_implications": [
+          {
+            "evidence_article_ids": [
+              "art_58952c33fa",
+              "art_82b95d2e44"
+            ],
+            "reasoning": "Both articles show conversion lift mechanisms around neglected leads and faster response.",
+            "statement": "Pilot around lead recovery and operator handoff before claiming paid-traffic substitution."
+          },
+          {
+            "evidence_article_ids": [
+              "art_f54777679f",
+              "art_4030ad1705"
+            ],
+            "reasoning": "The evidence points to search, scoring, enrichment, and property reports as matching inputs.",
+            "statement": "Invest in inventory and intent data quality before monetizing lead quality."
+          }
+        ],
+        "case_id": "syn-nd-001",
+        "caveats": [
+          "The corpus contains analogues from agent and portal workflows, not a direct Avito developer CPA case."
+        ],
+        "risks": [
+          {
+            "evidence_article_ids": [
+              "art_72bf1d2512"
+            ],
+            "reasoning": "The lawsuit example shows consent and synthetic outreach risk.",
+            "statement": "Automated lead activation can create legal and trust risk."
+          },
+          {
+            "evidence_article_ids": [
+              "art_1a5306798b"
+            ],
+            "reasoning": "Agents describe limits of AI in emotional or complex interactions.",
+            "statement": "AI should not replace human operators in high-trust conversion moments."
+          }
+        ],
+        "theses": [
+          {
+            "evidence_article_ids": [
+              "art_58952c33fa",
+              "art_82b95d2e44",
+              "art_45ed1d626f"
+            ],
+            "reasoning": "AI sales and engagement tools recover neglected demand and move leads to human teams.",
+            "statement": "Better conversion from existing demand is the strongest path to lower paid-traffic dependence.",
+            "strength": "strong"
+          },
+          {
+            "evidence_article_ids": [
+              "art_82b95d2e44",
+              "art_34f650f1cc",
+              "art_8f98e029e7"
+            ],
+            "reasoning": "CRM, behavior, and conversation data are used for intent detection and follow-up.",
+            "statement": "First-party and conversation data can support lead scoring and prioritization.",
+            "strength": "strong"
+          },
+          {
+            "evidence_article_ids": [
+              "art_f54777679f",
+              "art_4030ad1705",
+              "art_31a1d23146"
+            ],
+            "reasoning": "Search, enrichment, property reports, and site-plan content improve property understanding.",
+            "statement": "Buyer-to-property matching depends on structured property data and richer listing content.",
+            "strength": "moderate"
+          },
+          {
+            "evidence_article_ids": [
+              "art_58952c33fa",
+              "art_45ed1d626f",
+              "art_1a5306798b"
+            ],
+            "reasoning": "The articles show AI handoff and limits around complex human decisions.",
+            "statement": "The operating pattern should be AI-assisted human handoff, not full automation.",
+            "strength": "strong"
+          },
+          {
+            "evidence_article_ids": [
+              "art_c0a637c253",
+              "art_82b95d2e44"
+            ],
+            "reasoning": "Homes.com and lead-routing examples are monetization analogues, not direct proof.",
+            "statement": "Quality-based monetization is plausible but direct developer CPA evidence remains indirect.",
+            "strength": "weak"
+          }
+        ]
+      }
+    },
+    {
+      "expected_pass": false,
+      "id": "incomplete",
+      "reason": "Fails thesis recall: it covers AI lead conversion but omits data/matching, human handoff, monetization caveats, and risks.",
+      "sample_output": {
+        "answer_summary": "AI agents can help Avito Novostroek process more leads.",
+        "avito_implications": [
+          {
+            "evidence_article_ids": [
+              "art_58952c33fa"
+            ],
+            "reasoning": "The article discusses an AI sales agent for new homes.",
+            "statement": "Try an AI sales assistant."
+          }
+        ],
+        "case_id": "syn-nd-001",
+        "caveats": [],
+        "risks": [],
+        "theses": [
+          {
+            "evidence_article_ids": [
+              "art_58952c33fa"
+            ],
+            "reasoning": "AI can engage many leads.",
+            "statement": "AI sales agents can improve lead handling.",
+            "strength": "moderate"
+          }
+        ]
+      }
+    },
+    {
+      "expected_pass": false,
+      "id": "hallucinated",
+      "reason": "Fails forbidden-claim and grounding checks: it claims proof of Avito paid-traffic reduction and developer CPA validation, and asserts AI replacement of operators.",
+      "sample_output": {
+        "answer_summary": "The articles prove Avito can cut paid marketing and launch developer CPA immediately.",
+        "avito_implications": [
+          {
+            "evidence_article_ids": [
+              "art_c0a637c253"
+            ],
+            "reasoning": "Homes.com proves developer CPA works.",
+            "statement": "Move directly to quality-based CPA for all developers."
+          }
+        ],
+        "case_id": "syn-nd-001",
+        "caveats": [
+          "No caveats."
+        ],
+        "risks": [
+          {
+            "evidence_article_ids": [
+              "art_7ed2a76ff5"
+            ],
+            "reasoning": "Marketing leaders use AI, so risk is low.",
+            "statement": "There are no meaningful risks."
+          }
+        ],
+        "theses": [
+          {
+            "evidence_article_ids": [
+              "art_58952c33fa"
+            ],
+            "reasoning": "The AI sales agent can handle leads.",
+            "statement": "AI can replace sales operators in new developments.",
+            "strength": "strong"
+          }
+        ]
+      }
+    }
+  ],
+  "manual_rubric": {
+    "avito_usefulness": {
+      "pass_rule": "The answer explicitly connects evidence to Avito ND investment decisions and distinguishes implications from generic market summary."
+    },
+    "evidence_grounding": {
+      "pass_rule": "At least 70% of cited article IDs must support the claim they are attached to; major theses, risks, and implications must cite supplied article IDs."
+    },
+    "forbidden_claims": {
+      "pass_rule": "Any high-severity forbidden claim fails the case regardless of other scores."
+    },
+    "risk_coverage": {
+      "pass_rule": "At least one required risk must be covered, and a strong answer should cover legal/trust risk plus over-automation or evidence-indirectness risk."
+    },
+    "thesis_recall": {
+      "pass_rule": "At least 80% of must-cover theses must be present. For the ND pilot, this means at least 4 of 4 must-cover theses."
+    }
+  },
+  "schema_version": "request_synthesis_scoring_examples_v1"
+}

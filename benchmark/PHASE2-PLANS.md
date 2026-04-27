@@ -484,7 +484,7 @@ Non-goals:
 ### P2-7 - Scoring Examples and Manual Rubric
 
 Estimate: 1-2 hours.
-Status: planned.
+Status: completed.
 
 Goal: make the scoring rules concrete before QA and expert review.
 
