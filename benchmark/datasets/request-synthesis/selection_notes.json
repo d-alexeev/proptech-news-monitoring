@@ -72,6 +72,203 @@
     }
   ],
   "schema_version": "request_synthesis_selection_notes_v1",
-  "selected_articles": [],
-  "status": "policy_defined_no_articles_selected"
+  "selected_article_count": 12,
+  "selected_articles": [
+    {
+      "article_id": "art_58952c33fa",
+      "cleaning_notes": "Remove YAML frontmatter and repeated markdown title before model-facing use.",
+      "covered_topic_codes": [
+        "nd-intent-signals",
+        "nd-buyer-matching",
+        "nd-ops-automation"
+      ],
+      "full_text_char_count": 2530,
+      "full_text_quality": "exact",
+      "full_text_quality_notes": "Fetched local markdown has article body, source metadata, and no failure markers.",
+      "full_text_source_path": ".state/articles/2026-03/2026-03-30_the-ai-sales-agent-for-new-homes-is-here-and-theres-no-going.md",
+      "replacement_required": false,
+      "selection_rationale": "Direct new-homes evidence for AI sales-agent automation, lead warming, intent extraction, and human handoff.",
+      "selection_role": "core"
+    },
+    {
+      "article_id": "art_82b95d2e44",
+      "cleaning_notes": "Remove YAML frontmatter and repeated markdown title before model-facing use.",
+      "covered_topic_codes": [
+        "nd-intent-signals",
+        "nd-buyer-matching",
+        "nd-ops-automation"
+      ],
+      "full_text_char_count": 2796,
+      "full_text_quality": "exact",
+      "full_text_quality_notes": "Fetched local markdown has article body, source metadata, and no failure markers.",
+      "full_text_source_path": ".state/articles/2026-03/2026-03-31_inside-real-estate-wants-to-fix-the-response-lag-killing-dea.md",
+      "replacement_required": false,
+      "selection_rationale": "Core evidence for high-intent lead surfacing, response-lag reduction, and CRM/workflow automation.",
+      "selection_role": "core"
+    },
+    {
+      "article_id": "art_f54777679f",
+      "cleaning_notes": "Remove YAML frontmatter and repeated markdown title before model-facing use.",
+      "covered_topic_codes": [
+        "nd-buyer-matching",
+        "nd-inventory-data",
+        "nd-intent-signals"
+      ],
+      "full_text_char_count": 2369,
+      "full_text_quality": "exact",
+      "full_text_quality_notes": "Fetched local markdown has article body, source metadata, and no failure markers.",
+      "full_text_source_path": ".state/articles/2026-02/2026-02-06_realscout-scores-a-hat-trick-with-massive-ai-led-update-to-p.md",
+      "replacement_required": false,
+      "selection_rationale": "Core evidence for AI search, scoring, contact enrichment, and better matching between user intent and listings.",
+      "selection_role": "core"
+    },
+    {
+      "article_id": "art_4030ad1705",
+      "cleaning_notes": "Remove YAML frontmatter and repeated markdown title before model-facing use.",
+      "covered_topic_codes": [
+        "nd-inventory-data",
+        "nd-ops-automation"
+      ],
+      "full_text_char_count": 2201,
+      "full_text_quality": "exact",
+      "full_text_quality_notes": "Fetched local markdown has article body, source metadata, and no failure markers.",
+      "full_text_source_path": ".state/articles/2026-03/2026-03-19_statewide-mls-taps-realreports-to-roll-out-ai-property-tools.md",
+      "replacement_required": false,
+      "selection_rationale": "Core evidence for structured property data, AI property reports, and unified workflows around listing intelligence.",
+      "selection_role": "core"
+    },
+    {
+      "article_id": "art_45ed1d626f",
+      "cleaning_notes": "Remove YAML frontmatter and repeated markdown title before model-facing use.",
+      "covered_topic_codes": [
+        "nd-intent-signals",
+        "nd-inventory-data",
+        "nd-ops-automation"
+      ],
+      "full_text_char_count": 3656,
+      "full_text_quality": "exact",
+      "full_text_quality_notes": "Fetched local markdown has article body, source metadata, and no failure markers.",
+      "full_text_source_path": ".state/articles/2026-02/2026-02-23_proptech-ceo-were-empowering-not-displacing-agents.md",
+      "replacement_required": false,
+      "selection_rationale": "Core evidence for listing-level engagement, richer property content, early buyer qualification, and AI-assisted conversations.",
+      "selection_role": "core"
+    },
+    {
+      "article_id": "art_34f650f1cc",
+      "cleaning_notes": "Remove YAML frontmatter and repeated markdown title before model-facing use.",
+      "covered_topic_codes": [
+        "nd-intent-signals",
+        "nd-ops-automation"
+      ],
+      "full_text_char_count": 1893,
+      "full_text_quality": "exact",
+      "full_text_quality_notes": "Fetched local markdown has article body, source metadata, and no failure markers.",
+      "full_text_source_path": ".state/articles/2026-04/2026-04-03_lofty-launches-ai-tool-to-turn-crm-contacts-into-seller-lead.md",
+      "replacement_required": false,
+      "selection_rationale": "Core analogue for mining first-party CRM data, detecting intent signals, and automated nurturing.",
+      "selection_role": "core"
+    },
+    {
+      "article_id": "art_8f98e029e7",
+      "cleaning_notes": "Remove YAML frontmatter and repeated markdown title before model-facing use.",
+      "covered_topic_codes": [
+        "nd-intent-signals",
+        "nd-ops-automation"
+      ],
+      "full_text_char_count": 2685,
+      "full_text_quality": "exact",
+      "full_text_quality_notes": "Fetched local markdown has article body, source metadata, and no failure markers.",
+      "full_text_source_path": ".state/articles/2026-04/2026-04-07_rechat-wants-to-capture-every-client-conversation-and-turn-i.md",
+      "replacement_required": false,
+      "selection_rationale": "Core evidence for converting client conversations into structured data for follow-up and CRM workflows.",
+      "selection_role": "core"
+    },
+    {
+      "article_id": "art_c0a637c253",
+      "cleaning_notes": "Remove YAML frontmatter and repeated markdown title before model-facing use.",
+      "covered_topic_codes": [
+        "nd-developer-monetization",
+        "nd-risks-limits"
+      ],
+      "full_text_char_count": 4637,
+      "full_text_quality": "exact",
+      "full_text_quality_notes": "Fetched local markdown has article body, source metadata, and no failure markers.",
+      "full_text_source_path": ".state/articles/2026-02/2026-02-24_costar-continues-defending-homescom-strategy.md",
+      "replacement_required": false,
+      "selection_rationale": "Core monetization analogue for portal strategy around listing-agent leads, paid members, and defending differentiated portal economics.",
+      "selection_role": "core"
+    },
+    {
+      "article_id": "art_31a1d23146",
+      "cleaning_notes": "Remove YAML frontmatter and repeated markdown title before model-facing use.",
+      "covered_topic_codes": [
+        "nd-inventory-data"
+      ],
+      "full_text_char_count": 3131,
+      "full_text_quality": "exact",
+      "full_text_quality_notes": "Fetched local markdown has article body, source metadata, and no failure markers.",
+      "full_text_source_path": ".state/articles/2026-02/2026-02-11_new-listing-tech-tool-expands-digital-property-views-beyond.md",
+      "replacement_required": false,
+      "selection_rationale": "Nuance evidence for richer property content and exterior/site-plan data that can improve recommendation quality.",
+      "selection_role": "nuance"
+    },
+    {
+      "article_id": "art_1a5306798b",
+      "cleaning_notes": "Remove YAML frontmatter and repeated markdown title before model-facing use.",
+      "covered_topic_codes": [
+        "nd-risks-limits"
+      ],
+      "full_text_char_count": 2553,
+      "full_text_quality": "exact",
+      "full_text_quality_notes": "Fetched local markdown has article body, source metadata, and no failure markers.",
+      "full_text_source_path": ".state/articles/2026-03/2026-03-27_agents-weigh-in-on-the-limits-of-artificial-intelligence.md",
+      "replacement_required": false,
+      "selection_rationale": "Risk and counterweight article on limits of AI in negotiation, trust, and emotionally complex real estate moments.",
+      "selection_role": "nuance"
+    },
+    {
+      "article_id": "art_72bf1d2512",
+      "cleaning_notes": "Remove YAML frontmatter and repeated markdown title before model-facing use.",
+      "covered_topic_codes": [
+        "nd-risks-limits"
+      ],
+      "full_text_char_count": 2457,
+      "full_text_quality": "exact",
+      "full_text_quality_notes": "Fetched local markdown has article body, source metadata, and no failure markers.",
+      "full_text_source_path": ".state/articles/2026-02/2026-02-27_class-action-accuses-lender-of-unsolicited-ai-generated-cold.md",
+      "replacement_required": false,
+      "selection_rationale": "Risk article for legal, consent, and trust failure modes around AI-driven outreach and lead activation.",
+      "selection_role": "nuance"
+    },
+    {
+      "article_id": "art_7ed2a76ff5",
+      "cleaning_notes": "Remove YAML frontmatter and repeated markdown title before model-facing use.",
+      "covered_topic_codes": [
+        "nd-risks-limits"
+      ],
+      "full_text_char_count": 2663,
+      "full_text_quality": "exact",
+      "full_text_quality_notes": "Fetched local markdown has article body, source metadata, and no failure markers.",
+      "full_text_source_path": ".state/articles/2026-02/2026-02-05_cmos-advise-dont-let-artificial-intelligence-replace-your-vo.md",
+      "replacement_required": false,
+      "selection_rationale": "Close distractor: AI and real estate marketing are thematically close, but the article should not support core ND CPA theses.",
+      "selection_role": "distractor"
+    }
+  ],
+  "selection_summary": {
+    "coverage_topic_codes": [
+      "nd-intent-signals",
+      "nd-buyer-matching",
+      "nd-developer-monetization",
+      "nd-inventory-data",
+      "nd-ops-automation",
+      "nd-risks-limits"
+    ],
+    "role_counts": {
+      "core": 8,
+      "distractor": 1,
+      "nuance": 3
+    }
+  },
+  "status": "nd_articles_selected"
 }

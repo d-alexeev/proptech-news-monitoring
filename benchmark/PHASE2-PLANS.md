@@ -334,7 +334,7 @@ Non-goals:
 ### P2-3 - Select 12 ND Articles
 
 Estimate: 1-2 hours.
-Status: planned.
+Status: completed.
 
 Goal: choose the 12-article ND synthesis set from Phase 1 artifacts.
 

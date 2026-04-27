@@ -37,7 +37,7 @@
   "milestone_status": {
     "P2-1": "completed",
     "P2-2": "completed",
-    "P2-3": "planned",
+    "P2-3": "completed",
     "P2-4": "planned",
     "P2-5": "planned",
     "P2-6": "planned",
@@ -60,6 +60,6 @@
   "source_retrieval_cases": [
     "reqret-001"
   ],
-  "status": "schema_defined",
+  "status": "nd_articles_selected",
   "version": "0.1.0"
 }
