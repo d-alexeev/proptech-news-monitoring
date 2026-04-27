@@ -35,6 +35,7 @@ OPENROUTER_HEADERS = {
 BENCHMARK_DIRS = {
     "request-synthesis": "request-synthesis",
     "request-article-retrieval": "request-article-retrieval",
+    "request-article-synthesis": "request-article-synthesis",
 }
 
 
@@ -214,6 +215,57 @@ Return JSON with exactly these top-level fields:
     return [{"role": "system", "content": system}, {"role": "user", "content": user}]
 
 
+def build_article_synthesis_messages(case: dict[str, Any]) -> list[dict[str, str]]:
+    article_lines = []
+    for article in case["articles"]:
+        article_lines.append(
+            "\n".join(
+                [
+                    f"ARTICLE_ID: {article['article_id']}",
+                    f"TITLE: {article['title']}",
+                    f"PUBLISHED: {article.get('published') or 'unknown'}",
+                    f"URL: {article['normalized_url']}",
+                    "EXCERPT:",
+                    article["body_excerpt"],
+                    "FULL_TEXT:",
+                    article["body_full_text"],
+                ]
+            )
+        )
+    system = (
+        "You write request-specific per-article summaries for Avito Real Estate. "
+        "Use only the supplied articles. Return exactly one summary for every article. "
+        "Label irrelevant or distractor articles explicitly instead of forcing them into evidence. "
+        "Return only valid JSON. Do not use markdown."
+    )
+    article_block = "\n\n---\n\n".join(article_lines)
+    user = f"""User request:
+{case["user_request"]}
+
+Articles:
+{article_block}
+
+Return JSON with exactly these top-level fields:
+{{
+  "case_id": "{case["id"]}",
+  "article_summaries": [
+    {{
+      "article_id": "art_...",
+      "relevance": "high|medium|low|irrelevant",
+      "support_type": "direct_evidence|analogue|risk|background|distractor",
+      "request_specific_summary": "what this article contributes to the Avito ND request",
+      "theses": [
+        {{"statement": "...", "supports": "confirms|weakens|nuances|risk|background", "evidence": "short grounded evidence note"}}
+      ],
+      "avito_implication": "concrete implication, or why there is no useful implication",
+      "caveats": ["..."]
+    }}
+  ]
+}}
+"""
+    return [{"role": "system", "content": system}, {"role": "user", "content": user}]
+
+
 def parse_synthesis(parsed: dict[str, Any], case: dict[str, Any]) -> dict[str, Any]:
     required = ["case_id", "answer_summary", "theses", "risks", "avito_implications", "caveats"]
     missing = [field for field in required if field not in parsed]
@@ -264,6 +316,55 @@ def parse_retrieval(parsed: dict[str, Any], case: dict[str, Any]) -> dict[str, A
     }
 
 
+def parse_article_synthesis(parsed: dict[str, Any], case: dict[str, Any]) -> dict[str, Any]:
+    if parsed.get("case_id") != case["id"]:
+        raise ValueError(f"case_id mismatch: {parsed.get('case_id')!r}")
+    summaries = parsed.get("article_summaries")
+    if not isinstance(summaries, list):
+        raise ValueError("article_summaries must be a list")
+    valid_ids = {article["article_id"] for article in case["articles"]}
+    seen: set[str] = set()
+    valid_relevance = {"high", "medium", "low", "irrelevant"}
+    valid_support = {"direct_evidence", "analogue", "risk", "background", "distractor"}
+    valid_thesis_support = {"confirms", "weakens", "nuances", "risk", "background"}
+    for item in summaries:
+        if not isinstance(item, dict):
+            raise ValueError("article_summaries items must be objects")
+        article_id = item.get("article_id")
+        if article_id not in valid_ids:
+            raise ValueError(f"unknown article_id: {article_id!r}")
+        if article_id in seen:
+            raise ValueError(f"duplicate article_id: {article_id}")
+        seen.add(article_id)
+        if item.get("relevance") not in valid_relevance:
+            raise ValueError(f"invalid relevance for {article_id}: {item.get('relevance')!r}")
+        if item.get("support_type") not in valid_support:
+            raise ValueError(f"invalid support_type for {article_id}: {item.get('support_type')!r}")
+        for field in ["request_specific_summary", "avito_implication"]:
+            if not isinstance(item.get(field), str) or not item[field].strip():
+                raise ValueError(f"{field} is required for {article_id}")
+        if not isinstance(item.get("caveats"), list):
+            raise ValueError(f"caveats must be a list for {article_id}")
+        theses = item.get("theses")
+        if not isinstance(theses, list):
+            raise ValueError(f"theses must be a list for {article_id}")
+        for thesis in theses:
+            if not isinstance(thesis, dict):
+                raise ValueError(f"theses items must be objects for {article_id}")
+            if thesis.get("supports") not in valid_thesis_support:
+                raise ValueError(f"invalid thesis supports for {article_id}: {thesis.get('supports')!r}")
+            for field in ["statement", "evidence"]:
+                if not isinstance(thesis.get(field), str) or not thesis[field].strip():
+                    raise ValueError(f"thesis.{field} is required for {article_id}")
+    missing = sorted(valid_ids - seen)
+    if missing:
+        raise ValueError(f"missing article_summaries for: {missing}")
+    return {
+        "pred": parsed,
+        "pred_article_summary_count": len(summaries),
+    }
+
+
 def run_cases(
     api_key: str | None,
     benchmark: str,
@@ -275,8 +376,18 @@ def run_cases(
     retries: int,
     dry_run: bool,
 ) -> list[dict[str, Any]]:
-    build_messages = build_synthesis_messages if benchmark == "request-synthesis" else build_retrieval_messages
-    parser = parse_synthesis if benchmark == "request-synthesis" else parse_retrieval
+    builders = {
+        "request-synthesis": build_synthesis_messages,
+        "request-article-retrieval": build_retrieval_messages,
+        "request-article-synthesis": build_article_synthesis_messages,
+    }
+    parsers = {
+        "request-synthesis": parse_synthesis,
+        "request-article-retrieval": parse_retrieval,
+        "request-article-synthesis": parse_article_synthesis,
+    }
+    build_messages = builders[benchmark]
+    parser = parsers[benchmark]
     rows: list[dict[str, Any] | None] = [None] * len(cases)
 
     def work(index: int, case: dict[str, Any]) -> dict[str, Any]:
@@ -322,12 +433,30 @@ def run_cases(
                             "caveats": ["dry run"],
                         }
                     )
-                else:
+                elif benchmark == "request-article-retrieval":
                     content = json.dumps(
                         {
                             "case_id": case["id"],
                             "article_ids": [case["corpus"][0]["article_id"]],
                             "rationale": "dry run",
+                        }
+                    )
+                else:
+                    content = json.dumps(
+                        {
+                            "case_id": case["id"],
+                            "article_summaries": [
+                                {
+                                    "article_id": article["article_id"],
+                                    "relevance": "low",
+                                    "support_type": "background",
+                                    "request_specific_summary": "dry run",
+                                    "theses": [],
+                                    "avito_implication": "dry run",
+                                    "caveats": ["dry run"],
+                                }
+                                for article in case["articles"]
+                            ],
                         }
                     )
                 usage: dict[str, Any] = {}
@@ -454,6 +583,31 @@ def score_synthesis(rows: list[dict[str, Any]], golden: list[dict[str, Any]]) ->
     }
 
 
+def score_article_synthesis_schema(rows: list[dict[str, Any]], golden: list[dict[str, Any]]) -> dict[str, Any]:
+    cases: list[dict[str, Any]] = []
+    scored = 0
+    for row in rows:
+        if not row.get("parse_ok") or row.get("error"):
+            cases.append({"id": row["id"], "status": "error", "error": row.get("error")})
+            continue
+        scored += 1
+        cases.append(
+            {
+                "id": row["id"],
+                "status": "schema_ok",
+                "article_summary_count": row.get("pred_article_summary_count"),
+            }
+        )
+    return {
+        "n_cases_total": len(rows),
+        "n_scored": scored,
+        "schema_valid_rate": round(scored / len(rows), 4) if rows else 0.0,
+        "n_api_or_parse_errors": len(rows) - scored,
+        "cases": cases,
+        "scoring_warning": "Article synthesis AS5a only validates schema, article coverage, IDs, and enums; deterministic quality scoring is added in AS5b.",
+    }
+
+
 def write_markdown(report: dict[str, Any], path: Path) -> None:
     lines = [
         f"# {report['meta']['benchmark']} run {report['meta']['timestamp']}",
@@ -467,6 +621,8 @@ def write_markdown(report: dict[str, Any], path: Path) -> None:
         scores = item["scores"]
         if report["meta"]["benchmark"] == "request-synthesis":
             primary = scores["avg_thesis_recall_by_evidence_overlap"]
+        elif report["meta"]["benchmark"] == "request-article-synthesis":
+            primary = scores["schema_valid_rate"]
         else:
             primary = scores["avg_recall"]
         lines.append(
@@ -542,7 +698,12 @@ def main() -> int:
         },
         "models": [],
     }
-    scorer = score_synthesis if args.benchmark == "request-synthesis" else score_retrieval
+    scorers = {
+        "request-synthesis": score_synthesis,
+        "request-article-retrieval": score_retrieval,
+        "request-article-synthesis": score_article_synthesis_schema,
+    }
+    scorer = scorers[args.benchmark]
 
     print(f"{args.benchmark}: {len(cases)} cases x {len(models)} models; concurrency={args.concurrency}")
     for model in models:

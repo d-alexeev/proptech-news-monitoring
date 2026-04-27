@@ -289,7 +289,7 @@ Non-goals:
 
 ### AS5a — Runner Schema Support
 
-Status: planned
+Status: completed
 
 Goal: allow the benchmark runner to call and validate
 `request-article-synthesis`.

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "schema_version": "request_article_synthesis_metadata_v1",
   "phase": "phase_2_article_level_synthesis",
-  "status": "scoring_spec_defined",
+  "status": "runner_schema_supported",
   "pilot_scope": "ND-only pilot based on reqret-001; other cases deferred until the first case is reviewed.",
   "case_ids": [
     "art-syn-nd-001"
@@ -74,7 +74,7 @@
     "AS3a": "completed",
     "AS3b": "completed",
     "AS4": "completed",
-    "AS5a": "planned",
+    "AS5a": "completed",
     "AS5b": "planned",
     "AS6": "planned",
     "AS7": "planned"
