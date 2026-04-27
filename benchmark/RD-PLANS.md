@@ -242,8 +242,10 @@ Article-card fields:
 | `published` | required, nullable | Published date or timestamp when available. |
 | `title` | required, nullable | Article title from the best available local artifact. |
 
-Known failed-fetch excerpts may be replaced with transparent `Local NML
-analogue` excerpts when exact source text is unavailable in local artifacts.
+Known failed-fetch excerpts, AIM paywalled excerpts, and stubs may be replaced
+with clean summary excerpts based on local NML source or analogue material.
+Source/provenance prefixes are not included in model-facing `body_excerpt`
+text.
 
 The retrieval-facing article card intentionally excludes `url`, `source_id`,
 `source_name`, `lead_or_summary`, `provenance`, `analyst_summary`,

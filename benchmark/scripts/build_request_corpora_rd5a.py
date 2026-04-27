@@ -19,6 +19,7 @@ DISCOVERY_PATH = DATASET_DIR / "candidate_discovery_draft.json"
 DEFAULT_CASES = ["reqret-001", "reqret-002", "reqret-003", "reqret-004"]
 TARGET_CORPUS_SIZE = 50
 MIN_DISTRACTOR_RATIO = 0.30
+LOCAL_NML_PREFIX_RE = re.compile(r"^Local NML (?:analogue|text) \([^)]*\): ")
 
 BODY_EXCERPT_OVERRIDES = {
     "art_5d20bf2093": (
@@ -39,6 +40,15 @@ BODY_EXCERPT_OVERRIDES = {
         "questions, uses proprietary listing, pricing and behavioral data, and "
         "is framed as a shift from filter-based search to personalized "
         "discovery."
+    ),
+    "art_23a5961b7e": (
+        "Zillow, Redfin and Zumper all moved home search into AI-driven "
+        "conversational interfaces, showing that buyers and renters are "
+        "starting to search through natural-language prompts rather than only "
+        "through filters. Related coverage describes Zillow's ChatGPT app, "
+        "Zillow's earlier natural-language search work, Redfin's ChatGPT home "
+        "search launch, and Zumper survey data showing renter use of AI tools "
+        "more than doubled year over year."
     ),
     "art_471dc4626e": (
         "Local NML analogue (.state/raw/nml_2025.md:1830, Zillow rolling back "
@@ -85,6 +95,110 @@ BODY_EXCERPT_OVERRIDES = {
         "competition between brokerage inventory strategies and open-market "
         "policies."
     ),
+    "art_04e6e8dac8": (
+        "Local NML analogue (.state/raw/nml.md:491, Property Finder raises "
+        "$170M investment; .state/raw/nml.md:1305, Property Finder verification "
+        "system): Property Finder raised new capital after earlier equity and "
+        "debt funding, citing product scale, market position and products such "
+        "as credit optimizer, home valuation and super agent. A separate NML "
+        "item describes its shift toward prevention-first listing quality using "
+        "official Dubai Land Department APIs and AI verification to reduce fake "
+        "or inconsistent listings."
+    ),
+    "art_1b810e53b7": (
+        "Local NML analogue (.state/raw/nml_2025.md:4902, Kleinanzeigen rolls "
+        "out new offers for real estate professionals; .state/raw/nml_2025.md:"
+        "6516, Bayut TruBroker): Related examples show portals competing on "
+        "real estate professional relationships through project pages for new "
+        "construction, richer listing formats, mortgage calculators and "
+        "agent-quality badges that reward responsiveness and listing accuracy. "
+        "This is a close analogue to differentiating against horizontal "
+        "classifieds through verified supply and agent trust."
+    ),
+    "art_2bccef547b": (
+        "Local NML analogue (.state/raw/nml_2025.md:6010, Dubizzle and Bayut "
+        "sign MoU with Prypco; .state/raw/nml_2025.md:4911, Dubizzle Group IPO): "
+        "Dubizzle and Bayut signed a partnership with Prypco to provide online "
+        "mortgage access and repayment estimates to property users. NML also "
+        "describes Dubizzle Group as a UAE classifieds operator and Bayut parent "
+        "with real estate, automotive and general marketplaces, using scale and "
+        "adjacent services to deepen property transactions beyond listings."
+    ),
+    "art_3d7bcc13cf": (
+        "Local NML analogue (.state/raw/nml.md:150, Zillow played nice before "
+        "going nuclear against private listings; .state/raw/nml_2025.md:6093, "
+        "QuintoAndar tools for agents): NML examples show agent-ecosystem "
+        "competition moving beyond listings into recruitment, retention and "
+        "workflow. Zillow considered brokerage perks and CRM discounts to align "
+        "agents against private-listing networks, while QuintoAndar shares "
+        "search profiles and curated portfolio tools with agents to help them "
+        "acquire and retain clients."
+    ),
+    "art_3ec9c9bdb8": (
+        "Local NML analogue (.state/raw/nml.md:181, Wildberries expands car and "
+        "real estate sales; .state/raw/nml.md:1089, Kaspi marketplace and "
+        "classifieds revenue): Wildberries extended its e-commerce marketplace "
+        "into cars and new-build apartments, growing developer inventory and "
+        "adding direct contact mechanics. Kaspi shows the broader marketplace "
+        "pattern of combining e-commerce, advertising and classifieds, including "
+        "auto and real estate verticals, as adjacent revenue engines."
+    ),
+    "art_60d8b8e94d": (
+        "Local NML analogue (.state/raw/nml_2025.md:5605, Lifull Connect: Taking "
+        "on PropertyGuru, 99 Group with new SE Asian division): Lifull Connect "
+        "acquired DCG property assets, launched SEA Connect Ventures and framed "
+        "the next strategic step as building a full-stack marketplace that "
+        "combines classifieds, transactions and partner networks. The article "
+        "also notes the challenge of generating sustainable revenue in Southeast "
+        "Asian property portals where listing-fee models are weaker."
+    ),
+    "art_6dd0cbd6be": (
+        "Local NML analogue (.state/raw/nml.md:40, Avito Real Estate opens "
+        "property location maps to advertisers): Avito Real Estate opened map "
+        "placements to advertisers, giving brands native visibility inside "
+        "property search without distracting from listings. The product targets "
+        "a high-income real estate audience and lets advertisers route users to "
+        "more detailed commercial information, showing Avito expanding richer "
+        "paid ad formats beyond standard listings."
+    ),
+    "art_7b08997fd3": (
+        "Local NML analogue (.state/raw/nml_2025.md:4029, Frontier Digital "
+        "Ventures marketplace portfolio; .state/raw/nml_2025.md:5605, Lifull "
+        "Connect SEA division): NML examples describe horizontal or portfolio "
+        "marketplace operators deepening selected verticals through property "
+        "brands, acquisitions and partner networks. Lifull Connect's Southeast "
+        "Asia plan explicitly targets a full-stack property marketplace that "
+        "adds transactions and partner services on top of classifieds."
+    ),
+    "art_aab9520bd2": (
+        "Local NML text (.state/raw/nml.md:1714, Opendoor acquires Doma's "
+        "closing, escrow tools): Opendoor acquired Doma's closing and escrow "
+        "operations, subject to regulatory approval, to make closing faster, "
+        "cheaper and more certain. The deal is positioned as a step toward "
+        "Opendoor becoming closing infrastructure for U.S. real estate, with "
+        "Doma's data, algorithms and closing professionals supporting title "
+        "acceptance and refinance workflows."
+    ),
+    "art_df3527fb92": (
+        "Local NML analogue (.state/raw/nml.md:40, Avito Real Estate opens "
+        "property location maps to advertisers; .state/raw/nml_2025.md:3288, "
+        "postview analytics): Avito Real Estate's map ad product lets brands "
+        "reach property users through native placements and advertiser landing "
+        "links. A separate NML item explains postview analytics, which measures "
+        "how ad impressions influence later user behavior, making the combined "
+        "analogue relevant to Avito AdTech analytics and seller performance "
+        "measurement."
+    ),
+    "art_f6c8f32cd9": (
+        "Local NML analogue (.state/raw/nml.md:29, Kolesa Group spends $1.4M "
+        "to clean up auto and real estate listings; .state/raw/nml_2025.md:"
+        "3614, Kolesa Group 2024): Kolesa Group operates automotive and real "
+        "estate classifieds and invested heavily in cleaning up fraudulent "
+        "listings, suspicious accounts, fake photos and spam. NML also reports "
+        "Kolesa's auto marketplace scale and dealer monetization, making it a "
+        "useful analogue for monetizing and protecting high-value classifieds "
+        "verticals."
+    ),
 }
 
 
@@ -108,12 +222,17 @@ def display_path(path: Path) -> str:
         return str(path)
 
 
+def model_facing_excerpt(candidate: dict[str, Any]) -> str | None:
+    excerpt = BODY_EXCERPT_OVERRIDES.get(candidate["article_id"], candidate.get("body_excerpt"))
+    if not isinstance(excerpt, str):
+        return excerpt
+    return LOCAL_NML_PREFIX_RE.sub("", excerpt)
+
+
 def candidate_card(candidate: dict[str, Any]) -> dict[str, Any]:
     card = {
         "article_id": candidate["article_id"],
-        "body_excerpt": BODY_EXCERPT_OVERRIDES.get(
-            candidate["article_id"], candidate.get("body_excerpt")
-        ),
+        "body_excerpt": model_facing_excerpt(candidate),
         "normalized_url": candidate["normalized_url"],
         "published": candidate.get("published"),
         "title": candidate.get("title"),
