@@ -115,7 +115,7 @@ Non-goals:
 
 ### AS2 — ND Input Selection
 
-Status: planned
+Status: completed
 
 Goal: build one ND input case.
 

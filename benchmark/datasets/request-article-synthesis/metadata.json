@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "schema_version": "request_article_synthesis_metadata_v1",
   "phase": "phase_2_article_level_synthesis",
-  "status": "contract_defined",
+  "status": "inputs_built",
   "pilot_scope": "ND-only pilot based on reqret-001; other cases deferred until the first case is reviewed.",
   "case_ids": [
     "art-syn-nd-001"
@@ -70,7 +70,7 @@
   "milestone_status": {
     "AS0": "completed",
     "AS1": "completed",
-    "AS2": "planned",
+    "AS2": "completed",
     "AS3a": "planned",
     "AS3b": "planned",
     "AS4": "planned",
@@ -78,5 +78,21 @@
     "AS5b": "planned",
     "AS6": "planned",
     "AS7": "planned"
+  },
+  "inputs": {
+    "path": "inputs.jsonl",
+    "record_count": 1,
+    "article_count": 12
+  },
+  "input_selection_profile": {
+    "source": "Copied from request-synthesis ND pilot input to keep whole-set and per-article tasks comparable.",
+    "core_or_direct_count": 6,
+    "analogue_or_nuance_count": 4,
+    "low_relevance_or_distractor_count": 2,
+    "low_relevance_or_distractor_article_ids": [
+      "art_c0a637c253",
+      "art_7ed2a76ff5"
+    ],
+    "notes": "The set intentionally includes direct new-homes/lead-scoring evidence, adjacent CRM/property-data analogues, risk articles, and one generic AI marketing distractor."
   }
 }
