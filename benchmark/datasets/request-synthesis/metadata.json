@@ -44,7 +44,7 @@
     "P2-2": "completed",
     "P2-3": "completed",
     "P2-4": "completed",
-    "P2-5": "planned",
+    "P2-5": "completed",
     "P2-6": "planned",
     "P2-7": "planned",
     "P2-8": "planned",
@@ -65,6 +65,7 @@
   "source_retrieval_cases": [
     "reqret-001"
   ],
-  "status": "nd_inputs_built",
+  "status": "nd_thesis_inventory_drafted",
+  "thesis_inventory": "thesis_inventory.json",
   "version": "0.1.0"
 }

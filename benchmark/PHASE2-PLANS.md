@@ -415,7 +415,7 @@ Non-goals:
 ### P2-5 - Draft ND Thesis Inventory
 
 Estimate: 1-2 hours.
-Status: planned.
+Status: completed.
 
 Goal: create a reviewable thesis inventory before committing to final golden
 labels.

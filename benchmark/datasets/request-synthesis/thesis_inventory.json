@@ -1,0 +1,105 @@
+{
+  "benchmark_id": "request-synthesis",
+  "case_id": "syn-nd-001",
+  "candidate_theses": [
+    {
+      "candidate_id": "nd-inv-01",
+      "evidence_limitations": "Evidence is strongest for new-home sales workflows and adjacent residential lead handling; it does not by itself prove Avito can reduce paid traffic spend.",
+      "preliminary_supporting_article_ids": [
+        "art_58952c33fa",
+        "art_82b95d2e44",
+        "art_45ed1d626f"
+      ],
+      "statement": "A credible path to lower paid-traffic dependence is to improve conversion from existing demand: AI sales agents and workflow tools can engage neglected leads, infer intent, and hand better-qualified buyers to human operators.",
+      "status": "likely_must_cover"
+    },
+    {
+      "candidate_id": "nd-inv-02",
+      "evidence_limitations": "Most evidence comes from agent CRM and seller/buyer workflows rather than developer-specific CPA products.",
+      "preliminary_supporting_article_ids": [
+        "art_82b95d2e44",
+        "art_34f650f1cc",
+        "art_8f98e029e7",
+        "art_f54777679f"
+      ],
+      "statement": "First-party CRM, conversation, and behavioral data are becoming actionable inputs for lead scoring, prioritization, and follow-up, which supports the CDP/intent-model part of the ND hypothesis.",
+      "status": "likely_must_cover"
+    },
+    {
+      "candidate_id": "nd-inv-03",
+      "evidence_limitations": "The articles support property and listing intelligence generally; direct evidence for new-development lot-level availability and developer inventory feeds is weaker.",
+      "preliminary_supporting_article_ids": [
+        "art_f54777679f",
+        "art_4030ad1705",
+        "art_31a1d23146",
+        "art_45ed1d626f"
+      ],
+      "statement": "Better matching depends on structured property data and richer listing content, including AI search, contact enrichment, property reports, exterior/site-plan context, and listing-level assistants.",
+      "status": "likely_must_cover"
+    },
+    {
+      "candidate_id": "nd-inv-04",
+      "evidence_limitations": "The monetization evidence is mostly portal/listing-agent economics, not quality-based CPA for developers; this should be framed as an analogue, not proof.",
+      "preliminary_supporting_article_ids": [
+        "art_c0a637c253",
+        "art_58952c33fa",
+        "art_82b95d2e44"
+      ],
+      "statement": "There is an analogue for monetizing lead quality through differentiated portal economics: Homes.com emphasizes listing-agent leads and paid memberships, while AI lead-routing examples point toward paying for better-qualified demand rather than raw impressions.",
+      "status": "possible"
+    },
+    {
+      "candidate_id": "nd-inv-05",
+      "evidence_limitations": "The evidence supports human handoff and augmentation, but does not quantify the optimal operator model or economics.",
+      "preliminary_supporting_article_ids": [
+        "art_58952c33fa",
+        "art_45ed1d626f",
+        "art_1a5306798b"
+      ],
+      "statement": "The strongest product pattern is AI-assisted human handoff, not full automation: agents/operators remain important for complex decisions, trust, and conversion moments.",
+      "status": "likely_must_cover"
+    },
+    {
+      "candidate_id": "nd-inv-06",
+      "evidence_limitations": "Risk evidence comes from broader AI outreach and agent commentary, not a direct ND developer CPA case.",
+      "preliminary_supporting_article_ids": [
+        "art_72bf1d2512",
+        "art_1a5306798b"
+      ],
+      "statement": "Automated lead activation creates legal, consent, and trust risks, especially when outreach uses synthetic voice or opaque automation.",
+      "status": "risk_or_caveat"
+    },
+    {
+      "candidate_id": "nd-inv-07",
+      "evidence_limitations": "This is a cautionary thesis; it should not be used to reject the whole hypothesis, only to bound it.",
+      "preliminary_supporting_article_ids": [
+        "art_1a5306798b",
+        "art_7ed2a76ff5"
+      ],
+      "statement": "AI can raise productivity but may underperform in emotionally complex, high-trust, or brand-sensitive real estate interactions, so the benchmark should expect caveats about over-automation.",
+      "status": "risk_or_caveat"
+    },
+    {
+      "candidate_id": "nd-inv-08",
+      "evidence_limitations": "This is useful context for content quality, but only indirectly connected to CPA or lead monetization.",
+      "preliminary_supporting_article_ids": [
+        "art_31a1d23146",
+        "art_4030ad1705"
+      ],
+      "statement": "Richer visual and property-context data can improve buyer confidence and recommendation quality, but the evidence is indirect for ND CPA monetization.",
+      "status": "possible"
+    },
+    {
+      "candidate_id": "nd-inv-09",
+      "evidence_limitations": "This article is intentionally a close distractor: it discusses AI and marketing measurement but should not anchor a core ND investment thesis.",
+      "preliminary_supporting_article_ids": [
+        "art_7ed2a76ff5"
+      ],
+      "statement": "General AI marketing advice and brand voice guidance are too broad to validate data-driven CPA for new developments.",
+      "status": "reject"
+    }
+  ],
+  "schema_version": "request_synthesis_thesis_inventory_v1",
+  "source_inputs": "inputs.jsonl",
+  "status": "agent_draft"
+}
