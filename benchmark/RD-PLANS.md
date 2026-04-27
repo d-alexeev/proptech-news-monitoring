@@ -414,6 +414,15 @@ RD7 is explicitly marked `expert_review_pending`. The QA pass reviews
 borderline labels, raw-only false-negative risk, rejected candidate samples,
 keyword traps, and corpus difficulty without claiming final expert sign-off.
 
+RD8 creates:
+
+```text
+benchmark/datasets/request-article-retrieval/metadata.json
+```
+
+The metadata file defines Phase 1 retrieval metrics, target thresholds,
+critical-miss behavior, and dry-run examples.
+
 ## Candidate Discovery Method
 
 The candidate pool must normalize all available local artifacts:
@@ -482,7 +491,8 @@ corpus grows enough that BM25 plus LLM review misses analogues.
 | RD6a | complete | Drafted golden labels for `reqret-001` and `reqret-002`, with rationales and 3 critical misses per case. |
 | RD6b | complete | Extended draft golden labels to `reqret-003` and `reqret-004`, with rationales and 3 critical misses per case. |
 | RD7 | complete | Ran agent-side QA review with `expert_review_pending`, marked borderline disputes, reviewed raw-only false-negative risk, confirmed keyword traps, and found no too-easy corpora. |
-| RD8-RD9 | pending | Not implemented yet. |
+| RD8 | complete | Added metric and validation spec in `metadata.json`, including recall/precision, borderline neutrality, critical-miss failure, and all-case pass policy. |
+| RD9 | pending | Not implemented yet. |
 
 ## Milestone Details
 

@@ -1,0 +1,57 @@
+{
+  "annotation_status": "agent_qa_reviewed_expert_pending",
+  "benchmark_id": "request-article-retrieval",
+  "case_ids": [
+    "reqret-001",
+    "reqret-002",
+    "reqret-003",
+    "reqret-004"
+  ],
+  "corpus_construction_rules": {
+    "corpus_size_per_case": "40-70 articles",
+    "dedupe_key": "normalized_url",
+    "minimum_distractor_ratio": 0.3,
+    "text_policy": "compact article cards only; full article text is not a default model input"
+  },
+  "created_at": "2026-04-27",
+  "data_sources": [
+    ".state/articles/*.md",
+    ".state/raw/collected-all.json",
+    ".state/raw/feb-collected.json",
+    ".state/raw/enriched-march-april.json"
+  ],
+  "dry_run_examples": {
+    "all_distractors": {
+      "expected_case_pass": false,
+      "expected_precision": 0.0,
+      "purpose": "Returned ids that are all in the irrelevant bucket should score low precision."
+    },
+    "missing_critical_id": {
+      "expected_case_pass": false,
+      "purpose": "A run that otherwise clears numeric thresholds fails when any critical_miss_id is absent."
+    },
+    "perfect_output": {
+      "expected_case_pass": true,
+      "expected_precision": 1.0,
+      "expected_recall": 1.0,
+      "output_policy": "Return exactly must_find plus nice_to_have ids."
+    }
+  },
+  "expert_review_status": "expert_review_pending",
+  "metric_definitions": {
+    "borderline_policy": "borderline ids are neutral by default: they do not count as relevant for precision and are not required for recall",
+    "case_pass": "recall >= target_thresholds.recall and precision >= target_thresholds.precision and no critical miss is missing",
+    "critical_miss_policy": "if any id in critical_miss_ids is absent from returned ids, the case fails regardless of recall and precision",
+    "overall_pass": "all included cases must pass; averaging across cases is not sufficient",
+    "precision": "count(returned ids in must_find + nice_to_have) / count(returned ids excluding borderline ids)",
+    "strict_recall": "count(returned ids in must_find) / count(must_find)"
+  },
+  "phase": "phase_1_retrieval",
+  "private_source_documents": "Private DOCX contents are not committed; only derived request formulations are stored in benchmark artifacts.",
+  "review_notes": "See agent_qa_review_notes.json for RD7 agent-side QA. Final project-team expert adjudication remains pending.",
+  "target_thresholds": {
+    "precision": 0.85,
+    "recall": 0.85
+  },
+  "version": "0.1.0"
+}
