@@ -373,7 +373,7 @@ Non-goals:
 ### P2-4 - Build ND Synthesis Inputs
 
 Estimate: 1-2 hours.
-Status: planned.
+Status: completed.
 
 Goal: create model-facing `inputs.jsonl` for the ND pilot.
 

@@ -32,13 +32,18 @@
     "short_source_exception_policy": "If the local source artifact is shorter than 1,500 characters, the exception must be documented in selection_notes.json with full_text_quality_notes.",
     "soft_cap_body_full_text_chars": 20000,
     "soft_cap_exception_policy": "Text longer than the soft cap can be retained only with cleaning notes explaining why truncation would remove important evidence.",
-    "status": "policy_defined"
+    "status": "inputs_built"
+  },
+  "inputs": {
+    "article_count": 12,
+    "path": "inputs.jsonl",
+    "record_count": 1
   },
   "milestone_status": {
     "P2-1": "completed",
     "P2-2": "completed",
     "P2-3": "completed",
-    "P2-4": "planned",
+    "P2-4": "completed",
     "P2-5": "planned",
     "P2-6": "planned",
     "P2-7": "planned",
@@ -60,6 +65,6 @@
   "source_retrieval_cases": [
     "reqret-001"
   ],
-  "status": "nd_articles_selected",
+  "status": "nd_inputs_built",
   "version": "0.1.0"
 }
