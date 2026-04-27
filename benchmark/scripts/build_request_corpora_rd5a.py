@@ -16,7 +16,7 @@ DATASET_DIR = ROOT / "benchmark" / "datasets" / "request-article-retrieval"
 INVENTORY_PATH = DATASET_DIR / "candidate_inventory.json"
 DISCOVERY_PATH = DATASET_DIR / "candidate_discovery_draft.json"
 
-RD5A_CASES = ["reqret-001", "reqret-002"]
+DEFAULT_CASES = ["reqret-001", "reqret-002"]
 TARGET_CORPUS_SIZE = 50
 MIN_DISTRACTOR_RATIO = 0.30
 
@@ -139,7 +139,7 @@ def corpus_window(corpus: list[dict[str, Any]]) -> str:
     return f"{dates[0]}..{dates[-1]}"
 
 
-def build_corpora() -> tuple[list[dict[str, Any]], dict[str, Any]]:
+def build_corpora(case_ids: list[str], milestone: str) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     inventory = load_json(INVENTORY_PATH)
     discovery = load_json(DISCOVERY_PATH)
     candidates_by_id = {item["article_id"]: item for item in inventory["candidates"]}
@@ -148,8 +148,8 @@ def build_corpora() -> tuple[list[dict[str, Any]], dict[str, Any]]:
     notes: dict[str, Any] = {
         "schema_version": "corpus_selection_notes_v1",
         "benchmark_id": "request-article-retrieval",
-        "milestone": "RD5a",
-        "case_ids": RD5A_CASES,
+        "milestone": milestone,
+        "case_ids": case_ids,
         "selection_policy": {
             "target_corpus_size": TARGET_CORPUS_SIZE,
             "minimum_distractor_ratio": MIN_DISTRACTOR_RATIO,
@@ -159,7 +159,7 @@ def build_corpora() -> tuple[list[dict[str, Any]], dict[str, Any]]:
         "cases": {},
     }
 
-    for case_id in RD5A_CASES:
+    for case_id in case_ids:
         selected_ids, selected_by_group = build_case_selection(discovery["requests"][case_id])
         corpus = [candidate_card(candidates_by_id[article_id]) for article_id in selected_ids]
         distractor_count = len(selected_by_group["distractor"])
@@ -200,9 +200,21 @@ def main() -> int:
         default="benchmark/datasets/request-article-retrieval/corpus_selection_notes.json",
         help="Path to write corpus selection review notes.",
     )
+    parser.add_argument(
+        "--case",
+        action="append",
+        dest="case_ids",
+        help="Case id to include. Repeat for multiple cases. Defaults to RD5a cases.",
+    )
+    parser.add_argument(
+        "--milestone",
+        default="RD5a",
+        help="Milestone label to write into corpus selection notes.",
+    )
     args = parser.parse_args()
 
-    inputs, notes = build_corpora()
+    case_ids = args.case_ids or DEFAULT_CASES
+    inputs, notes = build_corpora(case_ids, args.milestone)
     inputs_path = Path(args.inputs_output)
     notes_path = Path(args.notes_output)
     if not inputs_path.is_absolute():
@@ -221,7 +233,7 @@ def main() -> int:
     print(
         "wrote "
         f"{inputs_path.relative_to(ROOT)} and {notes_path.relative_to(ROOT)} "
-        f"for {', '.join(RD5A_CASES)}"
+        f"for {', '.join(case_ids)}"
     )
     return 0
 

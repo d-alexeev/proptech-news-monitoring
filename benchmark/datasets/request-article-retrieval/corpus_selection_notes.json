@@ -2,7 +2,9 @@
   "benchmark_id": "request-article-retrieval",
   "case_ids": [
     "reqret-001",
-    "reqret-002"
+    "reqret-002",
+    "reqret-003",
+    "reqret-004"
   ],
   "cases": {
     "reqret-001": {
@@ -134,9 +136,140 @@
           "art_03c8323b6e"
         ]
       }
+    },
+    "reqret-003": {
+      "corpus_size": 50,
+      "distractor_count": 18,
+      "distractor_ratio": 0.36,
+      "selected_article_ids_by_discovery_group": {
+        "distractor": [
+          "art_af0c575579",
+          "art_f064d3ecb3",
+          "art_58952c33fa",
+          "art_ebb70b4738",
+          "art_8ddecd35bd",
+          "art_6767fb98a1",
+          "art_36aaa4c8a0",
+          "art_1fefb514a6",
+          "art_6b7b3fd7b1",
+          "art_81a35486fd",
+          "art_5b9f31d0b0",
+          "art_3d7bcc13cf",
+          "art_23a5961b7e",
+          "art_bcc494b3d9",
+          "art_7ed2a76ff5",
+          "art_6e8c47d4a6",
+          "art_81c458b262",
+          "art_7b08997fd3"
+        ],
+        "likely_relevant": [
+          "art_34f650f1cc",
+          "art_43ca52b1b8",
+          "art_905093b4eb",
+          "art_230252f03d",
+          "art_5d20bf2093",
+          "art_8cbd363e7e",
+          "art_2bccef547b",
+          "art_aab9520bd2",
+          "art_6b35e50918",
+          "art_ac8e31707e",
+          "art_471dc4626e",
+          "art_45ed1d626f",
+          "art_87af77841e",
+          "art_7cedc9f5d1",
+          "art_18162cc3a6"
+        ],
+        "possible": [
+          "art_708b7f8581",
+          "art_24feda3c9d",
+          "art_72bf1d2512",
+          "art_8f98e029e7",
+          "art_4030ad1705",
+          "art_1a5306798b",
+          "art_60d8b8e94d",
+          "art_90cdd7feee",
+          "art_3ec9c9bdb8",
+          "art_f6c8f32cd9",
+          "art_457eb7d57f",
+          "art_8086b9b8dd",
+          "art_300e7d1767",
+          "art_b3077b5a5a",
+          "art_11519554e4",
+          "art_a82e3f0bfe",
+          "art_d2a5f3b244"
+        ],
+        "reject": [
+          "art_5593175d64"
+        ]
+      }
+    },
+    "reqret-004": {
+      "corpus_size": 50,
+      "distractor_count": 22,
+      "distractor_ratio": 0.44,
+      "selected_article_ids_by_discovery_group": {
+        "distractor": [
+          "art_50fc90629f",
+          "art_8ddecd35bd",
+          "art_538020fa38",
+          "art_45ed1d626f",
+          "art_d967e3af68",
+          "art_0dea901dc1",
+          "art_72bf1d2512",
+          "art_58952c33fa",
+          "art_ebb70b4738",
+          "art_5d20bf2093",
+          "art_905093b4eb",
+          "art_11519554e4",
+          "art_300e7d1767",
+          "art_34f650f1cc",
+          "art_43ca52b1b8",
+          "art_daf0b0d0d9",
+          "art_f54777679f",
+          "art_471dc4626e",
+          "art_36aaa4c8a0",
+          "art_3e66bc3b7a",
+          "art_18162cc3a6",
+          "art_8f98e029e7"
+        ],
+        "likely_relevant": [
+          "art_6b7b3fd7b1",
+          "art_952009b665",
+          "art_708b7f8581",
+          "art_7cedc9f5d1",
+          "art_934aa5a19a",
+          "art_5f529eefc3",
+          "art_3d7bcc13cf",
+          "art_2b8a48ec58",
+          "art_353de0c413"
+        ],
+        "possible": [
+          "art_5b9f31d0b0",
+          "art_1efeebcc37",
+          "art_04e6e8dac8",
+          "art_c9bc8f2830",
+          "art_1b810e53b7",
+          "art_9a9b4c62d3",
+          "art_eb620165d4",
+          "art_81c458b262",
+          "art_87af77841e",
+          "art_d23a9ccbdb",
+          "art_be09dabda5",
+          "art_d97bc82afc",
+          "art_5593175d64",
+          "art_fad8fd2850",
+          "art_c23664bcfd"
+        ],
+        "reject": [
+          "art_c0a637c253",
+          "art_c96c0ec12d",
+          "art_60d8b8e94d",
+          "art_06e2473ec3"
+        ]
+      }
     }
   },
-  "milestone": "RD5a",
+  "milestone": "RD5b",
   "schema_version": "corpus_selection_notes_v1",
   "selection_policy": {
     "minimum_distractor_ratio": 0.3,
