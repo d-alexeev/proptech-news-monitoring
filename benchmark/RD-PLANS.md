@@ -323,6 +323,33 @@ Metadata fields:
 {"id":"reqret-000","must_find":["art_ab12cd34"],"nice_to_have":[],"borderline":[],"irrelevant":[],"critical_miss_ids":["art_ab12cd34"],"rationale":{"art_ab12cd34":"Directly tests owner paid visibility without full paid placement."}}
 ```
 
+## Candidate Inventory Artifact
+
+RD2 creates:
+
+```text
+benchmark/datasets/request-article-retrieval/candidate_inventory.json
+```
+
+The artifact is a generated review file, not the final benchmark corpus. It
+contains:
+
+- `schema_version`
+- `benchmark_id`
+- `source_files`
+- `summary.input_record_counts`
+- `summary.unique_candidate_count`
+- `summary.provenance_counts`
+- `summary.raw_only_candidate_count`
+- `summary.duplicates_merged_count`
+- `summary.missing_url_record_count`
+- `summary.nested_raw_children_with_inherited_source`
+- `candidates`
+
+Each candidate follows the RD1 article-card contract and additionally includes
+`artifact_refs` so reviewers can trace which local source artifacts contributed
+to the merged candidate card.
+
 ## Candidate Discovery Method
 
 The candidate pool must normalize all available local artifacts:
@@ -383,7 +410,8 @@ corpus grows enough that BM25 plus LLM review misses analogues.
 | --- | --- | --- |
 | RD0 | complete | Planning artifact created in `benchmark/RD-PLANS.md`. |
 | RD1 | complete | Dataset contract locked in this file: artifact schemas, stable ids, provenance enum, bucket rules, and mock input/golden pair. |
-| RD2-RD9 | pending | Not implemented in this milestone. |
+| RD2 | complete | Generated candidate inventory with 225 unique candidates, 72 raw-only candidates, URL dedupe, provenance counts, and inherited nested raw source metadata. |
+| RD3-RD9 | pending | Not implemented yet. |
 
 ## Milestone Details
 
