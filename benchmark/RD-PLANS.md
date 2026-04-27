@@ -375,6 +375,19 @@ review, selection summaries for top BM25, uncertain, sampled low-score, and
 raw-derived candidates, plus candidate groups: `likely_relevant`, `possible`,
 `distractor`, and `reject`.
 
+## Draft Corpus Artifacts
+
+RD5a creates draft corpus records for `reqret-001` and `reqret-002`:
+
+```text
+benchmark/datasets/request-article-retrieval/inputs.jsonl
+benchmark/datasets/request-article-retrieval/corpus_selection_notes.json
+```
+
+`inputs.jsonl` is clean model input and does not include discovery scores,
+groups, or relevance labels. `corpus_selection_notes.json` stores review-only
+selection counts and article ids by discovery group.
+
 ## Candidate Discovery Method
 
 The candidate pool must normalize all available local artifacts:
@@ -438,7 +451,8 @@ corpus grows enough that BM25 plus LLM review misses analogues.
 | RD2 | complete | Generated candidate inventory with 225 unique candidates, 72 raw-only candidates, URL dedupe, provenance counts, and inherited nested raw source metadata. |
 | RD3 | complete | Added per-request facet maps, judge rubric, uncertainty bucket, and manual sample applications. |
 | RD4 | complete | Generated discovery draft lists for all 4 requests with at least 107 candidates considered per request and at least 33 distractors per request. |
-| RD5a-RD9 | pending | Not implemented yet. |
+| RD5a | complete | Built clean draft corpora for `reqret-001` and `reqret-002`, 50 articles each, with 38-40% distractors. |
+| RD5b-RD9 | pending | Not implemented yet. |
 
 ## Milestone Details
 

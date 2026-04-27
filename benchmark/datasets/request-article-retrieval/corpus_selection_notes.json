@@ -1,0 +1,147 @@
+{
+  "benchmark_id": "request-article-retrieval",
+  "case_ids": [
+    "reqret-001",
+    "reqret-002"
+  ],
+  "cases": {
+    "reqret-001": {
+      "corpus_size": 50,
+      "distractor_count": 19,
+      "distractor_ratio": 0.38,
+      "selected_article_ids_by_discovery_group": {
+        "distractor": [
+          "art_18162cc3a6",
+          "art_f54777679f",
+          "art_72bf1d2512",
+          "art_471dc4626e",
+          "art_81a35486fd",
+          "art_b2e7d378a4",
+          "art_7a641278d2",
+          "art_7ed2a76ff5",
+          "art_538020fa38",
+          "art_0af84c7905",
+          "art_f064d3ecb3",
+          "art_36aaa4c8a0",
+          "art_8cbd363e7e",
+          "art_c0a637c253",
+          "art_6b7b3fd7b1",
+          "art_d1aa4e2991",
+          "art_af0c575579",
+          "art_300e7d1767",
+          "art_8317175684"
+        ],
+        "likely_relevant": [
+          "art_58952c33fa",
+          "art_34f650f1cc",
+          "art_45ed1d626f",
+          "art_82b95d2e44",
+          "art_1a5306798b",
+          "art_28cfe6472f",
+          "art_708b7f8581",
+          "art_31a1d23146",
+          "art_8f98e029e7",
+          "art_d97bc82afc",
+          "art_59f7b278e8",
+          "art_948b5c44ba"
+        ],
+        "possible": [
+          "art_5d20bf2093",
+          "art_23a5961b7e",
+          "art_4030ad1705",
+          "art_bcc494b3d9",
+          "art_50fc90629f",
+          "art_ebb70b4738",
+          "art_c9bc8f2830",
+          "art_81c458b262",
+          "art_11519554e4",
+          "art_5b9f31d0b0",
+          "art_6767fb98a1",
+          "art_905093b4eb",
+          "art_c23664bcfd",
+          "art_7ce811300b",
+          "art_04e6e8dac8",
+          "art_0dea901dc1",
+          "art_12a71046e6",
+          "art_fad8fd2850"
+        ],
+        "reject": [
+          "art_457eb7d57f"
+        ]
+      }
+    },
+    "reqret-002": {
+      "corpus_size": 50,
+      "distractor_count": 20,
+      "distractor_ratio": 0.4,
+      "selected_article_ids_by_discovery_group": {
+        "distractor": [
+          "art_905093b4eb",
+          "art_43ca52b1b8",
+          "art_58952c33fa",
+          "art_daf0b0d0d9",
+          "art_87af77841e",
+          "art_6b35e50918",
+          "art_81a35486fd",
+          "art_f0e770ca4c",
+          "art_6791c53b69",
+          "art_72bf1d2512",
+          "art_538020fa38",
+          "art_18162cc3a6",
+          "art_300e7d1767",
+          "art_5b9f31d0b0",
+          "art_af0c575579",
+          "art_45ed1d626f",
+          "art_ebb70b4738",
+          "art_11519554e4",
+          "art_ec11a9486d",
+          "art_d1aa4e2991"
+        ],
+        "likely_relevant": [
+          "art_8ddecd35bd",
+          "art_50fc90629f",
+          "art_0dea901dc1",
+          "art_34f650f1cc",
+          "art_426e4d1d66",
+          "art_bbd29db3ea",
+          "art_df3527fb92",
+          "art_0269b4b80c",
+          "art_6e8c47d4a6",
+          "art_6dd0cbd6be"
+        ],
+        "possible": [
+          "art_708b7f8581",
+          "art_f54777679f",
+          "art_c9bc8f2830",
+          "art_23a5961b7e",
+          "art_36aaa4c8a0",
+          "art_bcc494b3d9",
+          "art_6b7b3fd7b1",
+          "art_5d20bf2093",
+          "art_457eb7d57f",
+          "art_471dc4626e",
+          "art_1efeebcc37",
+          "art_230252f03d",
+          "art_6767fb98a1",
+          "art_2bccef547b",
+          "art_2b8a48ec58",
+          "art_a041604fe0",
+          "art_fad8fd2850",
+          "art_5f88c9e5af"
+        ],
+        "reject": [
+          "art_c96c0ec12d",
+          "art_03c8323b6e"
+        ]
+      }
+    }
+  },
+  "milestone": "RD5a",
+  "schema_version": "corpus_selection_notes_v1",
+  "selection_policy": {
+    "minimum_distractor_ratio": 0.3,
+    "note": "Selection notes are review metadata and are not model input.",
+    "source": "candidate_discovery_draft.json",
+    "target_corpus_size": 50
+  }
+}
