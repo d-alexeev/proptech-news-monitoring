@@ -230,32 +230,24 @@ Request-case fields:
 | `user_request` | required | Full request text, not a summary. |
 | `corpus_window` | required | Date window used to build the corpus, for example `2026-01-01..2026-04-07`. |
 | `source_scope` | required | Source ids or source groups considered. |
-| `corpus` | required | Array of compact article cards. |
+| `corpus` | required | Array of compact article cards with retrieval-facing fields only. |
 
 Article-card fields:
 
 | Field | Status | Notes |
 | --- | --- | --- |
 | `article_id` | required | Deterministic id derived from normalized URL. |
-| `normalized_url` | required | URL lowercased where safe and stripped of trailing slash and tracking params. |
-| `title` | required, nullable | Article title from the best available local artifact. |
-| `source_id` | required, nullable | Source id after normalization; nested raw children inherit it from the parent. |
-| `source_name` | required, nullable | Human-readable source name after normalization. |
-| `published` | required, nullable | Published date or timestamp when available. |
-| `url` | required | Original URL retained for review. |
-| `lead_or_summary` | required, nullable | Short summary, raw snippet, lead paragraph, or analyst summary. |
 | `body_excerpt` | required, nullable | Compact article text excerpt; full article text is not required. |
-| `provenance` | required | Non-empty array with one or more provenance enum values. |
-| `title_slug` | optional | Display helper only; never used as a unique key. |
-| `analyst_summary` | optional | From enriched raw artifacts when available. |
-| `why_it_matters` | optional | From enriched raw artifacts when available. |
-| `avito_implication` | optional | From enriched raw artifacts when available. |
-| `topic_tags` | optional | Array of normalized topic tags when available. |
-| `event_type` | optional | Source-provided or derived event type. |
-| `priority_score` | optional | Source-provided priority score. |
-| `companies` | optional | Companies or brands mentioned in the article card. |
+| `normalized_url` | required | URL lowercased where safe and stripped of trailing slash and tracking params. |
+| `published` | required, nullable | Published date or timestamp when available. |
+| `title` | required, nullable | Article title from the best available local artifact. |
 
-Allowed provenance values:
+The retrieval-facing article card intentionally excludes `url`, `source_id`,
+`source_name`, `lead_or_summary`, `provenance`, `analyst_summary`,
+`why_it_matters`, `avito_implication`, `topic_tags`, `event_type`,
+`priority_score`, and `companies`.
+
+Allowed `source_scope` values, also used as provenance in review artifacts:
 
 - `article_md`
 - `raw_collected_all`
@@ -316,7 +308,7 @@ Metadata fields:
 ### Mock Example
 
 ```json
-{"id":"reqret-000","user_request":"Find evidence for marketplace monetization via owner paid visibility.","corpus_window":"2026-01-01..2026-04-07","source_scope":["article_md","raw_collected_all"],"corpus":[{"article_id":"art_ab12cd34","normalized_url":"https://example.com/owner-paid-visibility","title":"Portal Adds Paid Visibility for Home Sellers","source_id":"example","source_name":"Example News","published":"2026-03-01","url":"https://example.com/owner-paid-visibility","lead_or_summary":"A property portal launched optional seller paid visibility without requiring paid listing.","body_excerpt":"The product limits free exposure after initial demand and offers paid boosts.","provenance":["raw_collected_all"]}]}
+{"id":"reqret-000","user_request":"Find evidence for marketplace monetization via owner paid visibility.","corpus_window":"2026-01-01..2026-04-07","source_scope":["article_md","raw_collected_all"],"corpus":[{"article_id":"art_ab12cd34","body_excerpt":"The product limits free exposure after initial demand and offers paid boosts.","normalized_url":"https://example.com/owner-paid-visibility","published":"2026-03-01","title":"Portal Adds Paid Visibility for Home Sellers"}]}
 ```
 
 ```json
@@ -620,7 +612,7 @@ Acceptance criteria:
 - Each case has 40-70 articles.
 - At least 30% are strong distractors.
 - No duplicate normalized URLs within a case.
-- Corpus includes provenance and compact article text.
+- Corpus includes compact article cards with only `article_id`, `body_excerpt`, `normalized_url`, `published`, and `title`.
 
 Tests:
 
@@ -642,7 +634,7 @@ Acceptance criteria:
 - Each case has 40-70 articles.
 - At least 30% are strong distractors.
 - No duplicate normalized URLs within a case.
-- Corpus includes provenance and compact article text.
+- Corpus includes compact article cards with only `article_id`, `body_excerpt`, `normalized_url`, `published`, and `title`.
 
 Tests:
 

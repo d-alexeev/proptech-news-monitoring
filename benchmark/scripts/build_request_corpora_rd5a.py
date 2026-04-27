@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build RD5a draft corpora for reqret-001 and reqret-002."""
+"""Build draft corpora for the request retrieval benchmark."""
 
 from __future__ import annotations
 
@@ -16,26 +16,13 @@ DATASET_DIR = ROOT / "benchmark" / "datasets" / "request-article-retrieval"
 INVENTORY_PATH = DATASET_DIR / "candidate_inventory.json"
 DISCOVERY_PATH = DATASET_DIR / "candidate_discovery_draft.json"
 
-DEFAULT_CASES = ["reqret-001", "reqret-002"]
+DEFAULT_CASES = ["reqret-001", "reqret-002", "reqret-003", "reqret-004"]
 TARGET_CORPUS_SIZE = 50
 MIN_DISTRACTOR_RATIO = 0.30
 
 
 def load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
-
-
-def compact_text(value: Any, limit: int = 900) -> str | None:
-    if value is None:
-        return None
-    if isinstance(value, list):
-        value = " ".join(str(item) for item in value)
-    text = re.sub(r"\s+", " ", str(value)).strip()
-    if not text:
-        return None
-    if len(text) <= limit:
-        return text
-    return text[: limit - 3].rstrip() + "..."
 
 
 def extract_request_text(case_id: str) -> str:
@@ -47,32 +34,21 @@ def extract_request_text(case_id: str) -> str:
     return match.group("body").strip()
 
 
+def display_path(path: Path) -> str:
+    try:
+        return str(path.relative_to(ROOT))
+    except ValueError:
+        return str(path)
+
+
 def candidate_card(candidate: dict[str, Any]) -> dict[str, Any]:
-    optional_fields = [
-        "analyst_summary",
-        "why_it_matters",
-        "avito_implication",
-        "topic_tags",
-        "event_type",
-        "priority_score",
-        "companies",
-    ]
     card = {
         "article_id": candidate["article_id"],
+        "body_excerpt": candidate.get("body_excerpt"),
         "normalized_url": candidate["normalized_url"],
-        "title": candidate.get("title"),
-        "source_id": candidate.get("source_id"),
-        "source_name": candidate.get("source_name"),
         "published": candidate.get("published"),
-        "url": candidate.get("url"),
-        "lead_or_summary": compact_text(candidate.get("lead_or_summary")),
-        "body_excerpt": compact_text(candidate.get("body_excerpt")),
-        "provenance": candidate.get("provenance", []),
+        "title": candidate.get("title"),
     }
-    for field in optional_fields:
-        value = candidate.get(field)
-        if value not in (None, "", []):
-            card[field] = value
     return card
 
 
@@ -204,11 +180,11 @@ def main() -> int:
         "--case",
         action="append",
         dest="case_ids",
-        help="Case id to include. Repeat for multiple cases. Defaults to RD5a cases.",
+        help="Case id to include. Repeat for multiple cases. Defaults to all request-retrieval cases.",
     )
     parser.add_argument(
         "--milestone",
-        default="RD5a",
+        default="RD5b",
         help="Milestone label to write into corpus selection notes.",
     )
     args = parser.parse_args()
@@ -232,7 +208,7 @@ def main() -> int:
     )
     print(
         "wrote "
-        f"{inputs_path.relative_to(ROOT)} and {notes_path.relative_to(ROOT)} "
+        f"{display_path(inputs_path)} and {display_path(notes_path)} "
         f"for {', '.join(case_ids)}"
     )
     return 0
