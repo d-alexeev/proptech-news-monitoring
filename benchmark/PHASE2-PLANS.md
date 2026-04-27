@@ -254,7 +254,7 @@ Non-goals:
 ### P2-1 - Define Output Schema and Scoring Dimensions
 
 Estimate: 1-2 hours.
-Status: planned.
+Status: completed.
 
 Goal: lock the response shape before golden labels are drafted.
 

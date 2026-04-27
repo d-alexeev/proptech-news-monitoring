@@ -1,0 +1,41 @@
+{
+  "benchmark_id": "request-synthesis",
+  "case_ids": [
+    "syn-nd-001"
+  ],
+  "created_at": "2026-04-27",
+  "expert_review_status": "not_started",
+  "full_text_inputs": {
+    "enabled": true,
+    "pilot_article_limit": 12,
+    "status": "policy_pending"
+  },
+  "milestone_status": {
+    "P2-1": "completed",
+    "P2-2": "planned",
+    "P2-3": "planned",
+    "P2-4": "planned",
+    "P2-5": "planned",
+    "P2-6": "planned",
+    "P2-7": "planned",
+    "P2-8": "planned",
+    "P2-9": "planned",
+    "P2-10": "deferred"
+  },
+  "output_schema": "output_schema.json",
+  "phase": "phase_2_synthesis",
+  "pilot_scope": "ND-only pilot based on reqret-001; other cases deferred until ND freeze.",
+  "scoring_dimensions": {
+    "avito_usefulness": "Synthesis connects evidence back to Avito New Developments investment implications.",
+    "evidence_grounding": "Major theses, risks, and implications include supporting article IDs from the supplied input set.",
+    "forbidden_claims": "Unsupported or over-stated claims are penalized even when directionally plausible.",
+    "risk_coverage": "Relevant risks, limits, or counter-signals are represented without overwhelming the answer.",
+    "thesis_recall": "Expected must-cover theses are present in the model output."
+  },
+  "schema_version": "request_synthesis_metadata_v1",
+  "source_retrieval_cases": [
+    "reqret-001"
+  ],
+  "status": "schema_defined",
+  "version": "0.1.0"
+}

@@ -1,0 +1,152 @@
+{
+  "benchmark_id": "request-synthesis",
+  "case_scope": [
+    "syn-nd-001"
+  ],
+  "output_format": "json",
+  "response_schema": {
+    "additionalProperties": false,
+    "properties": {
+      "answer_summary": {
+        "description": "Short direct answer to the investment question.",
+        "minLength": 1,
+        "type": "string"
+      },
+      "avito_implications": {
+        "description": "Practical implications for the Avito New Developments hypothesis.",
+        "items": {
+          "$ref": "#/$defs/evidence_backed_item"
+        },
+        "minItems": 1,
+        "type": "array"
+      },
+      "case_id": {
+        "const": "syn-nd-001",
+        "type": "string"
+      },
+      "caveats": {
+        "description": "Scope limits and uncertainty.",
+        "items": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "type": "array"
+      },
+      "risks": {
+        "description": "Risks, limits, or counter-signals grounded in the supplied articles.",
+        "items": {
+          "$ref": "#/$defs/evidence_backed_item"
+        },
+        "minItems": 1,
+        "type": "array"
+      },
+      "theses": {
+        "description": "Synthesized job-level theses grounded in supplied articles.",
+        "items": {
+          "$ref": "#/$defs/thesis"
+        },
+        "minItems": 1,
+        "type": "array"
+      }
+    },
+    "required": [
+      "case_id",
+      "answer_summary",
+      "theses",
+      "risks",
+      "avito_implications",
+      "caveats"
+    ],
+    "type": "object"
+  },
+  "$defs": {
+    "article_id_list": {
+      "items": {
+        "pattern": "^art_[0-9a-f]{10}$",
+        "type": "string"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "evidence_backed_item": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_article_ids": {
+          "$ref": "#/$defs/article_id_list"
+        },
+        "reasoning": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "statement": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "statement",
+        "evidence_article_ids",
+        "reasoning"
+      ],
+      "type": "object"
+    },
+    "thesis": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_article_ids": {
+          "$ref": "#/$defs/article_id_list"
+        },
+        "reasoning": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "statement": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "strength": {
+          "enum": [
+            "strong",
+            "moderate",
+            "weak"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "statement",
+        "evidence_article_ids",
+        "strength",
+        "reasoning"
+      ],
+      "type": "object"
+    }
+  },
+  "scoring_field_map": {
+    "avito_usefulness": [
+      "answer_summary",
+      "avito_implications"
+    ],
+    "evidence_grounding": [
+      "theses[].evidence_article_ids",
+      "risks[].evidence_article_ids",
+      "avito_implications[].evidence_article_ids"
+    ],
+    "forbidden_claims": [
+      "answer_summary",
+      "theses[].statement",
+      "risks[].statement",
+      "avito_implications[].statement",
+      "caveats[]"
+    ],
+    "risk_coverage": [
+      "risks"
+    ],
+    "thesis_recall": [
+      "theses[].statement",
+      "theses[].reasoning"
+    ]
+  },
+  "schema_version": "request_synthesis_output_v1"
+}
