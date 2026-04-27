@@ -403,6 +403,17 @@ bucket assignments, critical misses, or rationales.
 RD6b extends `golden.jsonl` with draft labels for `reqret-003` and
 `reqret-004`.
 
+RD7 creates agent-side QA review notes:
+
+```text
+benchmark/datasets/request-article-retrieval/agent_qa_review_notes.json
+```
+
+Because project-team human adjudication is not available in this milestone,
+RD7 is explicitly marked `expert_review_pending`. The QA pass reviews
+borderline labels, raw-only false-negative risk, rejected candidate samples,
+keyword traps, and corpus difficulty without claiming final expert sign-off.
+
 ## Candidate Discovery Method
 
 The candidate pool must normalize all available local artifacts:
@@ -470,7 +481,8 @@ corpus grows enough that BM25 plus LLM review misses analogues.
 | RD5b | complete | Extended clean draft corpora to `reqret-003` and `reqret-004`, 50 articles each, with 36-44% distractors. |
 | RD6a | complete | Drafted golden labels for `reqret-001` and `reqret-002`, with rationales and 3 critical misses per case. |
 | RD6b | complete | Extended draft golden labels to `reqret-003` and `reqret-004`, with rationales and 3 critical misses per case. |
-| RD7-RD9 | pending | Not implemented yet. |
+| RD7 | complete | Ran agent-side QA review with `expert_review_pending`, marked borderline disputes, reviewed raw-only false-negative risk, confirmed keyword traps, and found no too-easy corpora. |
+| RD8-RD9 | pending | Not implemented yet. |
 
 ## Milestone Details
 

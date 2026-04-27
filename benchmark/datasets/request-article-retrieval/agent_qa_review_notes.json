@@ -1,0 +1,772 @@
+{
+  "benchmark_id": "request-article-retrieval",
+  "cases": {
+    "reqret-001": {
+      "borderline_review": {
+        "article_ids": [
+          "art_45ed1d626f",
+          "art_1a5306798b",
+          "art_28cfe6472f",
+          "art_59f7b278e8",
+          "art_948b5c44ba",
+          "art_4030ad1705",
+          "art_81c458b262",
+          "art_5b9f31d0b0",
+          "art_c23664bcfd",
+          "art_7ce811300b",
+          "art_fad8fd2850"
+        ],
+        "borderline_count": 11,
+        "status": "explicitly_marked_for_expert_review"
+      },
+      "corpus_difficulty": {
+        "borderline_count": 11,
+        "corpus_size": 50,
+        "distractor_ratio": 0.38,
+        "irrelevant_count": 24,
+        "must_find_count": 6,
+        "nice_to_have_count": 9,
+        "relevant_ratio": 0.3,
+        "status": "not_too_easy"
+      },
+      "keyword_traps": [
+        {
+          "article_id": "art_18162cc3a6",
+          "bucket": "irrelevant",
+          "provenance": [
+            "article_md"
+          ],
+          "qa_decision": "valid_keyword_or_same_theme_trap",
+          "title": "Compass’s New Product: Address Upon Request"
+        },
+        {
+          "article_id": "art_7a641278d2",
+          "bucket": "irrelevant",
+          "provenance": [
+            "article_md"
+          ],
+          "qa_decision": "valid_keyword_or_same_theme_trap",
+          "title": "AI, Robots, Real Estate: A Futurist's Take On What's Coming Next"
+        },
+        {
+          "article_id": "art_6b7b3fd7b1",
+          "bucket": "irrelevant",
+          "provenance": [
+            "article_md",
+            "raw_collected_all",
+            "raw_enriched"
+          ],
+          "qa_decision": "valid_keyword_or_same_theme_trap",
+          "title": "How AI is transforming the rental application process"
+        }
+      ],
+      "raw_only_false_negative_review": {
+        "flag_count": 0,
+        "flags": [],
+        "reviewed_count": 26
+      },
+      "recommended_label_changes": [],
+      "rejected_candidate_false_negative_sample": [
+        {
+          "article_id": "art_457eb7d57f",
+          "bucket": "irrelevant",
+          "matched_facets": [],
+          "provenance": [
+            "raw_collected_all",
+            "raw_enriched"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "Hemnet Offers 'Sell First, Pay Later' for Swedish Property Sellers"
+        },
+        {
+          "article_id": "art_90cdd7feee",
+          "bucket": "not_in_corpus",
+          "matched_facets": [],
+          "provenance": [
+            "article_md"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "Portland Tries A New Affordable Housing Fix: Paying Homeowners To Rent Spare Rooms"
+        },
+        {
+          "article_id": "art_1efeebcc37",
+          "bucket": "not_in_corpus",
+          "matched_facets": [],
+          "provenance": [
+            "article_md"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "Scout24’s Consumer Subscriptions Driving Revenue Diversification"
+        },
+        {
+          "article_id": "art_03c8323b6e",
+          "bucket": "not_in_corpus",
+          "matched_facets": [],
+          "provenance": [
+            "article_md"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "Rocket Offers Buyouts As Redfin, Mr. Cooper Integration Continues"
+        },
+        {
+          "article_id": "art_35be6d5f47",
+          "bucket": "not_in_corpus",
+          "matched_facets": [],
+          "provenance": [
+            "article_md"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "Redfin Seeks To Draw App Users With $1M Home Hunt"
+        },
+        {
+          "article_id": "art_9bd74eeeaa",
+          "bucket": "not_in_corpus",
+          "matched_facets": [],
+          "provenance": [
+            "raw_feb_collected"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "Zillow Files Motion for Taylor Case Dismissal"
+        },
+        {
+          "article_id": "art_1e426e0ddd",
+          "bucket": "not_in_corpus",
+          "matched_facets": [],
+          "provenance": [
+            "raw_feb_collected"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "CoStar EBITDA Surges 83% as Domain to Fold Into Homes.com"
+        },
+        {
+          "article_id": "art_b9bbc24706",
+          "bucket": "not_in_corpus",
+          "matched_facets": [],
+          "provenance": [
+            "raw_feb_collected"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "CoStar Group Highlights Proven Track Record and Reiterates Commitment to Enhancing Stockholder Value"
+        },
+        {
+          "article_id": "art_14f01c7d91",
+          "bucket": "not_in_corpus",
+          "matched_facets": [],
+          "provenance": [
+            "article_md"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "Where Brokerages Stand On Pre-MLS Listings After A Whirlwind Week"
+        },
+        {
+          "article_id": "art_2c495ba432",
+          "bucket": "not_in_corpus",
+          "matched_facets": [],
+          "provenance": [
+            "article_md"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "Catch Up With Compass, Keller And The Commission Question"
+        }
+      ],
+      "same_company_or_theme_distractors_present": true
+    },
+    "reqret-002": {
+      "borderline_review": {
+        "article_ids": [
+          "art_50fc90629f",
+          "art_6791c53b69",
+          "art_f0e770ca4c",
+          "art_6b35e50918",
+          "art_230252f03d",
+          "art_5f88c9e5af",
+          "art_a041604fe0",
+          "art_0269b4b80c",
+          "art_6e8c47d4a6",
+          "art_2bccef547b"
+        ],
+        "borderline_count": 10,
+        "status": "explicitly_marked_for_expert_review"
+      },
+      "corpus_difficulty": {
+        "borderline_count": 10,
+        "corpus_size": 50,
+        "distractor_ratio": 0.4,
+        "irrelevant_count": 28,
+        "must_find_count": 4,
+        "nice_to_have_count": 8,
+        "relevant_ratio": 0.24,
+        "status": "not_too_easy"
+      },
+      "keyword_traps": [
+        {
+          "article_id": "art_6dd0cbd6be",
+          "bucket": "irrelevant",
+          "provenance": [
+            "article_md",
+            "raw_collected_all",
+            "raw_enriched"
+          ],
+          "qa_decision": "valid_keyword_or_same_theme_trap",
+          "title": "Avito Jobs launches branded vacancy ads"
+        },
+        {
+          "article_id": "art_905093b4eb",
+          "bucket": "irrelevant",
+          "provenance": [
+            "article_md"
+          ],
+          "qa_decision": "valid_keyword_or_same_theme_trap",
+          "title": "Rocket + Redfin + Compass"
+        },
+        {
+          "article_id": "art_58952c33fa",
+          "bucket": "irrelevant",
+          "provenance": [
+            "article_md"
+          ],
+          "qa_decision": "valid_keyword_or_same_theme_trap",
+          "title": "The AI Sales Agent for New Homes Is Here, And There's No Going Back"
+        }
+      ],
+      "raw_only_false_negative_review": {
+        "flag_count": 0,
+        "flags": [],
+        "reviewed_count": 29
+      },
+      "recommended_label_changes": [],
+      "rejected_candidate_false_negative_sample": [
+        {
+          "article_id": "art_c96c0ec12d",
+          "bucket": "irrelevant",
+          "matched_facets": [],
+          "provenance": [
+            "raw_collected_all"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "The Cities Where Homes Are Sitting on the Market the Longest"
+        },
+        {
+          "article_id": "art_03c8323b6e",
+          "bucket": "irrelevant",
+          "matched_facets": [],
+          "provenance": [
+            "article_md"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "Rocket Offers Buyouts As Redfin, Mr. Cooper Integration Continues"
+        },
+        {
+          "article_id": "art_97ea989083",
+          "bucket": "not_in_corpus",
+          "matched_facets": [],
+          "provenance": [
+            "raw_collected_all",
+            "raw_enriched"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "Beasr: The App Making Property Hunting Social"
+        },
+        {
+          "article_id": "art_31a1d23146",
+          "bucket": "not_in_corpus",
+          "matched_facets": [],
+          "provenance": [
+            "article_md",
+            "raw_feb_collected"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "New Listing Tech Tool Expands Digital Property Views Beyond Interiors"
+        },
+        {
+          "article_id": "art_4a45dc2795",
+          "bucket": "not_in_corpus",
+          "matched_facets": [],
+          "provenance": [
+            "article_md"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "5 years. $50M in sales. Here's the blueprint behind it all"
+        },
+        {
+          "article_id": "art_5f7216e937",
+          "bucket": "not_in_corpus",
+          "matched_facets": [],
+          "provenance": [
+            "article_md"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "Take The Inman Intel Index Survey For February 2026"
+        },
+        {
+          "article_id": "art_cac3ba00c4",
+          "bucket": "not_in_corpus",
+          "matched_facets": [],
+          "provenance": [
+            "article_md"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "Guy Gal: Coming Soon Stratagems"
+        },
+        {
+          "article_id": "art_66fc13c8f1",
+          "bucket": "not_in_corpus",
+          "matched_facets": [],
+          "provenance": [
+            "article_md"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "Real Estate Needs New Ways To Connect With The Tech World"
+        },
+        {
+          "article_id": "art_14f01c7d91",
+          "bucket": "not_in_corpus",
+          "matched_facets": [],
+          "provenance": [
+            "article_md"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "Where Brokerages Stand On Pre-MLS Listings After A Whirlwind Week"
+        },
+        {
+          "article_id": "art_8fbf4db7c2",
+          "bucket": "not_in_corpus",
+          "matched_facets": [],
+          "provenance": [
+            "raw_collected_all"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "Spring 2026 Housing Trends: What Buyers and Sellers Should Know"
+        }
+      ],
+      "same_company_or_theme_distractors_present": true
+    },
+    "reqret-003": {
+      "borderline_review": {
+        "article_ids": [
+          "art_34f650f1cc",
+          "art_230252f03d",
+          "art_8cbd363e7e",
+          "art_471dc4626e",
+          "art_45ed1d626f",
+          "art_24feda3c9d",
+          "art_4030ad1705",
+          "art_3ec9c9bdb8",
+          "art_f6c8f32cd9",
+          "art_b3077b5a5a"
+        ],
+        "borderline_count": 10,
+        "status": "explicitly_marked_for_expert_review"
+      },
+      "corpus_difficulty": {
+        "borderline_count": 10,
+        "corpus_size": 50,
+        "distractor_ratio": 0.36,
+        "irrelevant_count": 25,
+        "must_find_count": 6,
+        "nice_to_have_count": 9,
+        "relevant_ratio": 0.3,
+        "status": "not_too_easy"
+      },
+      "keyword_traps": [
+        {
+          "article_id": "art_58952c33fa",
+          "bucket": "irrelevant",
+          "provenance": [
+            "article_md"
+          ],
+          "qa_decision": "valid_keyword_or_same_theme_trap",
+          "title": "The AI Sales Agent for New Homes Is Here, And There's No Going Back"
+        },
+        {
+          "article_id": "art_f064d3ecb3",
+          "bucket": "irrelevant",
+          "provenance": [
+            "article_md"
+          ],
+          "qa_decision": "valid_keyword_or_same_theme_trap",
+          "title": "Zillow’s new AI helps shoppers prepare — so agents can focus on getting deals done"
+        },
+        {
+          "article_id": "art_af0c575579",
+          "bucket": "irrelevant",
+          "provenance": [
+            "article_md"
+          ],
+          "qa_decision": "valid_keyword_or_same_theme_trap",
+          "title": "The Internet Says Agents Are Doomed. Here's What's Actually Happening"
+        }
+      ],
+      "raw_only_false_negative_review": {
+        "flag_count": 2,
+        "flags": [
+          {
+            "article_id": "art_13e1292095",
+            "bucket": "not_in_corpus",
+            "discovery_group": "possible",
+            "matched_facets": [
+              "trx_portal_to_transaction",
+              "trx_agent_channel_flywheel"
+            ],
+            "provenance": [
+              "raw_collected_all",
+              "raw_enriched"
+            ],
+            "qa_decision": "potential_raw_only_false_negative_for_expert_review",
+            "score": 2,
+            "title": "French Portal Rivalry Intensifies as Bien'ici, SeLoger, and Leboncoin Trade Claims"
+          },
+          {
+            "article_id": "art_b2e7d378a4",
+            "bucket": "not_in_corpus",
+            "discovery_group": "possible",
+            "matched_facets": [
+              "trx_agent_channel_flywheel",
+              "trx_commission_monetization"
+            ],
+            "provenance": [
+              "raw_collected_all",
+              "raw_enriched"
+            ],
+            "qa_decision": "potential_raw_only_false_negative_for_expert_review",
+            "score": 2,
+            "title": "CoStar's $5B Bet on Homes.com: Early Returns"
+          }
+        ],
+        "reviewed_count": 24
+      },
+      "recommended_label_changes": [],
+      "rejected_candidate_false_negative_sample": [
+        {
+          "article_id": "art_5593175d64",
+          "bucket": "not_in_corpus",
+          "matched_facets": [],
+          "provenance": [
+            "article_md",
+            "raw_feb_collected"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "Being Found In The Age Of AI: The Collapse Of The \"I'm The Best\" Era"
+        },
+        {
+          "article_id": "art_8fd52c96ec",
+          "bucket": "not_in_corpus",
+          "matched_facets": [],
+          "provenance": [
+            "raw_collected_all"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "Redfin Reports: Spring Homebuying Season Starts Slowly"
+        },
+        {
+          "article_id": "art_5f529eefc3",
+          "bucket": "not_in_corpus",
+          "matched_facets": [],
+          "provenance": [
+            "raw_collected_all"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "Redfin Reports: Rental Affordability Improves in Most Major US Cities"
+        },
+        {
+          "article_id": "art_f98f1e68c0",
+          "bucket": "not_in_corpus",
+          "matched_facets": [],
+          "provenance": [
+            "article_md"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "Rechat lands Webby nomination, putting proptech on a bigger stage"
+        },
+        {
+          "article_id": "art_71c4803ede",
+          "bucket": "not_in_corpus",
+          "matched_facets": [],
+          "provenance": [
+            "article_md"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "Zillow CEO talks AI, affordability and supply"
+        },
+        {
+          "article_id": "art_be09dabda5",
+          "bucket": "not_in_corpus",
+          "matched_facets": [],
+          "provenance": [
+            "raw_collected_all"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "Redfin Reports: Homebuyers Are Prioritizing These Features in 2026"
+        },
+        {
+          "article_id": "art_b6007e44e7",
+          "bucket": "not_in_corpus",
+          "matched_facets": [],
+          "provenance": [
+            "article_md"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "Zillow tools are helping first-time buyers navigate a changing housing market"
+        },
+        {
+          "article_id": "art_b934942189",
+          "bucket": "not_in_corpus",
+          "matched_facets": [],
+          "provenance": [
+            "article_md"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "Zillow and Google bring home-buying guidance to NotebookLM"
+        },
+        {
+          "article_id": "art_b9bbc24706",
+          "bucket": "not_in_corpus",
+          "matched_facets": [],
+          "provenance": [
+            "raw_feb_collected"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "CoStar Group Highlights Proven Track Record and Reiterates Commitment to Enhancing Stockholder Value"
+        },
+        {
+          "article_id": "art_bc1bc59d0e",
+          "bucket": "not_in_corpus",
+          "matched_facets": [],
+          "provenance": [
+            "raw_collected_all",
+            "raw_enriched"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "Realtor.com Launches AI-Powered Home Search"
+        }
+      ],
+      "same_company_or_theme_distractors_present": true
+    },
+    "reqret-004": {
+      "borderline_review": {
+        "article_ids": [
+          "art_5f529eefc3",
+          "art_be09dabda5",
+          "art_eb620165d4",
+          "art_2b8a48ec58",
+          "art_5593175d64",
+          "art_18162cc3a6",
+          "art_50fc90629f",
+          "art_8ddecd35bd",
+          "art_0dea901dc1",
+          "art_3d7bcc13cf",
+          "art_9a9b4c62d3"
+        ],
+        "borderline_count": 11,
+        "status": "explicitly_marked_for_expert_review"
+      },
+      "corpus_difficulty": {
+        "borderline_count": 11,
+        "corpus_size": 50,
+        "distractor_ratio": 0.44,
+        "irrelevant_count": 25,
+        "must_find_count": 6,
+        "nice_to_have_count": 8,
+        "relevant_ratio": 0.28,
+        "status": "not_too_easy"
+      },
+      "keyword_traps": [
+        {
+          "article_id": "art_538020fa38",
+          "bucket": "irrelevant",
+          "provenance": [
+            "article_md"
+          ],
+          "qa_decision": "valid_keyword_or_same_theme_trap",
+          "title": "Product and Services Roundup: Realtor.com Launches ChatGPT App"
+        },
+        {
+          "article_id": "art_905093b4eb",
+          "bucket": "irrelevant",
+          "provenance": [
+            "article_md"
+          ],
+          "qa_decision": "valid_keyword_or_same_theme_trap",
+          "title": "Rocket + Redfin + Compass"
+        },
+        {
+          "article_id": "art_58952c33fa",
+          "bucket": "irrelevant",
+          "provenance": [
+            "article_md"
+          ],
+          "qa_decision": "valid_keyword_or_same_theme_trap",
+          "title": "The AI Sales Agent for New Homes Is Here, And There's No Going Back"
+        }
+      ],
+      "raw_only_false_negative_review": {
+        "flag_count": 0,
+        "flags": [],
+        "reviewed_count": 30
+      },
+      "recommended_label_changes": [],
+      "rejected_candidate_false_negative_sample": [
+        {
+          "article_id": "art_c0a637c253",
+          "bucket": "irrelevant",
+          "matched_facets": [],
+          "provenance": [
+            "article_md"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "CoStar Continues Defending Homes.com Strategy"
+        },
+        {
+          "article_id": "art_c96c0ec12d",
+          "bucket": "irrelevant",
+          "matched_facets": [],
+          "provenance": [
+            "raw_collected_all"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "The Cities Where Homes Are Sitting on the Market the Longest"
+        },
+        {
+          "article_id": "art_60d8b8e94d",
+          "bucket": "irrelevant",
+          "matched_facets": [],
+          "provenance": [
+            "article_md",
+            "raw_collected_all",
+            "raw_enriched"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "Lifull Connect looks to property transactions to drive Southeast Asia expansion"
+        },
+        {
+          "article_id": "art_06e2473ec3",
+          "bucket": "nice_to_have",
+          "matched_facets": [],
+          "provenance": [
+            "raw_feb_collected"
+          ],
+          "qa_decision": "discovery_false_negative_already_caught_in_golden",
+          "score": 0,
+          "title": "Product and Services Roundup: ImmoScout24, Bayut, 99.co, Avito, Zumper"
+        },
+        {
+          "article_id": "art_df3527fb92",
+          "bucket": "not_in_corpus",
+          "matched_facets": [],
+          "provenance": [
+            "article_md",
+            "raw_collected_all",
+            "raw_enriched"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "Avito Adtech expands analytics for sellers"
+        },
+        {
+          "article_id": "art_f6c8f32cd9",
+          "bucket": "not_in_corpus",
+          "matched_facets": [],
+          "provenance": [
+            "article_md",
+            "raw_collected_all",
+            "raw_enriched"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "KG/KCar and the challenge of monetizing used car classifieds"
+        },
+        {
+          "article_id": "art_78974654d7",
+          "bucket": "not_in_corpus",
+          "matched_facets": [],
+          "provenance": [
+            "article_md"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "Visualizing 8 Years of Real Estate Tech Trends"
+        },
+        {
+          "article_id": "art_e329d01e32",
+          "bucket": "not_in_corpus",
+          "matched_facets": [],
+          "provenance": [
+            "article_md"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "Judge Denies Compass Request To Stop Zillow's Listing Policy"
+        },
+        {
+          "article_id": "art_2c495ba432",
+          "bucket": "not_in_corpus",
+          "matched_facets": [],
+          "provenance": [
+            "article_md"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "Catch Up With Compass, Keller And The Commission Question"
+        },
+        {
+          "article_id": "art_66fc13c8f1",
+          "bucket": "not_in_corpus",
+          "matched_facets": [],
+          "provenance": [
+            "article_md"
+          ],
+          "qa_decision": "no_false_negative_signal",
+          "score": 0,
+          "title": "Real Estate Needs New Ways To Connect With The Tech World"
+        }
+      ],
+      "same_company_or_theme_distractors_present": true
+    }
+  },
+  "expert_review_status": "expert_review_pending",
+  "milestone": "RD7",
+  "review_type": "agent_side_qa",
+  "schema_version": "agent_qa_review_v1",
+  "scope_note": "This is an agent-side QA pass authorized as a substitute artifact for RD7. It does not claim final project-team human adjudication.",
+  "summary": {
+    "cases_reviewed": 4,
+    "critical_blockers": 0,
+    "expert_review_pending": true,
+    "potential_raw_only_false_negative_flags": 2,
+    "rejected_sample_false_negatives_already_caught": 1,
+    "too_easy_cases": []
+  }
+}
