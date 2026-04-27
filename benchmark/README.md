@@ -18,6 +18,11 @@ benchmark/
     │   ├── inputs.jsonl                  25 случаев
     │   ├── golden.jsonl                  is_breaking + rationale
     │   └── metadata.json
+    ├── request-article-retrieval/      ← Phase 1 retrieval only
+    │   ├── inputs.jsonl                  4 Avito Real Estate request cases
+    │   ├── golden.jsonl                  relevant article ids + critical misses
+    │   ├── metadata.json                 recall/precision, critical miss policy
+    │   └── agent_qa_review_notes.json    agent QA; expert_review_pending
     ├── jtbd-08-scoring/                ← Phase 2
     │   ├── inputs.jsonl                  16 случаев
     │   ├── golden.jsonl                  5-мерные оценки + total_score
@@ -52,12 +57,25 @@ for case in inputs:
     compare(llm_output['is_breaking'], golden[case['id']]['is_breaking'])
 ```
 
+### Request-Article Retrieval
+
+Датасет: `benchmark/datasets/request-article-retrieval/`.
+
+Это Phase 1 retrieval-only benchmark: модель получает реалистичный продуктовый
+запрос Авито Недвижимости и фиксированный corpus article cards, затем должна
+вернуть релевантные `article_id`. Синтез тезисов, digest generation и
+production validation не входят в этот benchmark.
+
+Текущий статус golden labels: `agent_qa_reviewed_expert_pending`. Перед
+production-использованием нужен review эксперта домена.
+
 ## Ключевые метрики по JTBD
 
 | JTBD | Метод оценки | Главная метрика | Порог |
 |------|-------------|----------------|-------|
 | 07 — Классификация сигнала | Hard metrics | Macro-F1 | ≥ 0.75 |
 | 09 — Breaking alert | Hard metrics | Precision | ≥ 0.85 |
+| Request Article Retrieval | Hard retrieval metrics | Recall / Precision | ≥ 0.85 / ≥ 0.85 |
 | 08 — Скоринг релевантности | Correlation | Spearman ρ | ≥ 0.75 |
 | 06 — Дедупликация | Hard metrics | F1 | ≥ 0.80 |
 | 15 — Контекстуализация | Retrieval + LLM-as-Judge | Precision@3 | ≥ 0.85 |

@@ -492,7 +492,7 @@ corpus grows enough that BM25 plus LLM review misses analogues.
 | RD6b | complete | Extended draft golden labels to `reqret-003` and `reqret-004`, with rationales and 3 critical misses per case. |
 | RD7 | complete | Ran agent-side QA review with `expert_review_pending`, marked borderline disputes, reviewed raw-only false-negative risk, confirmed keyword traps, and found no too-easy corpora. |
 | RD8 | complete | Added metric and validation spec in `metadata.json`, including recall/precision, borderline neutrality, critical-miss failure, and all-case pass policy. |
-| RD9 | pending | Not implemented yet. |
+| RD9 | complete | Integrated request-driven retrieval benchmark into `benchmark/README.md` as Phase 1 retrieval-only with expert review pending. |
 
 ## Milestone Details
 
