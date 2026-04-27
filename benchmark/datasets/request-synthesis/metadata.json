@@ -39,13 +39,20 @@
     "path": "inputs.jsonl",
     "record_count": 1
   },
+  "golden": {
+    "expected_thesis_count": 6,
+    "must_cover_thesis_count": 4,
+    "path": "golden.jsonl",
+    "record_count": 1,
+    "review_status": "agent_draft"
+  },
   "milestone_status": {
     "P2-1": "completed",
     "P2-2": "completed",
     "P2-3": "completed",
     "P2-4": "completed",
     "P2-5": "completed",
-    "P2-6": "planned",
+    "P2-6": "completed",
     "P2-7": "planned",
     "P2-8": "planned",
     "P2-9": "planned",
@@ -65,7 +72,7 @@
   "source_retrieval_cases": [
     "reqret-001"
   ],
-  "status": "nd_thesis_inventory_drafted",
+  "status": "nd_golden_drafted",
   "thesis_inventory": "thesis_inventory.json",
   "version": "0.1.0"
 }

@@ -448,7 +448,7 @@ Non-goals:
 ### P2-6 - Build ND Golden Labels
 
 Estimate: 2-3 hours.
-Status: planned.
+Status: completed.
 
 Goal: convert the thesis inventory into `golden.jsonl` for `syn-nd-001`.
 
