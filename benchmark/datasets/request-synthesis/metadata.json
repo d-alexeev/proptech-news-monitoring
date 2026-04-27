@@ -4,7 +4,7 @@
     "syn-nd-001"
   ],
   "created_at": "2026-04-27",
-  "expert_review_status": "not_started",
+  "expert_review_status": "expert_review_pending",
   "full_text_inputs": {
     "boilerplate_cleanup_rules": [
       "Remove navigation, cookie, subscription, share, and newsletter boilerplate.",
@@ -54,13 +54,14 @@
     "P2-5": "completed",
     "P2-6": "completed",
     "P2-7": "completed",
-    "P2-8": "planned",
+    "P2-8": "completed",
     "P2-9": "planned",
     "P2-10": "deferred"
   },
   "output_schema": "output_schema.json",
   "phase": "phase_2_synthesis",
   "pilot_scope": "ND-only pilot based on reqret-001; other cases deferred until ND freeze.",
+  "qa_review": "agent_qa_review_notes.json",
   "scoring_dimensions": {
     "avito_usefulness": "Synthesis connects evidence back to Avito New Developments investment implications.",
     "evidence_grounding": "Major theses, risks, and implications include supporting article IDs from the supplied input set.",
@@ -73,7 +74,7 @@
   "source_retrieval_cases": [
     "reqret-001"
   ],
-  "status": "nd_scoring_examples_defined",
+  "status": "agent_qa_reviewed_expert_pending",
   "thesis_inventory": "thesis_inventory.json",
   "version": "0.1.0"
 }

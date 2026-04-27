@@ -515,7 +515,7 @@ Non-goals:
 ### P2-8 - Agent-Side QA Review for ND
 
 Estimate: 1-2 hours.
-Status: planned.
+Status: completed.
 
 Goal: review ND inputs, golden labels, and scoring examples before expert
 review.

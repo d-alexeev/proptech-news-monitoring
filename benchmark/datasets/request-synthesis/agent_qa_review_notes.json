@@ -1,0 +1,60 @@
+{
+  "benchmark_id": "request-synthesis",
+  "case_id": "syn-nd-001",
+  "checks": {
+    "answerability": {
+      "result": "pass",
+      "notes": [
+        "Each must_cover thesis can be answered from the supplied full text without external knowledge.",
+        "The four must_cover theses are grounded in exact local markdown article text."
+      ]
+    },
+    "distractor_review": {
+      "result": "pass",
+      "notes": [
+        "art_7ed2a76ff5 is a close AI/real-estate-marketing article but does not support a core ND CPA thesis.",
+        "The distractor may support caution about generic AI marketing, but it should not anchor expected theses."
+      ]
+    },
+    "evidence_quality": {
+      "result": "pass",
+      "notes": [
+        "All selected articles use exact local full text.",
+        "No must_cover thesis relies on local_summary, analogue, or unusable evidence.",
+        "No model-facing input contains Local NML, Fetch failed, Paywall, or warning-symbol markers."
+      ]
+    },
+    "risk_coverage": {
+      "result": "pass",
+      "notes": [
+        "Legal/consent risk is supported by art_72bf1d2512.",
+        "Over-automation and human-trust limits are supported by art_1a5306798b and the distractor art_7ed2a76ff5.",
+        "Indirect developer CPA evidence is explicitly represented as a required caveat."
+      ]
+    },
+    "scoring_examples_alignment": {
+      "result": "pass",
+      "notes": [
+        "The good example covers all four must_cover theses and required risk/caveat categories.",
+        "The incomplete example fails thesis recall by design.",
+        "The hallucinated example fails forbidden-claim and grounding checks by design."
+      ]
+    },
+    "weak_or_ambiguous_items": {
+      "result": "review_needed",
+      "notes": [
+        "nd-t05 is intentionally nice_to_have because monetization evidence is indirect and mostly analogical.",
+        "nd-t06 is intentionally nice_to_have because property-content evidence supports matching quality more directly than CPA monetization.",
+        "Expert review should confirm whether the indirect developer CPA caveat is strict enough."
+      ]
+    }
+  },
+  "dry_run_summary": {
+    "input_scope": "Read only inputs.jsonl, golden.jsonl, and scoring_examples.json.",
+    "result": "pass",
+    "summary": "A model can synthesize the ND hypothesis from the supplied full text, but a correct answer must separate direct evidence from analogues and include risk/caveat language."
+  },
+  "expert_review_status": "expert_review_pending",
+  "review_status": "agent_qa_reviewed",
+  "schema_version": "request_synthesis_agent_qa_review_v1"
+}
