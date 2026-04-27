@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "schema_version": "request_article_synthesis_metadata_v1",
   "phase": "phase_2_article_level_synthesis",
-  "status": "inputs_built",
+  "status": "scoring_spec_defined",
   "pilot_scope": "ND-only pilot based on reqret-001; other cases deferred until the first case is reviewed.",
   "case_ids": [
     "art-syn-nd-001"
@@ -73,7 +73,7 @@
     "AS2": "completed",
     "AS3a": "completed",
     "AS3b": "completed",
-    "AS4": "planned",
+    "AS4": "completed",
     "AS5a": "planned",
     "AS5b": "planned",
     "AS6": "planned",
@@ -102,5 +102,70 @@
       "art_7ed2a76ff5"
     ],
     "notes": "The set intentionally includes direct new-homes/lead-scoring evidence, adjacent CRM/property-data analogues, risk articles, and one generic AI marketing distractor."
+  },
+  "scoring_contract": {
+    "version": "request_article_synthesis_scoring_v1",
+    "deterministic_v1": {
+      "purpose": "Baseline scoring for schema-valid model outputs before semantic judge calibration.",
+      "metrics": {
+        "article_relevance_accuracy": "Exact-match accuracy between predicted and golden relevance labels per article.",
+        "must_point_recall": "Share of golden must-cover points matched by deterministic keyword/phrase cues where configured; this is a proxy, not full semantic recall.",
+        "grounding": "Checks that every article summary refers only to the matching input article and uses valid thesis/evidence fields.",
+        "overstatement_penalty": "Penalizes exact or near-exact forbidden claims from must_not_claim and high relevance assigned to low/distractor articles.",
+        "distractor_handling": "Distractor articles must be labeled irrelevant or low and should not contain substantive confirming theses.",
+        "implication_quality": "For high/medium articles, avito_implication must be non-empty and must not contradict must_not_claim guards."
+      },
+      "pass_policy": {
+        "schema_valid": "required",
+        "article_coverage": "all input articles must be present exactly once",
+        "min_relevance_accuracy": 0.75,
+        "min_must_point_recall": 0.7,
+        "max_high_relevance_distractors": 0,
+        "forbidden_claims": "no high-severity forbidden or must_not_claim violation"
+      },
+      "known_limits": [
+        "Deterministic must-point matching can over-credit keyword overlap and under-credit valid paraphrase.",
+        "Semantic quality and expert correctness still require human or LLM judge review.",
+        "The scorer should report its heuristic status in result artifacts."
+      ]
+    },
+    "semantic_llm_judge_v2": {
+      "status": "planned_not_implemented",
+      "purpose": "Evaluate semantic coverage, grounding quality, request specificity, and nuanced analogue-vs-proof distinctions after deterministic v1 is calibrated.",
+      "candidate_dimensions": [
+        "semantic_must_point_coverage",
+        "evidence_support_quality",
+        "request_specificity",
+        "analogue_vs_direct_handling",
+        "overstatement_detection"
+      ]
+    },
+    "score_fields_to_output_schema": {
+      "article_relevance_accuracy": [
+        "article_summaries[].relevance"
+      ],
+      "must_point_recall": [
+        "article_summaries[].request_specific_summary",
+        "article_summaries[].theses[].statement",
+        "article_summaries[].theses[].evidence"
+      ],
+      "grounding": [
+        "article_summaries[].article_id",
+        "article_summaries[].theses[].evidence"
+      ],
+      "overstatement_penalty": [
+        "article_summaries[].request_specific_summary",
+        "article_summaries[].theses[].statement",
+        "article_summaries[].avito_implication"
+      ],
+      "distractor_handling": [
+        "article_summaries[].relevance",
+        "article_summaries[].support_type",
+        "article_summaries[].theses"
+      ],
+      "implication_quality": [
+        "article_summaries[].avito_implication"
+      ]
+    }
   }
 }

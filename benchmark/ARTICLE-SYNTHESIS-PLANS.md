@@ -247,7 +247,7 @@ Non-goals:
 
 ### AS4 — Scoring Spec
 
-Status: planned
+Status: completed
 
 Goal: define a scoring contract before implementation.
 
