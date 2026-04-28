@@ -61,6 +61,7 @@
     "storage_policy": "Raw judge outputs and full reports stay under ignored benchmark/results/; compact QA notes may be committed when needed for traceability.",
     "expert_review_status": "expert_review_pending"
   },
+  "llm_judge_schema": "judge_schema.json",
   "full_text_inputs": {
     "boilerplate_cleanup_rules": [
       "Remove navigation, cookie, subscription, share, and newsletter boilerplate.",

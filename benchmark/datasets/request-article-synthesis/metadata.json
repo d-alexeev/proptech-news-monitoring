@@ -74,6 +74,7 @@
     "storage_policy": "Raw judge outputs and full reports stay under ignored benchmark/results/; compact QA notes may be committed when needed for traceability.",
     "expert_review_status": "expert_review_pending"
   },
+  "llm_judge_schema": "judge_schema.json",
   "output_contract": {
     "article_coverage": "The model must return exactly one article_summaries item for every input article.",
     "irrelevant_policy": "Irrelevant and distractor articles must be labeled explicitly and must not be converted into substantive supporting theses.",

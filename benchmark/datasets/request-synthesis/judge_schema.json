@@ -1,0 +1,206 @@
+{
+  "schema_version": "request_synthesis_llm_judge_v1",
+  "benchmark_id": "request-synthesis",
+  "case_id_scope": [
+    "syn-nd-001"
+  ],
+  "common_fields": [
+    "benchmark_id",
+    "case_id",
+    "candidate_model",
+    "judge_model",
+    "judge_context_mode",
+    "source_report",
+    "source_raw_path",
+    "source_run_id",
+    "judge_schema_version",
+    "judge_prompt_hash",
+    "self_judged"
+  ],
+  "candidate_status_values": [
+    "judgeable",
+    "candidate_parse_error",
+    "candidate_schema_error_judgeable",
+    "candidate_schema_error_blocked"
+  ],
+  "score_scale": {
+    "min": 0,
+    "max": 4,
+    "anchors": {
+      "0": "absent, unsupported, or seriously wrong",
+      "1": "weak; mentions the right area but misses the substantive requirement",
+      "2": "partial; captures some correct meaning but misses important nuance or evidence support",
+      "3": "good; materially correct, grounded, and useful",
+      "4": "excellent; complete, precise, well-grounded, and appropriately caveated"
+    }
+  },
+  "confidence_values": [
+    "low",
+    "medium",
+    "high"
+  ],
+  "dimensions": [
+    {
+      "id": "semantic_thesis_coverage",
+      "threshold": 3,
+      "score_anchors": {
+        "0": "Must-cover thesis ideas are absent.",
+        "2": "Some expected thesis ideas appear, but important themes are missing or shallow.",
+        "4": "All important thesis ideas are covered with precise request-specific framing."
+      }
+    },
+    {
+      "id": "evidence_grounding",
+      "threshold": 3,
+      "score_anchors": {
+        "0": "Major claims lack cited article IDs or cite articles that do not support them.",
+        "2": "Some claims are grounded, but citation quality is inconsistent.",
+        "4": "All major claims are supported by appropriate supplied article IDs."
+      }
+    },
+    {
+      "id": "risk_coverage",
+      "threshold": 3,
+      "score_anchors": {
+        "0": "Important risks and counter-signals are absent.",
+        "2": "Some risks are mentioned but not connected to the investment question.",
+        "4": "Risks are specific, balanced, and supported by supplied evidence."
+      }
+    },
+    {
+      "id": "avito_implication_quality",
+      "threshold": 3,
+      "score_anchors": {
+        "0": "Implications are generic or unrelated to Avito New Developments.",
+        "2": "Implications are directionally relevant but vague.",
+        "4": "Implications are concrete, decision-useful, and tied to the request."
+      }
+    },
+    {
+      "id": "overstatement_detection",
+      "threshold": 3,
+      "score_anchors": {
+        "0": "Analogues or weak evidence are framed as direct proof.",
+        "2": "Some caveats are present, but proof strength is still overstated.",
+        "4": "Direct evidence, analogues, and risks are clearly separated."
+      }
+    },
+    {
+      "id": "hallucination_or_external_claims",
+      "threshold": 4,
+      "score_anchors": {
+        "0": "Answer relies on unsupported external facts or invented evidence.",
+        "2": "Answer includes minor unsupported claims that do not drive the conclusion.",
+        "4": "Answer uses only supplied article evidence."
+      }
+    }
+  ],
+  "field_mapping": {
+    "semantic_thesis_coverage": [
+      "candidate_output.theses[].statement",
+      "candidate_output.answer_summary",
+      "golden.expected_theses"
+    ],
+    "evidence_grounding": [
+      "candidate_output.theses[].evidence_article_ids",
+      "candidate_output.risks[].evidence_article_ids",
+      "candidate_output.avito_implications[].evidence_article_ids",
+      "input.articles[].article_id"
+    ],
+    "risk_coverage": [
+      "candidate_output.risks[]",
+      "golden.required_risks"
+    ],
+    "avito_implication_quality": [
+      "candidate_output.avito_implications[]",
+      "user_request"
+    ],
+    "overstatement_detection": [
+      "candidate_output.theses[]",
+      "candidate_output.avito_implications[]",
+      "golden.expected_theses[].evidence_role"
+    ],
+    "hallucination_or_external_claims": [
+      "candidate_output.answer_summary",
+      "candidate_output.theses[]",
+      "input.articles[]"
+    ]
+  },
+  "required_output_fields": [
+    "benchmark_id",
+    "case_id",
+    "candidate_model",
+    "judge_model",
+    "judge_context_mode",
+    "source_report",
+    "source_raw_path",
+    "source_run_id",
+    "judge_schema_version",
+    "judge_prompt_hash",
+    "self_judged",
+    "candidate_status",
+    "dimension_scores",
+    "blocking_failures",
+    "overall_score",
+    "final_recommendation",
+    "summary"
+  ],
+  "dimension_score_required_fields": [
+    "dimension",
+    "score",
+    "confidence",
+    "rationale",
+    "cited_article_ids",
+    "disagreement_flags"
+  ],
+  "final_recommendation_values": [
+    "pass",
+    "fail",
+    "needs_expert_review"
+  ],
+  "blocking_failure_values": [
+    "critical_hallucination",
+    "unsupported_external_claims",
+    "severe_overstatement",
+    "missing_required_evidence",
+    "wrong_case_or_article_ids"
+  ],
+  "aggregation": {
+    "overall_score": "Mean of dimension scores when candidate_status is judgeable or candidate_schema_error_judgeable.",
+    "pass_policy": "Pass requires no blocking failures, semantic_thesis_coverage >= 3, evidence_grounding >= 3, avito_implication_quality >= 3, overstatement_detection >= 3, and hallucination_or_external_claims >= 4.",
+    "parse_error_policy": "candidate_parse_error and candidate_schema_error_blocked do not receive semantic scores and final_recommendation must be fail or needs_expert_review."
+  },
+  "mock_judge_output": {
+    "benchmark_id": "request-synthesis",
+    "case_id": "syn-nd-001",
+    "candidate_model": "dry/candidate",
+    "judge_model": "dry/judge",
+    "judge_context_mode": "hybrid",
+    "source_report": "benchmark/results/example-request-synthesis.json",
+    "source_raw_path": "benchmark/results/raw/example-request-synthesis.jsonl",
+    "source_run_id": "example-run",
+    "judge_schema_version": "request_synthesis_llm_judge_v1",
+    "judge_prompt_hash": "sha256:example",
+    "self_judged": false,
+    "candidate_status": "judgeable",
+    "dimension_scores": [
+      {
+        "dimension": "semantic_thesis_coverage",
+        "score": 3,
+        "confidence": "medium",
+        "rationale": "The answer covers lead prioritization and AI sales follow-up but gives less attention to developer monetization.",
+        "cited_article_ids": [
+          "art_58952c33fa",
+          "art_82b95d2e44"
+        ],
+        "disagreement_flags": [
+          "deterministic_understates_paraphrase"
+        ]
+      }
+    ],
+    "blocking_failures": [],
+    "overall_score": 3.0,
+    "final_recommendation": "needs_expert_review",
+    "summary": "Mock whole-set judge output for schema validation."
+  }
+}

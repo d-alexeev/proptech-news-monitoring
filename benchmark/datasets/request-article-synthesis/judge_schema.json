@@ -1,0 +1,225 @@
+{
+  "schema_version": "request_article_synthesis_llm_judge_v1",
+  "benchmark_id": "request-article-synthesis",
+  "case_id_scope": [
+    "art-syn-nd-001"
+  ],
+  "common_fields": [
+    "benchmark_id",
+    "case_id",
+    "candidate_model",
+    "judge_model",
+    "judge_context_mode",
+    "source_report",
+    "source_raw_path",
+    "source_run_id",
+    "judge_schema_version",
+    "judge_prompt_hash",
+    "self_judged"
+  ],
+  "candidate_status_values": [
+    "judgeable",
+    "candidate_parse_error",
+    "candidate_schema_error_judgeable",
+    "candidate_schema_error_blocked"
+  ],
+  "score_scale": {
+    "min": 0,
+    "max": 4,
+    "anchors": {
+      "0": "absent, unsupported, or seriously wrong",
+      "1": "weak; mentions the right area but misses the substantive requirement",
+      "2": "partial; captures some correct meaning but misses important nuance or evidence support",
+      "3": "good; materially correct, grounded, and useful",
+      "4": "excellent; complete, precise, well-grounded, and appropriately caveated"
+    }
+  },
+  "confidence_values": [
+    "low",
+    "medium",
+    "high"
+  ],
+  "dimensions": [
+    {
+      "id": "article_relevance_judgment",
+      "threshold": 3,
+      "score_anchors": {
+        "0": "Relevance labels are mostly wrong or promote distractors.",
+        "2": "Several relevance labels are directionally right, but important direct/analogue distinctions are missed.",
+        "4": "Relevance labels match the request-specific role of each article."
+      }
+    },
+    {
+      "id": "semantic_must_point_coverage",
+      "threshold": 3,
+      "score_anchors": {
+        "0": "Per-article must-cover points are absent.",
+        "2": "Some must-cover points are represented, but important article-specific evidence is missing.",
+        "4": "High and medium relevance articles cover their must-cover points precisely."
+      }
+    },
+    {
+      "id": "request_specificity",
+      "threshold": 3,
+      "score_anchors": {
+        "0": "Summaries are generic article recaps.",
+        "2": "Summaries sometimes connect to Avito ND but remain vague.",
+        "4": "Each summary explains the article's contribution to the Avito ND request."
+      }
+    },
+    {
+      "id": "analogue_vs_direct_handling",
+      "threshold": 3,
+      "score_anchors": {
+        "0": "Analogues are treated as direct proof.",
+        "2": "Some analogue caveats are present, but proof strength is unclear.",
+        "4": "Direct evidence, analogues, risks, and background are separated cleanly."
+      }
+    },
+    {
+      "id": "distractor_handling",
+      "threshold": 3,
+      "score_anchors": {
+        "0": "Distractors are promoted into high relevance or confirming theses.",
+        "2": "Distractors are not high relevance, but still receive too much substantive weight.",
+        "4": "Distractors are labeled low or irrelevant and not converted into support."
+      }
+    },
+    {
+      "id": "forbidden_claim_detection",
+      "threshold": 4,
+      "score_anchors": {
+        "0": "Output makes forbidden or must-not-claim assertions.",
+        "2": "Output includes ambiguous wording that could imply a forbidden claim.",
+        "4": "Output avoids forbidden claims and overstatement."
+      }
+    }
+  ],
+  "field_mapping": {
+    "article_relevance_judgment": [
+      "candidate_output.article_summaries[].relevance",
+      "golden.article_labels[].relevance",
+      "golden.article_labels[].article_role"
+    ],
+    "semantic_must_point_coverage": [
+      "candidate_output.article_summaries[].request_specific_summary",
+      "candidate_output.article_summaries[].theses[]",
+      "golden.article_labels[].must_cover_points"
+    ],
+    "request_specificity": [
+      "candidate_output.article_summaries[].request_specific_summary",
+      "candidate_output.article_summaries[].avito_implication",
+      "user_request"
+    ],
+    "analogue_vs_direct_handling": [
+      "candidate_output.article_summaries[].support_type",
+      "candidate_output.article_summaries[].theses[].supports",
+      "golden.article_labels[].support_type"
+    ],
+    "distractor_handling": [
+      "candidate_output.article_summaries[].relevance",
+      "candidate_output.article_summaries[].theses[]",
+      "golden.article_labels[].article_role"
+    ],
+    "forbidden_claim_detection": [
+      "candidate_output.article_summaries[].request_specific_summary",
+      "candidate_output.article_summaries[].theses[]",
+      "candidate_output.article_summaries[].avito_implication",
+      "golden.article_labels[].must_not_claim"
+    ]
+  },
+  "required_output_fields": [
+    "benchmark_id",
+    "case_id",
+    "candidate_model",
+    "judge_model",
+    "judge_context_mode",
+    "source_report",
+    "source_raw_path",
+    "source_run_id",
+    "judge_schema_version",
+    "judge_prompt_hash",
+    "self_judged",
+    "candidate_status",
+    "dimension_scores",
+    "per_article_reviews",
+    "blocking_failures",
+    "overall_score",
+    "final_recommendation",
+    "summary"
+  ],
+  "dimension_score_required_fields": [
+    "dimension",
+    "score",
+    "confidence",
+    "rationale",
+    "cited_article_ids",
+    "disagreement_flags"
+  ],
+  "per_article_review_required_fields": [
+    "article_id",
+    "relevance_score",
+    "coverage_score",
+    "overstatement_risk",
+    "rationale"
+  ],
+  "final_recommendation_values": [
+    "pass",
+    "fail",
+    "needs_expert_review"
+  ],
+  "blocking_failure_values": [
+    "critical_hallucination",
+    "unsupported_external_claims",
+    "severe_overstatement",
+    "missing_required_evidence",
+    "wrong_case_or_article_ids"
+  ],
+  "aggregation": {
+    "overall_score": "Mean of dimension scores when candidate_status is judgeable or candidate_schema_error_judgeable.",
+    "pass_policy": "Pass requires no blocking failures, article_relevance_judgment >= 3, semantic_must_point_coverage >= 3, request_specificity >= 3, analogue_vs_direct_handling >= 3, distractor_handling >= 3, and forbidden_claim_detection >= 4.",
+    "parse_error_policy": "candidate_parse_error and candidate_schema_error_blocked do not receive semantic scores and final_recommendation must be fail or needs_expert_review."
+  },
+  "mock_judge_output": {
+    "benchmark_id": "request-article-synthesis",
+    "case_id": "art-syn-nd-001",
+    "candidate_model": "dry/candidate",
+    "judge_model": "dry/judge",
+    "judge_context_mode": "hybrid",
+    "source_report": "benchmark/results/example-request-article-synthesis.json",
+    "source_raw_path": "benchmark/results/raw/example-request-article-synthesis.jsonl",
+    "source_run_id": "example-run",
+    "judge_schema_version": "request_article_synthesis_llm_judge_v1",
+    "judge_prompt_hash": "sha256:example",
+    "self_judged": false,
+    "candidate_status": "judgeable",
+    "dimension_scores": [
+      {
+        "dimension": "article_relevance_judgment",
+        "score": 3,
+        "confidence": "medium",
+        "rationale": "The output identifies direct new-homes AI sales evidence but is less precise on a generic marketing distractor.",
+        "cited_article_ids": [
+          "art_58952c33fa",
+          "art_7ed2a76ff5"
+        ],
+        "disagreement_flags": [
+          "deterministic_relevance_disagreement"
+        ]
+      }
+    ],
+    "per_article_reviews": [
+      {
+        "article_id": "art_58952c33fa",
+        "relevance_score": 4,
+        "coverage_score": 3,
+        "overstatement_risk": "low",
+        "rationale": "The candidate connects the article to new-homes AI lead engagement and handoff."
+      }
+    ],
+    "blocking_failures": [],
+    "overall_score": 3.0,
+    "final_recommendation": "needs_expert_review",
+    "summary": "Mock article-level judge output for schema validation."
+  }
+}

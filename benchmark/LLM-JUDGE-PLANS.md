@@ -217,7 +217,7 @@ Non-goals:
 
 ### LJ1b — Benchmark-Specific Judge Schemas
 
-Status: planned
+Status: completed
 
 Goal: add structured judge output schemas for whole-set and article-level
 synthesis.
