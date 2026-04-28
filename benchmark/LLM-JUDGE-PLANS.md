@@ -164,7 +164,7 @@ Non-goals:
 
 ### LJ1a — Common Judge Contract
 
-Status: planned
+Status: completed
 
 Goal: define common judge metadata, score scale, statuses, and reproducibility
 fields.

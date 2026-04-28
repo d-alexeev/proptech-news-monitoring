@@ -5,6 +5,62 @@
   ],
   "created_at": "2026-04-27",
   "expert_review_status": "expert_review_pending",
+  "llm_judge_contract": {
+    "status": "common_contract_defined",
+    "schema_version": "llm_judge_common_contract_v1",
+    "judge_model_policy": "Use one strong judge model for v1. Keep report metadata compatible with future multi-judge or arbiter setups.",
+    "allowed_context_modes": [
+      "full_golden",
+      "hybrid",
+      "reduced_rubric"
+    ],
+    "default_context_mode": "hybrid",
+    "common_fields": [
+      "benchmark_id",
+      "case_id",
+      "candidate_model",
+      "judge_model",
+      "judge_context_mode",
+      "source_report",
+      "source_raw_path",
+      "source_run_id",
+      "judge_schema_version",
+      "judge_prompt_hash",
+      "self_judged"
+    ],
+    "score_scale": {
+      "min": 0,
+      "max": 4,
+      "anchors": {
+        "0": "absent, unsupported, or seriously wrong",
+        "1": "weak; mentions the right area but misses the substantive requirement",
+        "2": "partial; captures some correct meaning but misses important nuance or evidence support",
+        "3": "good; materially correct, grounded, and useful",
+        "4": "excellent; complete, precise, well-grounded, and appropriately caveated"
+      }
+    },
+    "confidence_values": [
+      "low",
+      "medium",
+      "high"
+    ],
+    "candidate_statuses": {
+      "judgeable": "Candidate output parsed against its benchmark contract and can receive semantic judge scores.",
+      "candidate_parse_error": "Candidate output failed JSON parsing or required top-level shape before semantic judging.",
+      "candidate_schema_error_judgeable": "Candidate output has a limited schema/rubric issue but enough structured content remains for semantic judging.",
+      "candidate_schema_error_blocked": "Candidate output is too malformed for semantic judging and should not receive semantic scores."
+    },
+    "blocking_failure_categories": [
+      "critical_hallucination",
+      "unsupported_external_claims",
+      "severe_overstatement",
+      "missing_required_evidence",
+      "wrong_case_or_article_ids"
+    ],
+    "analogue_tolerance_policy": "For article-level synthesis candidate outputs, thesis.supports=analogue can be treated as candidate_schema_error_judgeable for LLM judge review; this does not change the formal benchmark output schema.",
+    "storage_policy": "Raw judge outputs and full reports stay under ignored benchmark/results/; compact QA notes may be committed when needed for traceability.",
+    "expert_review_status": "expert_review_pending"
+  },
   "full_text_inputs": {
     "boilerplate_cleanup_rules": [
       "Remove navigation, cookie, subscription, share, and newsletter boilerplate.",
