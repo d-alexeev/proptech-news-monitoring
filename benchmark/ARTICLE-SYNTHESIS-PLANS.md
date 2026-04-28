@@ -374,7 +374,7 @@ Non-goals:
 
 ### AS6 — Pilot Run
 
-Status: planned
+Status: completed
 
 Goal: run one ND case on four `.env` models.
 

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "schema_version": "request_article_synthesis_metadata_v1",
   "phase": "phase_2_article_level_synthesis",
-  "status": "deterministic_scorer_defined",
+  "status": "pilot_run_completed",
   "pilot_scope": "ND-only pilot based on reqret-001; other cases deferred until the first case is reviewed.",
   "case_ids": [
     "art-syn-nd-001"
@@ -76,7 +76,7 @@
     "AS4": "completed",
     "AS5a": "completed",
     "AS5b": "completed",
-    "AS6": "planned",
+    "AS6": "completed",
     "AS7": "planned"
   },
   "inputs": {
@@ -167,5 +167,17 @@
         "article_summaries[].avito_implication"
       ]
     }
+  },
+  "pilot_run": {
+    "timestamp": "20260428T001627Z",
+    "report_json": "benchmark/results/request-article-synthesis-20260428T001627Z.json",
+    "report_markdown": "benchmark/results/request-article-synthesis-20260428T001627Z.md",
+    "models_run": 4,
+    "models_scored": 2,
+    "parse_or_schema_error_models": [
+      "anthropic/claude-sonnet-4.6",
+      "minimax/minimax-m2.7"
+    ],
+    "observed_issue": "Two models used thesis.supports=analogue, which is outside the AS1 enum; AS7 should decide whether to allow analogue here or keep the stricter supports enum."
   }
 }
