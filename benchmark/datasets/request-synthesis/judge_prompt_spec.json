@@ -1,0 +1,133 @@
+{
+  "schema_version": "request_synthesis_judge_prompt_spec_v1",
+  "benchmark_id": "request-synthesis",
+  "judge_schema": "judge_schema.json",
+  "default_context_mode": "hybrid",
+  "supported_context_modes": [
+    "full_golden",
+    "hybrid",
+    "reduced_rubric"
+  ],
+  "system_prompt": {
+    "role": "LLM-as-judge for Avito Real Estate request-synthesis benchmark outputs.",
+    "rules": [
+      "Use only supplied benchmark inputs, golden context allowed by the selected context mode, and the candidate output.",
+      "Do not use external knowledge.",
+      "Return only valid JSON matching judge_schema.json.",
+      "Score each dimension on the 0-4 scale.",
+      "Cite supplied article IDs for every partial or failing dimension score.",
+      "Do not reward verbosity by itself.",
+      "Mark self_judged=true when candidate_model equals judge_model.",
+      "Treat unsupported confident claims as worse than cautious partial answers."
+    ]
+  },
+  "full_text_policy": {
+    "allowed": true,
+    "reason": "request-synthesis already uses full article text as benchmark input.",
+    "use": "Use full text only to verify whether cited evidence supports candidate claims.",
+    "non_goals": [
+      "Do not introduce full text into retrieval judging.",
+      "Do not quote long article passages in judge output."
+    ]
+  },
+  "malformed_candidate_policy": {
+    "candidate_parse_error": "If candidate output cannot be parsed as JSON, return candidate_status=candidate_parse_error, no semantic dimension scores, and final_recommendation=fail or needs_expert_review.",
+    "candidate_schema_error_judgeable": "If a limited schema issue exists but the answer content remains understandable, judge semantics and describe the schema issue in summary.",
+    "candidate_schema_error_blocked": "If required synthesis content is missing or case/article IDs are unusable, do not assign semantic scores."
+  },
+  "context_modes": {
+    "full_golden": {
+      "intended_use": "Calibration and debugging.",
+      "include": [
+        "user_request",
+        "input.articles[].article_id",
+        "input.articles[].title",
+        "input.articles[].body_excerpt",
+        "input.articles[].body_full_text",
+        "candidate_output",
+        "golden.expected_theses[] including statements, acceptable_paraphrases, supporting_article_ids, priority, and must_not_overstate",
+        "golden.required_risks[]",
+        "golden.forbidden_claims[]",
+        "judge_schema dimensions and score anchors"
+      ],
+      "exclude": [
+        "unrelated benchmark cases",
+        "production runtime prompts"
+      ]
+    },
+    "hybrid": {
+      "intended_use": "Default pilot mode.",
+      "include": [
+        "user_request",
+        "input.articles[].article_id",
+        "input.articles[].title",
+        "input.articles[].body_excerpt",
+        "input.articles[].body_full_text",
+        "candidate_output",
+        "key must-cover themes without ideal answer wording",
+        "supporting article IDs for key themes",
+        "golden.forbidden_claims[]",
+        "judge_schema dimensions and score anchors"
+      ],
+      "exclude": [
+        "golden.expected_theses[].statement",
+        "golden.expected_theses[].acceptable_paraphrases",
+        "golden.required_risks[].statement exact wording"
+      ],
+      "hybrid_theme_source": {
+        "conversion_from_existing_demand": [
+          "art_58952c33fa",
+          "art_82b95d2e44",
+          "art_45ed1d626f"
+        ],
+        "first_party_behavioral_data_for_scoring_and_routing": [
+          "art_82b95d2e44",
+          "art_34f650f1cc",
+          "art_8f98e029e7",
+          "art_f54777679f"
+        ],
+        "structured_property_data_and_richer_listing_context": [
+          "art_f54777679f",
+          "art_4030ad1705",
+          "art_31a1d23146",
+          "art_45ed1d626f"
+        ],
+        "ai_assisted_human_handoff": [
+          "art_58952c33fa",
+          "art_45ed1d626f",
+          "art_1a5306798b"
+        ],
+        "developer_cpa_evidence_is_indirect": [
+          "art_c0a637c253",
+          "art_58952c33fa",
+          "art_82b95d2e44"
+        ]
+      }
+    },
+    "reduced_rubric": {
+      "intended_use": "More independent review after calibration.",
+      "include": [
+        "user_request",
+        "input.articles[].article_id",
+        "input.articles[].title",
+        "input.articles[].body_excerpt",
+        "input.articles[].body_full_text",
+        "candidate_output",
+        "judge_schema dimensions and score anchors"
+      ],
+      "exclude": [
+        "golden.expected_theses",
+        "golden.required_risks",
+        "golden.forbidden_claims",
+        "hybrid_theme_source"
+      ]
+    }
+  },
+  "judge_output_requirements": [
+    "Set candidate_status before assigning semantic scores.",
+    "Provide one dimension_scores item per judge_schema dimension when candidate_status is judgeable or candidate_schema_error_judgeable.",
+    "Use blocking_failures for critical hallucination, unsupported external claims, severe overstatement, missing required evidence, or wrong case/article IDs.",
+    "Set final_recommendation to fail when blocking_failures is non-empty.",
+    "Set final_recommendation to needs_expert_review for borderline or low-confidence semantic disputes."
+  ]
+}

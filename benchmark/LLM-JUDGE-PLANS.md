@@ -359,7 +359,7 @@ Non-goals:
 
 ### LJ3 — Context Modes and Judge Prompt Specs
 
-Status: planned
+Status: completed
 
 Goal: write prompt specifications for the three judge context modes.
 

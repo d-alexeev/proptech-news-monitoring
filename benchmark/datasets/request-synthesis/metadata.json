@@ -62,6 +62,7 @@
     "expert_review_status": "expert_review_pending"
   },
   "llm_judge_schema": "judge_schema.json",
+  "llm_judge_prompt_spec": "judge_prompt_spec.json",
   "full_text_inputs": {
     "boilerplate_cleanup_rules": [
       "Remove navigation, cookie, subscription, share, and newsletter boilerplate.",

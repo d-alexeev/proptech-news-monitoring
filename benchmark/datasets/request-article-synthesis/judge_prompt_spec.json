@@ -1,0 +1,129 @@
+{
+  "schema_version": "request_article_synthesis_judge_prompt_spec_v1",
+  "benchmark_id": "request-article-synthesis",
+  "judge_schema": "judge_schema.json",
+  "default_context_mode": "hybrid",
+  "supported_context_modes": [
+    "full_golden",
+    "hybrid",
+    "reduced_rubric"
+  ],
+  "system_prompt": {
+    "role": "LLM-as-judge for Avito Real Estate request-article-synthesis benchmark outputs.",
+    "rules": [
+      "Use only supplied benchmark inputs, golden context allowed by the selected context mode, and the candidate output.",
+      "Do not use external knowledge.",
+      "Return only valid JSON matching judge_schema.json.",
+      "Score each dimension on the 0-4 scale.",
+      "Cite supplied article IDs for every partial or failing dimension score.",
+      "Do not reward verbosity by itself.",
+      "Mark self_judged=true when candidate_model equals judge_model.",
+      "Reward request-specific article summaries over generic article recaps.",
+      "Penalize promoting distractors or weak analogues into direct evidence."
+    ]
+  },
+  "full_text_policy": {
+    "allowed": true,
+    "reason": "request-article-synthesis already uses full article text as benchmark input.",
+    "use": "Use full text only to verify per-article coverage, grounding, and overstatement.",
+    "non_goals": [
+      "Do not introduce full text into retrieval judging.",
+      "Do not quote long article passages in judge output."
+    ]
+  },
+  "malformed_candidate_policy": {
+    "candidate_parse_error": "If candidate output cannot be parsed as JSON, return candidate_status=candidate_parse_error, no semantic dimension scores, and final_recommendation=fail or needs_expert_review.",
+    "candidate_schema_error_judgeable": "If a limited schema issue exists but article summaries remain understandable, judge semantics and describe the schema issue in summary.",
+    "candidate_schema_error_blocked": "If article IDs are missing, duplicated beyond repair, or mostly unusable, do not assign semantic scores.",
+    "analogue_tolerance": "If thesis.supports=analogue appears, treat it as candidate_schema_error_judgeable rather than blocking, then evaluate analogue_vs_direct_handling."
+  },
+  "context_modes": {
+    "full_golden": {
+      "intended_use": "Calibration and debugging.",
+      "include": [
+        "user_request",
+        "input.articles[].article_id",
+        "input.articles[].title",
+        "input.articles[].body_excerpt",
+        "input.articles[].body_full_text",
+        "candidate_output",
+        "golden.article_labels[] including relevance, article_role, support_type, why_relevant_or_not, must_cover_points, optional_points, and must_not_claim",
+        "judge_schema dimensions and score anchors"
+      ],
+      "exclude": [
+        "unrelated benchmark cases",
+        "production runtime prompts"
+      ]
+    },
+    "hybrid": {
+      "intended_use": "Default pilot mode.",
+      "include": [
+        "user_request",
+        "input.articles[].article_id",
+        "input.articles[].title",
+        "input.articles[].body_excerpt",
+        "input.articles[].body_full_text",
+        "candidate_output",
+        "article relevance roles without ideal summary wording",
+        "must-cover themes without exact statement wording",
+        "must_not_claim guards",
+        "judge_schema dimensions and score anchors"
+      ],
+      "exclude": [
+        "golden.article_labels[].why_relevant_or_not",
+        "golden.article_labels[].must_cover_points[].statement exact wording",
+        "golden.article_labels[].optional_points"
+      ],
+      "hybrid_theme_source": {
+        "art_58952c33fa": [
+          "new-homes AI lead engagement",
+          "human handoff"
+        ],
+        "art_82b95d2e44": [
+          "real-time buyer activity signals",
+          "CRM and behavioral data breadth"
+        ],
+        "art_f54777679f": [
+          "engagement scoring analogue",
+          "AI search for property matching"
+        ],
+        "art_4030ad1705": [
+          "structured property data analogue"
+        ],
+        "art_45ed1d626f": [
+          "listing-level buyer questions as intent signals",
+          "real-time agent connection"
+        ],
+        "art_7ed2a76ff5": [
+          "distractor",
+          "generic AI marketing discussion"
+        ]
+      }
+    },
+    "reduced_rubric": {
+      "intended_use": "More independent review after calibration.",
+      "include": [
+        "user_request",
+        "input.articles[].article_id",
+        "input.articles[].title",
+        "input.articles[].body_excerpt",
+        "input.articles[].body_full_text",
+        "candidate_output",
+        "judge_schema dimensions and score anchors"
+      ],
+      "exclude": [
+        "golden.article_labels",
+        "must_not_claim guards",
+        "hybrid_theme_source"
+      ]
+    }
+  },
+  "judge_output_requirements": [
+    "Set candidate_status before assigning semantic scores.",
+    "Provide one dimension_scores item per judge_schema dimension when candidate_status is judgeable or candidate_schema_error_judgeable.",
+    "Provide per_article_reviews for all cited or disputed articles.",
+    "Use blocking_failures for critical hallucination, unsupported external claims, severe overstatement, missing required evidence, or wrong case/article IDs.",
+    "Set final_recommendation to fail when blocking_failures is non-empty.",
+    "Set final_recommendation to needs_expert_review for borderline or low-confidence semantic disputes."
+  ]
+}
