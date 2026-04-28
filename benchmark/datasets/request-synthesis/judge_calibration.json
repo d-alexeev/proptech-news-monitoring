@@ -1,0 +1,390 @@
+{
+  "schema_version": "request_synthesis_judge_calibration_v1",
+  "benchmark_id": "request-synthesis",
+  "case_id": "syn-nd-001",
+  "expert_review_status": "expert_review_pending",
+  "calibration_format": "compact_candidate_output_excerpts",
+  "format_note": "Examples intentionally use compact candidate-output excerpts, not full production-length answers. They calibrate judge behavior for recurring whole-set synthesis failure modes before live judging.",
+  "score_scale": "0-4, inherited from judge_schema.json",
+  "dimensions": [
+    "semantic_thesis_coverage",
+    "evidence_grounding",
+    "risk_coverage",
+    "avito_implication_quality",
+    "overstatement_detection",
+    "hallucination_or_external_claims"
+  ],
+  "examples": [
+    {
+      "calibration_id": "syn-cal-001-good-balanced",
+      "expected_result": "pass",
+      "purpose": "A good synthesis covers core theses, cites evidence, separates analogues from proof, and includes risks.",
+      "candidate_status": "judgeable",
+      "referenced_article_ids": [
+        "art_58952c33fa",
+        "art_82b95d2e44",
+        "art_45ed1d626f",
+        "art_f54777679f",
+        "art_4030ad1705",
+        "art_1a5306798b",
+        "art_72bf1d2512"
+      ],
+      "candidate_output_excerpt": {
+        "case_id": "syn-nd-001",
+        "answer_summary": "The corpus supports the Avito ND bet directionally: use internal and behavioral data to improve conversion and handoff, but it does not directly prove developer CPA economics.",
+        "theses": [
+          {
+            "statement": "AI sales agents and real-time lead signals can improve conversion from existing demand before buying more traffic.",
+            "evidence_article_ids": [
+              "art_58952c33fa",
+              "art_82b95d2e44",
+              "art_45ed1d626f"
+            ],
+            "strength": "strong",
+            "reasoning": "These articles describe new-home lead engagement, response-lag reduction, and listing-level intent capture."
+          },
+          {
+            "statement": "CRM, conversation, and engagement data are credible inputs for scoring, routing, and follow-up.",
+            "evidence_article_ids": [
+              "art_82b95d2e44",
+              "art_f54777679f"
+            ],
+            "strength": "moderate",
+            "reasoning": "The evidence is strong for adjacent workflows, but indirect for developer CPA."
+          },
+          {
+            "statement": "Better buyer-to-property matching needs rich structured property and listing context.",
+            "evidence_article_ids": [
+              "art_f54777679f",
+              "art_4030ad1705"
+            ],
+            "strength": "moderate",
+            "reasoning": "AI search, property reports, and listing assistants point to data needs for recommendation quality."
+          }
+        ],
+        "risks": [
+          {
+            "statement": "AI should augment rather than replace human operators in complex real estate decisions.",
+            "evidence_article_ids": [
+              "art_58952c33fa",
+              "art_1a5306798b"
+            ],
+            "reasoning": "The strongest operating pattern is AI handoff plus human advisory."
+          },
+          {
+            "statement": "Automated outreach can create consent and vendor-liability risks.",
+            "evidence_article_ids": [
+              "art_72bf1d2512"
+            ],
+            "reasoning": "The TCPA case is a warning for AI voice or outbound activation."
+          }
+        ],
+        "avito_implications": [
+          {
+            "statement": "Prioritize lead-intent data, operator handoff, and inventory quality before claiming CPA monetization proof.",
+            "evidence_article_ids": [
+              "art_58952c33fa",
+              "art_82b95d2e44",
+              "art_f54777679f"
+            ],
+            "reasoning": "The corpus supports mechanism design more than validated pricing economics."
+          }
+        ],
+        "caveats": [
+          "Developer-specific quality-based CPA is not directly proven by this corpus."
+        ]
+      },
+      "expected_dimension_scores": [
+        {
+          "dimension": "semantic_thesis_coverage",
+          "score": 4,
+          "rationale": "Covers conversion, first-party signals, matching data, and human handoff."
+        },
+        {
+          "dimension": "evidence_grounding",
+          "score": 4,
+          "rationale": "Major claims cite appropriate supplied article IDs."
+        },
+        {
+          "dimension": "risk_coverage",
+          "score": 4,
+          "rationale": "Includes human limits and automated outreach risk."
+        },
+        {
+          "dimension": "avito_implication_quality",
+          "score": 4,
+          "rationale": "Implications are specific to Avito ND sequencing and evidence strength."
+        },
+        {
+          "dimension": "overstatement_detection",
+          "score": 4,
+          "rationale": "The output explicitly avoids claiming developer CPA proof."
+        },
+        {
+          "dimension": "hallucination_or_external_claims",
+          "score": 4,
+          "rationale": "No external or invented evidence is used."
+        }
+      ],
+      "expected_failure_modes": []
+    },
+    {
+      "calibration_id": "syn-cal-002-generic-ai-summary",
+      "expected_result": "fail",
+      "purpose": "A generic AI-in-real-estate synthesis can cite articles but miss the investment question.",
+      "candidate_status": "judgeable",
+      "referenced_article_ids": [
+        "art_58952c33fa",
+        "art_82b95d2e44",
+        "art_f54777679f"
+      ],
+      "candidate_output_excerpt": {
+        "case_id": "syn-nd-001",
+        "answer_summary": "AI is transforming real estate, and Avito should adopt AI features.",
+        "theses": [
+          {
+            "statement": "AI is becoming important for real estate companies.",
+            "evidence_article_ids": [
+              "art_58952c33fa",
+              "art_82b95d2e44"
+            ],
+            "strength": "strong",
+            "reasoning": "Several articles discuss AI tools."
+          },
+          {
+            "statement": "Real estate platforms need better technology.",
+            "evidence_article_ids": [
+              "art_f54777679f"
+            ],
+            "strength": "moderate",
+            "reasoning": "RealScout has AI features."
+          }
+        ],
+        "risks": [],
+        "avito_implications": [
+          {
+            "statement": "Avito should launch AI products.",
+            "evidence_article_ids": [
+              "art_58952c33fa"
+            ],
+            "reasoning": "AI is useful."
+          }
+        ],
+        "caveats": []
+      },
+      "expected_dimension_scores": [
+        {
+          "dimension": "semantic_thesis_coverage",
+          "score": 1,
+          "rationale": "The output misses data-driven CPA, first-party intent, matching, and human handoff mechanics."
+        },
+        {
+          "dimension": "evidence_grounding",
+          "score": 2,
+          "rationale": "Citations are real but used only for broad generic claims."
+        },
+        {
+          "dimension": "risk_coverage",
+          "score": 0,
+          "rationale": "No risks are represented."
+        },
+        {
+          "dimension": "avito_implication_quality",
+          "score": 1,
+          "rationale": "Implication is generic and not tied to Avito ND investment decisions."
+        },
+        {
+          "dimension": "overstatement_detection",
+          "score": 3,
+          "rationale": "It does not make severe proof claims, but it also lacks nuance."
+        },
+        {
+          "dimension": "hallucination_or_external_claims",
+          "score": 4,
+          "rationale": "No external facts are introduced."
+        }
+      ],
+      "expected_failure_modes": [
+        "generic_synthesis",
+        "risk_missing",
+        "weak_avito_implication"
+      ]
+    },
+    {
+      "calibration_id": "syn-cal-003-weak-evidence-grounding",
+      "expected_result": "fail",
+      "purpose": "The judge must punish outputs that cite article IDs but attach them to claims they do not support.",
+      "candidate_status": "judgeable",
+      "referenced_article_ids": [
+        "art_31a1d23146",
+        "art_4030ad1705",
+        "art_7ed2a76ff5",
+        "art_72bf1d2512"
+      ],
+      "candidate_output_excerpt": {
+        "case_id": "syn-nd-001",
+        "answer_summary": "The corpus proves Avito can deploy CPA pricing because listing visuals, property reports, and marketing AI all show monetizable buyer intent.",
+        "theses": [
+          {
+            "statement": "Site plans and property reports directly validate lead quality pricing.",
+            "evidence_article_ids": [
+              "art_31a1d23146",
+              "art_4030ad1705"
+            ],
+            "strength": "strong",
+            "reasoning": "These articles discuss rich property data."
+          },
+          {
+            "statement": "Generic AI marketing productivity is evidence for Avito ND matching.",
+            "evidence_article_ids": [
+              "art_7ed2a76ff5"
+            ],
+            "strength": "moderate",
+            "reasoning": "CMOs discuss AI efficiency."
+          }
+        ],
+        "risks": [
+          {
+            "statement": "AI outreach has compliance risks.",
+            "evidence_article_ids": [
+              "art_72bf1d2512"
+            ],
+            "reasoning": "The mortgage case describes TCPA risk."
+          }
+        ],
+        "avito_implications": [
+          {
+            "statement": "Avito can sell developer CPA immediately.",
+            "evidence_article_ids": [
+              "art_31a1d23146",
+              "art_4030ad1705"
+            ],
+            "reasoning": "Property data creates monetizable signals."
+          }
+        ],
+        "caveats": []
+      },
+      "expected_dimension_scores": [
+        {
+          "dimension": "semantic_thesis_coverage",
+          "score": 2,
+          "rationale": "Some matching/data ideas appear, but core conversion and handoff theses are missing."
+        },
+        {
+          "dimension": "evidence_grounding",
+          "score": 1,
+          "rationale": "Cited articles do not support direct CPA pricing claims."
+        },
+        {
+          "dimension": "risk_coverage",
+          "score": 2,
+          "rationale": "A compliance risk is cited, but human-handoff and monetization-evidence risks are weak."
+        },
+        {
+          "dimension": "avito_implication_quality",
+          "score": 1,
+          "rationale": "Implication is action-oriented but unsupported."
+        },
+        {
+          "dimension": "overstatement_detection",
+          "score": 0,
+          "rationale": "Adjacent property-data evidence is overstated as direct CPA proof."
+        },
+        {
+          "dimension": "hallucination_or_external_claims",
+          "score": 3,
+          "rationale": "No external facts are added, but evidence is misused."
+        }
+      ],
+      "expected_failure_modes": [
+        "weak_evidence_grounding",
+        "overstatement",
+        "distractor_used_as_support"
+      ]
+    },
+    {
+      "calibration_id": "syn-cal-004-overclaiming-no-risk",
+      "expected_result": "fail",
+      "purpose": "The judge must reject confident conclusions that claim causal proof and omit caveats.",
+      "candidate_status": "judgeable",
+      "referenced_article_ids": [
+        "art_58952c33fa",
+        "art_82b95d2e44",
+        "art_c0a637c253"
+      ],
+      "candidate_output_excerpt": {
+        "case_id": "syn-nd-001",
+        "answer_summary": "The corpus proves Avito can reduce paid marketing spend and launch quality-based CPA for developers.",
+        "theses": [
+          {
+            "statement": "Internal data models will reduce paid marketing dependence.",
+            "evidence_article_ids": [
+              "art_58952c33fa",
+              "art_82b95d2e44"
+            ],
+            "strength": "strong",
+            "reasoning": "AI sales and lead signals improve conversion."
+          },
+          {
+            "statement": "Quality-based CPA for developers is directly validated.",
+            "evidence_article_ids": [
+              "art_c0a637c253"
+            ],
+            "strength": "strong",
+            "reasoning": "Homes.com shows portal monetization."
+          }
+        ],
+        "risks": [],
+        "avito_implications": [
+          {
+            "statement": "Avito should treat the investment case as market-proven.",
+            "evidence_article_ids": [
+              "art_58952c33fa",
+              "art_82b95d2e44",
+              "art_c0a637c253"
+            ],
+            "reasoning": "The articles validate the core economics."
+          }
+        ],
+        "caveats": []
+      },
+      "expected_dimension_scores": [
+        {
+          "dimension": "semantic_thesis_coverage",
+          "score": 3,
+          "rationale": "Some core ideas are present, but framed too strongly."
+        },
+        {
+          "dimension": "evidence_grounding",
+          "score": 2,
+          "rationale": "Lead-conversion evidence is grounded, but CPA proof is not."
+        },
+        {
+          "dimension": "risk_coverage",
+          "score": 0,
+          "rationale": "No required risks or caveats are included."
+        },
+        {
+          "dimension": "avito_implication_quality",
+          "score": 1,
+          "rationale": "Implication is decisive but not safe or evidence-calibrated."
+        },
+        {
+          "dimension": "overstatement_detection",
+          "score": 0,
+          "rationale": "The output directly makes forbidden causal and CPA validation claims."
+        },
+        {
+          "dimension": "hallucination_or_external_claims",
+          "score": 3,
+          "rationale": "Mostly uses supplied articles but overstates what they prove."
+        }
+      ],
+      "expected_failure_modes": [
+        "overclaiming",
+        "risk_missing",
+        "forbidden_claims"
+      ]
+    }
+  ]
+}

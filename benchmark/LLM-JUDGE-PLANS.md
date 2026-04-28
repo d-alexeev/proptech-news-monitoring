@@ -313,7 +313,7 @@ Non-goals:
 
 ### LJ2b — Whole-Set Synthesis Calibration Set
 
-Status: planned
+Status: completed
 
 Goal: create calibration examples for `request-synthesis`.
 
