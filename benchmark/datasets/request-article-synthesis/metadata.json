@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "schema_version": "request_article_synthesis_metadata_v1",
   "phase": "phase_2_article_level_synthesis",
-  "status": "pilot_run_completed",
+  "status": "agent_qa_reviewed_expert_pending",
   "pilot_scope": "ND-only pilot based on reqret-001; other cases deferred until the first case is reviewed.",
   "case_ids": [
     "art-syn-nd-001"
@@ -15,7 +15,8 @@
   "artifacts": {
     "inputs": "inputs.jsonl",
     "golden": "golden.jsonl",
-    "output_schema": "output_schema.json"
+    "output_schema": "output_schema.json",
+    "qa_review": "agent_qa_review_notes.json"
   },
   "output_contract": {
     "article_coverage": "The model must return exactly one article_summaries item for every input article.",
@@ -77,7 +78,7 @@
     "AS5a": "completed",
     "AS5b": "completed",
     "AS6": "completed",
-    "AS7": "planned"
+    "AS7": "completed"
   },
   "inputs": {
     "path": "inputs.jsonl",
@@ -179,5 +180,7 @@
       "minimax/minimax-m2.7"
     ],
     "observed_issue": "Two models used thesis.supports=analogue, which is outside the AS1 enum; AS7 should decide whether to allow analogue here or keep the stricter supports enum."
-  }
+  },
+  "qa_review": "agent_qa_review_notes.json",
+  "expert_review_status": "expert_review_pending"
 }

@@ -1,0 +1,78 @@
+{
+  "benchmark_id": "request-article-synthesis",
+  "case_id": "art-syn-nd-001",
+  "review_status": "agent_qa_reviewed_expert_pending",
+  "expert_review_status": "expert_review_pending",
+  "source_report": "benchmark/results/request-article-synthesis-20260428T001627Z.json",
+  "summary": {
+    "models_run": 4,
+    "models_scored": 2,
+    "models_with_schema_errors": [
+      "anthropic/claude-sonnet-4.6",
+      "minimax/minimax-m2.7"
+    ],
+    "best_observed_must_point_recall": 0.9286,
+    "known_scoring_status": "deterministic_v1_only"
+  },
+  "concrete_observations": [
+    {
+      "model": "anthropic/claude-sonnet-4.6",
+      "observation": "Output was valid JSON-shaped and not truncated, but failed schema because a thesis used supports=analogue, which is not allowed by the AS1 thesis.supports enum."
+    },
+    {
+      "model": "openai/gpt-5-mini",
+      "observation": "Output passed schema and reached 0.9286 deterministic must-point recall, but relevance accuracy was only 0.5833, suggesting relevance labels need review or model calibration."
+    },
+    {
+      "model": "deepseek/deepseek-v3.2",
+      "observation": "Output passed schema and reached 0.9286 deterministic must-point recall, but relevance accuracy was only 0.4167, again showing relevance grading sensitivity."
+    },
+    {
+      "model": "minimax/minimax-m2.7",
+      "observation": "Output failed schema because a thesis used supports=analogue. This mirrors the Claude issue and suggests the schema may be stricter than the natural task vocabulary."
+    }
+  ],
+  "deterministic_scorer_blind_spots": [
+    "Must-point recall uses token overlap and can over-credit verbose outputs that mention the right concepts without making the right request-specific point.",
+    "The scorer can under-credit concise but semantically correct paraphrases.",
+    "Relevance accuracy may be too brittle if adjacent analogues can reasonably be high or medium depending on reviewer policy.",
+    "Forbidden-claim checks are exact or near-exact and will miss subtle overstatement.",
+    "The scorer does not yet judge whether evidence notes are truly supported by article text."
+  ],
+  "schema_review_items": [
+    {
+      "item": "thesis.supports enum",
+      "recommendation": "Consider adding analogue to thesis.supports, or clarify in the prompt that analogue belongs only in support_type while thesis.supports must describe confirm/weaken/nuance/risk/background."
+    },
+    {
+      "item": "relevance labels",
+      "recommendation": "Expert should review whether several medium analogue articles should allow high as acceptable, or whether exact-match relevance scoring should become weighted."
+    }
+  ],
+  "proposed_calibration_outputs": [
+    {
+      "name": "good_request_specific",
+      "purpose": "Should pass: correct relevance labels, concise request-specific points, no overstatement, distractor kept irrelevant."
+    },
+    {
+      "name": "generic_article_recaps",
+      "purpose": "Should fail or score low: schema-valid summaries that merely recap each article without tying back to Avito ND."
+    },
+    {
+      "name": "analogue_overstated_as_proof",
+      "purpose": "Should fail forbidden/overstatement checks: treats portal economics and CRM analogues as proof of developer CPA."
+    },
+    {
+      "name": "distractor_promoted",
+      "purpose": "Should fail distractor handling: marks the generic AI marketing article as high relevance with confirming theses."
+    },
+    {
+      "name": "schema_valid_semantically_weak",
+      "purpose": "Should expose deterministic scorer limits: correct IDs and enums but vague theses with weak grounding."
+    }
+  ],
+  "expansion_decision": {
+    "status": "deferred",
+    "reason": "Do not expand to other cases until expert review decides the thesis.supports enum issue and whether deterministic scoring needs an LLM judge before broader runs."
+  }
+}

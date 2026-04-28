@@ -416,7 +416,7 @@ Non-goals:
 
 ### AS7 — QA and Judge Upgrade Plan
 
-Status: planned
+Status: completed
 
 Goal: review the pilot run and decide whether LLM-as-judge is needed before
 expanding.
