@@ -412,7 +412,7 @@ Non-goals:
 
 ### LJ4a — Source Report Loader and Candidate Normalization
 
-Status: planned
+Status: completed
 
 Goal: add offline loading of existing run artifacts without calling candidate
 models.

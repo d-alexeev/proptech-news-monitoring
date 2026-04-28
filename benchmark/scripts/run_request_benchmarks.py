@@ -725,6 +725,112 @@ def write_markdown(report: dict[str, Any], path: Path) -> None:
     path.write_text("\n".join(lines) + "\n")
 
 
+def resolve_existing_path(path_text: str, base_dir: Path = ROOT) -> Path:
+    path = Path(path_text)
+    candidates = [path] if path.is_absolute() else [Path.cwd() / path, base_dir / path]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    raise FileNotFoundError(f"path not found: {path_text}")
+
+
+def resolve_report_child_path(path_text: str, report_path: Path) -> Path:
+    path = Path(path_text)
+    candidates = [path] if path.is_absolute() else [ROOT / path, report_path.parent / path]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    raise FileNotFoundError(f"referenced raw file not found: {path_text}")
+
+
+def load_judge_source_candidates(source_report_path: Path) -> dict[str, Any]:
+    report = json.loads(source_report_path.read_text())
+    meta = report.get("meta") or {}
+    benchmark = meta.get("benchmark")
+    if benchmark not in {"request-synthesis", "request-article-synthesis"}:
+        raise ValueError(f"judge source benchmark is not supported: {benchmark!r}")
+    candidates: list[dict[str, Any]] = []
+    status_counts: dict[str, int] = {}
+    for model_item in report.get("models", []):
+        raw_path_text = model_item.get("raw_path")
+        if not raw_path_text:
+            raise ValueError(f"model item lacks raw_path: {model_item.get('model')!r}")
+        raw_path = resolve_report_child_path(raw_path_text, source_report_path)
+        rows = load_jsonl(raw_path)
+        for row in rows:
+            candidate = normalize_judge_candidate(benchmark, row)
+            candidate.update(
+                {
+                    "benchmark": benchmark,
+                    "candidate_model": model_item.get("model") or row.get("model"),
+                    "source_report": str(source_report_path.relative_to(Path.cwd()))
+                    if source_report_path.is_relative_to(Path.cwd())
+                    else str(source_report_path),
+                    "source_raw_path": str(raw_path.relative_to(Path.cwd()))
+                    if raw_path.is_relative_to(Path.cwd())
+                    else str(raw_path),
+                    "source_run_id": meta.get("timestamp"),
+                    "deterministic_scores": model_item.get("scores"),
+                }
+            )
+            candidates.append(candidate)
+            status = candidate["candidate_status"]
+            status_counts[status] = status_counts.get(status, 0) + 1
+    return {
+        "benchmark": benchmark,
+        "source_report": str(source_report_path),
+        "source_run_id": meta.get("timestamp"),
+        "n_candidates": len(candidates),
+        "status_counts": status_counts,
+        "candidates": candidates,
+    }
+
+
+def normalize_judge_candidate(benchmark: str, row: dict[str, Any]) -> dict[str, Any]:
+    candidate: dict[str, Any] = {
+        "case_id": row.get("id"),
+        "parse_ok": bool(row.get("parse_ok")),
+        "error": row.get("error"),
+        "candidate_status": "judgeable",
+        "candidate_output": row.get("pred"),
+    }
+    if row.get("parse_ok") and not row.get("error"):
+        return candidate
+    raw_text = row.get("raw") or ""
+    error_text = row.get("error") or ""
+    if benchmark == "request-article-synthesis" and "invalid thesis supports" in error_text and "analogue" in error_text:
+        try:
+            parsed = extract_json(raw_text)
+        except Exception:  # noqa: BLE001 - candidate remains blocked but original error is retained.
+            candidate["candidate_status"] = "candidate_schema_error_blocked"
+            return candidate
+        if parsed.get("case_id") == row.get("id") and isinstance(parsed.get("article_summaries"), list):
+            candidate["candidate_status"] = "candidate_schema_error_judgeable"
+            candidate["candidate_output"] = parsed
+            candidate["schema_issue"] = "thesis.supports=analogue"
+            return candidate
+    if raw_text.strip():
+        candidate["candidate_status"] = "candidate_schema_error_blocked"
+    else:
+        candidate["candidate_status"] = "candidate_parse_error"
+    candidate["candidate_output"] = None
+    return candidate
+
+
+def print_judge_source_summary(summary: dict[str, Any]) -> None:
+    print(
+        f"judge source: {summary['benchmark']} report={summary['source_report']} "
+        f"candidates={summary['n_candidates']}"
+    )
+    for status, count in sorted(summary["status_counts"].items()):
+        print(f"  {status}: {count}")
+    for candidate in summary["candidates"]:
+        print(
+            f"  - {candidate['candidate_model']} / {candidate['case_id']}: "
+            f"{candidate['candidate_status']}"
+        )
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--benchmark", required=False, choices=sorted(BENCHMARK_DIRS))
@@ -736,6 +842,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--retries", type=int, default=2)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--list-models", action="store_true")
+    parser.add_argument("--judge-source-report", default=None, help="load an existing benchmark report for future LLM judge evaluation")
     return parser.parse_args()
 
 
@@ -757,6 +864,23 @@ def main() -> int:
             print("No models configured in LLM_MODEL or --model.", file=sys.stderr)
             return 2
         return 0
+
+    if args.judge_source_report:
+        try:
+            source_report_path = resolve_existing_path(args.judge_source_report)
+            summary = load_judge_source_candidates(source_report_path)
+            if args.benchmark and args.benchmark != summary["benchmark"]:
+                print(
+                    f"FATAL: --benchmark {args.benchmark!r} does not match source report "
+                    f"benchmark {summary['benchmark']!r}",
+                    file=sys.stderr,
+                )
+                return 2
+            print_judge_source_summary(summary)
+            return 0
+        except Exception as exc:  # noqa: BLE001 - CLI should report source artifact issues clearly.
+            print(f"FATAL: {exc}", file=sys.stderr)
+            return 2
 
     if not args.benchmark:
         print("FATAL: --benchmark is required unless --list-models is used", file=sys.stderr)
