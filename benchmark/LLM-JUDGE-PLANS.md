@@ -511,7 +511,7 @@ Non-goals:
 
 ### LJ5a — Judge Parser Hardening
 
-Status: planned
+Status: completed
 
 Goal: validate judge responses strictly before using scores.
 

@@ -1025,6 +1025,116 @@ def write_judge_prompt_dry_run_markdown(report: dict[str, Any], path: Path) -> N
     path.write_text("\n".join(lines) + "\n")
 
 
+def parse_judge_output(
+    parsed: dict[str, Any],
+    schema: dict[str, Any],
+    valid_article_ids: set[str],
+    expected_case_id: str,
+) -> dict[str, Any]:
+    required = schema["required_output_fields"]
+    missing = [field for field in required if field not in parsed]
+    if missing:
+        raise ValueError(f"judge output missing required fields: {missing}")
+    if parsed["benchmark_id"] != schema["benchmark_id"]:
+        raise ValueError(f"judge benchmark_id mismatch: {parsed['benchmark_id']!r}")
+    if parsed["case_id"] != expected_case_id:
+        raise ValueError(f"judge case_id mismatch: {parsed['case_id']!r}")
+    if parsed["judge_schema_version"] != schema["schema_version"]:
+        raise ValueError(f"judge schema version mismatch: {parsed['judge_schema_version']!r}")
+    if parsed["candidate_status"] not in schema["candidate_status_values"]:
+        raise ValueError(f"invalid candidate_status: {parsed['candidate_status']!r}")
+    if parsed["final_recommendation"] not in schema["final_recommendation_values"]:
+        raise ValueError(f"invalid final_recommendation: {parsed['final_recommendation']!r}")
+    if not isinstance(parsed["self_judged"], bool):
+        raise ValueError("self_judged must be boolean")
+    if not isinstance(parsed["blocking_failures"], list):
+        raise ValueError("blocking_failures must be a list")
+    for failure in parsed["blocking_failures"]:
+        if failure not in schema["blocking_failure_values"]:
+            raise ValueError(f"invalid blocking failure: {failure!r}")
+    if parsed["candidate_status"] in {"candidate_parse_error", "candidate_schema_error_blocked"}:
+        if parsed["dimension_scores"]:
+            raise ValueError("blocked or parse-error candidates must not include semantic dimension_scores")
+        return {"judge": parsed, "overall_score": None}
+    validate_judge_dimension_scores(parsed, schema, valid_article_ids)
+    if "per_article_reviews" in schema["required_output_fields"]:
+        validate_judge_per_article_reviews(parsed, schema, valid_article_ids)
+    score = parsed["overall_score"]
+    if not isinstance(score, (int, float)) or not 0 <= score <= 4:
+        raise ValueError(f"overall_score out of range: {score!r}")
+    return {"judge": parsed, "overall_score": float(score)}
+
+
+def validate_judge_dimension_scores(
+    parsed: dict[str, Any],
+    schema: dict[str, Any],
+    valid_article_ids: set[str],
+) -> None:
+    scores = parsed["dimension_scores"]
+    if not isinstance(scores, list):
+        raise ValueError("dimension_scores must be a list")
+    expected_dimensions = {item["id"] for item in schema["dimensions"]}
+    seen: set[str] = set()
+    required = schema["dimension_score_required_fields"]
+    for item in scores:
+        if not isinstance(item, dict):
+            raise ValueError("dimension_scores items must be objects")
+        missing = [field for field in required if field not in item]
+        if missing:
+            raise ValueError(f"dimension score missing fields: {missing}")
+        dimension = item["dimension"]
+        if dimension not in expected_dimensions:
+            raise ValueError(f"unknown judge dimension: {dimension!r}")
+        if dimension in seen:
+            raise ValueError(f"duplicate judge dimension: {dimension}")
+        seen.add(dimension)
+        score = item["score"]
+        if not isinstance(score, (int, float)) or not 0 <= score <= 4:
+            raise ValueError(f"judge dimension score out of range for {dimension}: {score!r}")
+        if item["confidence"] not in schema["confidence_values"]:
+            raise ValueError(f"invalid confidence for {dimension}: {item['confidence']!r}")
+        if not isinstance(item["rationale"], str) or not item["rationale"].strip():
+            raise ValueError(f"missing rationale for {dimension}")
+        cited = item["cited_article_ids"]
+        if not isinstance(cited, list):
+            raise ValueError(f"cited_article_ids must be a list for {dimension}")
+        unknown = [article_id for article_id in cited if article_id not in valid_article_ids]
+        if unknown:
+            raise ValueError(f"unknown cited article IDs for {dimension}: {unknown}")
+        if not isinstance(item["disagreement_flags"], list):
+            raise ValueError(f"disagreement_flags must be a list for {dimension}")
+    missing_dimensions = sorted(expected_dimensions - seen)
+    if missing_dimensions:
+        raise ValueError(f"missing judge dimensions: {missing_dimensions}")
+
+
+def validate_judge_per_article_reviews(
+    parsed: dict[str, Any],
+    schema: dict[str, Any],
+    valid_article_ids: set[str],
+) -> None:
+    reviews = parsed["per_article_reviews"]
+    if not isinstance(reviews, list):
+        raise ValueError("per_article_reviews must be a list")
+    required = schema["per_article_review_required_fields"]
+    for item in reviews:
+        if not isinstance(item, dict):
+            raise ValueError("per_article_reviews items must be objects")
+        missing = [field for field in required if field not in item]
+        if missing:
+            raise ValueError(f"per-article review missing fields: {missing}")
+        if item["article_id"] not in valid_article_ids:
+            raise ValueError(f"unknown per-article review article_id: {item['article_id']!r}")
+        for field in ["relevance_score", "coverage_score"]:
+            score = item[field]
+            if not isinstance(score, (int, float)) or not 0 <= score <= 4:
+                raise ValueError(f"{field} out of range for {item['article_id']}: {score!r}")
+        if item["overstatement_risk"] not in {"low", "medium", "high"}:
+            raise ValueError(f"invalid overstatement_risk for {item['article_id']}: {item['overstatement_risk']!r}")
+        if not isinstance(item["rationale"], str) or not item["rationale"].strip():
+            raise ValueError(f"missing per-article rationale for {item['article_id']}")
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--benchmark", required=False, choices=sorted(BENCHMARK_DIRS))
