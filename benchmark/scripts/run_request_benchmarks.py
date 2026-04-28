@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import concurrent.futures as futures
 import datetime as dt
+import hashlib
 import json
 import os
 import re
@@ -831,6 +832,199 @@ def print_judge_source_summary(summary: dict[str, Any]) -> None:
         )
 
 
+def run_judge_source_mode(args: argparse.Namespace, models: list[str]) -> int:
+    try:
+        source_report_path = resolve_existing_path(args.judge_source_report)
+        summary = load_judge_source_candidates(source_report_path)
+        if args.benchmark and args.benchmark != summary["benchmark"]:
+            print(
+                f"FATAL: --benchmark {args.benchmark!r} does not match source report "
+                f"benchmark {summary['benchmark']!r}",
+                file=sys.stderr,
+            )
+            return 2
+        if not args.dry_run:
+            print_judge_source_summary(summary)
+            print("Judge execution is not implemented in this milestone; use --dry-run for prompt reporting.")
+            return 0
+        judge_models = models or ["dry/judge"]
+        report_path, markdown_path = write_judge_prompt_dry_run(summary, judge_models, args.judge_context_mode)
+        print_judge_source_summary(summary)
+        print(f"Judge prompt dry-run report: {report_path.relative_to(ROOT)}")
+        print(f"Judge prompt dry-run summary: {markdown_path.relative_to(ROOT)}")
+        return 0
+    except Exception as exc:  # noqa: BLE001 - CLI should report source artifact issues clearly.
+        print(f"FATAL: {exc}", file=sys.stderr)
+        return 2
+
+
+def write_judge_prompt_dry_run(
+    source_summary: dict[str, Any],
+    judge_models: list[str],
+    context_mode: str,
+) -> tuple[Path, Path]:
+    benchmark = source_summary["benchmark"]
+    dataset_dir = DATASETS / BENCHMARK_DIRS[benchmark]
+    inputs = {row["id"]: row for row in load_jsonl(dataset_dir / "inputs.jsonl")}
+    golden = {row["id"]: row for row in load_jsonl(dataset_dir / "golden.jsonl")}
+    schema = json.loads((dataset_dir / "judge_schema.json").read_text())
+    prompt_spec = json.loads((dataset_dir / "judge_prompt_spec.json").read_text())
+    timestamp = dt.datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+    RESULTS.mkdir(parents=True, exist_ok=True)
+    report: dict[str, Any] = {
+        "meta": {
+            "type": "llm_judge_prompt_dry_run",
+            "benchmark": benchmark,
+            "timestamp": timestamp,
+            "source_report": source_summary["source_report"],
+            "source_run_id": source_summary["source_run_id"],
+            "judge_context_mode": context_mode,
+            "judge_models": judge_models,
+            "dry_run": True,
+        },
+        "candidates": [],
+    }
+    for judge_model in judge_models:
+        for candidate in source_summary["candidates"]:
+            item = {
+                "case_id": candidate["case_id"],
+                "candidate_model": candidate["candidate_model"],
+                "judge_model": judge_model,
+                "candidate_status": candidate["candidate_status"],
+                "source_raw_path": candidate["source_raw_path"],
+                "deterministic_scores": candidate.get("deterministic_scores"),
+                "self_judged": candidate["candidate_model"] == judge_model,
+            }
+            if candidate["candidate_status"] in {"judgeable", "candidate_schema_error_judgeable"}:
+                messages = build_judge_messages(
+                    benchmark=benchmark,
+                    candidate=candidate,
+                    case=inputs[candidate["case_id"]],
+                    gold=golden[candidate["case_id"]],
+                    schema=schema,
+                    prompt_spec=prompt_spec,
+                    judge_model=judge_model,
+                    context_mode=context_mode,
+                )
+                prompt_json = json.dumps(messages, ensure_ascii=False, sort_keys=True)
+                item["judge_prompt_hash"] = "sha256:" + hashlib.sha256(prompt_json.encode("utf-8")).hexdigest()
+                item["prompt_chars"] = sum(len(message["content"]) for message in messages)
+                item["prompt_message_count"] = len(messages)
+            else:
+                item["judge_prompt_hash"] = None
+                item["prompt_chars"] = 0
+                item["prompt_message_count"] = 0
+            report["candidates"].append(item)
+    report_path = RESULTS / f"llm-judge-prompt-dry-run-{benchmark}-{timestamp}.json"
+    markdown_path = RESULTS / f"llm-judge-prompt-dry-run-{benchmark}-{timestamp}.md"
+    report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
+    write_judge_prompt_dry_run_markdown(report, markdown_path)
+    return report_path, markdown_path
+
+
+def build_judge_messages(
+    benchmark: str,
+    candidate: dict[str, Any],
+    case: dict[str, Any],
+    gold: dict[str, Any],
+    schema: dict[str, Any],
+    prompt_spec: dict[str, Any],
+    judge_model: str,
+    context_mode: str,
+) -> list[dict[str, str]]:
+    if context_mode not in prompt_spec["supported_context_modes"]:
+        raise ValueError(f"unsupported judge_context_mode: {context_mode}")
+    system = "\n".join([prompt_spec["system_prompt"]["role"], *prompt_spec["system_prompt"]["rules"]])
+    context = build_judge_context(benchmark, case, gold, prompt_spec, context_mode)
+    payload = {
+        "benchmark_id": benchmark,
+        "case_id": candidate["case_id"],
+        "candidate_model": candidate["candidate_model"],
+        "judge_model": judge_model,
+        "judge_context_mode": context_mode,
+        "source_report": candidate["source_report"],
+        "source_raw_path": candidate["source_raw_path"],
+        "source_run_id": candidate["source_run_id"],
+        "judge_schema_version": schema["schema_version"],
+        "self_judged": candidate["candidate_model"] == judge_model,
+        "candidate_status": candidate["candidate_status"],
+        "schema_issue": candidate.get("schema_issue"),
+        "judge_schema": {
+            "dimensions": schema["dimensions"],
+            "required_output_fields": schema["required_output_fields"],
+            "dimension_score_required_fields": schema["dimension_score_required_fields"],
+            "final_recommendation_values": schema["final_recommendation_values"],
+            "blocking_failure_values": schema["blocking_failure_values"],
+            "aggregation": schema["aggregation"],
+        },
+        "context": context,
+        "candidate_output": candidate["candidate_output"],
+    }
+    user = "Return JSON only for this judge task:\n" + json.dumps(payload, ensure_ascii=False, indent=2)
+    return [{"role": "system", "content": system}, {"role": "user", "content": user}]
+
+
+def build_judge_context(
+    benchmark: str,
+    case: dict[str, Any],
+    gold: dict[str, Any],
+    prompt_spec: dict[str, Any],
+    context_mode: str,
+) -> dict[str, Any]:
+    articles = [
+        {
+            "article_id": article["article_id"],
+            "title": article["title"],
+            "body_excerpt": article["body_excerpt"],
+            "body_full_text": article.get("body_full_text", ""),
+        }
+        for article in case["articles"]
+    ]
+    context: dict[str, Any] = {
+        "user_request": case["user_request"],
+        "articles": articles,
+        "context_mode_rules": prompt_spec["context_modes"][context_mode],
+    }
+    if context_mode == "full_golden":
+        context["golden"] = gold
+    elif context_mode == "hybrid":
+        context["hybrid_theme_source"] = prompt_spec["context_modes"]["hybrid"].get("hybrid_theme_source", {})
+        if benchmark == "request-synthesis":
+            context["forbidden_claims"] = gold.get("forbidden_claims", [])
+        else:
+            context["article_roles"] = [
+                {
+                    "article_id": item["article_id"],
+                    "relevance": item["relevance"],
+                    "article_role": item["article_role"],
+                    "support_type": item["support_type"],
+                    "must_not_claim": item.get("must_not_claim", []),
+                }
+                for item in gold.get("article_labels", [])
+            ]
+    return context
+
+
+def write_judge_prompt_dry_run_markdown(report: dict[str, Any], path: Path) -> None:
+    lines = [
+        f"# LLM judge prompt dry run {report['meta']['timestamp']}",
+        "",
+        f"Benchmark: `{report['meta']['benchmark']}`",
+        f"Context mode: `{report['meta']['judge_context_mode']}`",
+        f"Source report: `{report['meta']['source_report']}`",
+        "",
+        "| Candidate model | Judge model | Status | Prompt chars | Prompt hash |",
+        "|---|---|---|---:|---|",
+    ]
+    for item in report["candidates"]:
+        lines.append(
+            f"| `{item['candidate_model']}` | `{item['judge_model']}` | "
+            f"`{item['candidate_status']}` | {item['prompt_chars']} | "
+            f"`{item['judge_prompt_hash'] or ''}` |"
+        )
+    path.write_text("\n".join(lines) + "\n")
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--benchmark", required=False, choices=sorted(BENCHMARK_DIRS))
@@ -843,6 +1037,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--list-models", action="store_true")
     parser.add_argument("--judge-source-report", default=None, help="load an existing benchmark report for future LLM judge evaluation")
+    parser.add_argument("--judge-context-mode", default="hybrid", choices=["full_golden", "hybrid", "reduced_rubric"])
     return parser.parse_args()
 
 
@@ -866,21 +1061,7 @@ def main() -> int:
         return 0
 
     if args.judge_source_report:
-        try:
-            source_report_path = resolve_existing_path(args.judge_source_report)
-            summary = load_judge_source_candidates(source_report_path)
-            if args.benchmark and args.benchmark != summary["benchmark"]:
-                print(
-                    f"FATAL: --benchmark {args.benchmark!r} does not match source report "
-                    f"benchmark {summary['benchmark']!r}",
-                    file=sys.stderr,
-                )
-                return 2
-            print_judge_source_summary(summary)
-            return 0
-        except Exception as exc:  # noqa: BLE001 - CLI should report source artifact issues clearly.
-            print(f"FATAL: {exc}", file=sys.stderr)
-            return 2
+        return run_judge_source_mode(args, models)
 
     if not args.benchmark:
         print("FATAL: --benchmark is required unless --list-models is used", file=sys.stderr)

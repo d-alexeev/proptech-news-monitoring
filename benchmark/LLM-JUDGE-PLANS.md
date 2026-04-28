@@ -464,7 +464,7 @@ Non-goals:
 
 ### LJ4b — Judge Prompt Dry Run and Reporting Skeleton
 
-Status: planned
+Status: completed
 
 Goal: build judge prompts and report metadata without network calls.
 
