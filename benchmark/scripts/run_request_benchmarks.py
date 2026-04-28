@@ -858,6 +858,142 @@ def run_judge_source_mode(args: argparse.Namespace, models: list[str]) -> int:
         return 2
 
 
+def run_judge_calibration_dry_run(args: argparse.Namespace) -> int:
+    if not args.benchmark:
+        print("FATAL: --benchmark is required for --judge-calibration-dry-run", file=sys.stderr)
+        return 2
+    if args.benchmark not in {"request-synthesis", "request-article-synthesis"}:
+        print(f"FATAL: benchmark does not support judge calibration: {args.benchmark}", file=sys.stderr)
+        return 2
+    try:
+        report_path, markdown_path = write_judge_calibration_dry_run(args.benchmark)
+        print(f"Judge calibration dry-run report: {report_path.relative_to(ROOT)}")
+        print(f"Judge calibration dry-run summary: {markdown_path.relative_to(ROOT)}")
+        return 0
+    except Exception as exc:  # noqa: BLE001 - CLI should report calibration artifact issues clearly.
+        print(f"FATAL: {exc}", file=sys.stderr)
+        return 2
+
+
+def write_judge_calibration_dry_run(benchmark: str) -> tuple[Path, Path]:
+    dataset_dir = DATASETS / BENCHMARK_DIRS[benchmark]
+    schema = json.loads((dataset_dir / "judge_schema.json").read_text())
+    calibration = json.loads((dataset_dir / "judge_calibration.json").read_text())
+    inputs = load_jsonl(dataset_dir / "inputs.jsonl")
+    valid_article_ids = {article["article_id"] for case in inputs for article in case["articles"]}
+    timestamp = dt.datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+    RESULTS.mkdir(parents=True, exist_ok=True)
+    rows: list[dict[str, Any]] = []
+    agreements = 0
+    for example in calibration["examples"]:
+        judge_output = calibration_example_to_judge_output(example, calibration, schema)
+        parsed = parse_judge_output(judge_output, schema, valid_article_ids, calibration["case_id"])
+        expected = example["expected_result"]
+        actual = parsed["judge"]["final_recommendation"]
+        expected_recommendation = "pass" if expected == "pass" else "fail"
+        agreement = actual == expected_recommendation
+        if agreement:
+            agreements += 1
+        rows.append(
+            {
+                "calibration_id": example["calibration_id"],
+                "expected_result": expected,
+                "actual_recommendation": actual,
+                "agreement": agreement,
+                "overall_score": parsed["overall_score"],
+                "expected_failure_modes": example.get("expected_failure_modes", []),
+            }
+        )
+    report = {
+        "meta": {
+            "type": "llm_judge_calibration_dry_run",
+            "benchmark": benchmark,
+            "timestamp": timestamp,
+            "case_id": calibration["case_id"],
+            "schema_version": schema["schema_version"],
+            "calibration_schema_version": calibration["schema_version"],
+            "dry_run": True,
+        },
+        "agreement_rate": round(agreements / len(rows), 4) if rows else 0.0,
+        "examples": rows,
+    }
+    report_path = RESULTS / f"llm-judge-calibration-dry-run-{benchmark}-{timestamp}.json"
+    markdown_path = RESULTS / f"llm-judge-calibration-dry-run-{benchmark}-{timestamp}.md"
+    report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
+    write_judge_calibration_dry_run_markdown(report, markdown_path)
+    return report_path, markdown_path
+
+
+def calibration_example_to_judge_output(
+    example: dict[str, Any],
+    calibration: dict[str, Any],
+    schema: dict[str, Any],
+) -> dict[str, Any]:
+    scores = example["expected_dimension_scores"]
+    overall_score = sum(item["score"] for item in scores) / len(scores) if scores else 0.0
+    final_recommendation = "pass" if example["expected_result"] == "pass" else "fail"
+    output: dict[str, Any] = {
+        "benchmark_id": calibration["benchmark_id"],
+        "case_id": calibration["case_id"],
+        "candidate_model": f"calibration/{example['calibration_id']}",
+        "judge_model": "dry/calibration-judge",
+        "judge_context_mode": "hybrid",
+        "source_report": "benchmark/datasets/calibration",
+        "source_raw_path": "benchmark/datasets/calibration",
+        "source_run_id": example["calibration_id"],
+        "judge_schema_version": schema["schema_version"],
+        "judge_prompt_hash": "sha256:calibration",
+        "self_judged": False,
+        "candidate_status": example["candidate_status"],
+        "dimension_scores": [
+            {
+                "dimension": item["dimension"],
+                "score": item["score"],
+                "confidence": "medium",
+                "rationale": item["rationale"],
+                "cited_article_ids": example["referenced_article_ids"],
+                "disagreement_flags": example.get("expected_failure_modes", []),
+            }
+            for item in scores
+        ],
+        "blocking_failures": [],
+        "overall_score": round(overall_score, 4),
+        "final_recommendation": final_recommendation,
+        "summary": example["purpose"],
+    }
+    if "per_article_reviews" in schema["required_output_fields"]:
+        output["per_article_reviews"] = [
+            {
+                "article_id": article_id,
+                "relevance_score": 3,
+                "coverage_score": 3,
+                "overstatement_risk": "medium" if example["expected_result"] == "fail" else "low",
+                "rationale": f"Calibration article review for {example['calibration_id']}.",
+            }
+            for article_id in example["referenced_article_ids"]
+        ]
+    return output
+
+def write_judge_calibration_dry_run_markdown(report: dict[str, Any], path: Path) -> None:
+    lines = [
+        f"# LLM judge calibration dry run {report['meta']['timestamp']}",
+        "",
+        f"Benchmark: `{report['meta']['benchmark']}`",
+        f"Case: `{report['meta']['case_id']}`",
+        f"Agreement rate: {report['agreement_rate']:.3f}",
+        "",
+        "| Calibration example | Expected | Actual | Agreement | Score |",
+        "|---|---|---|---:|---:|",
+    ]
+    for item in report["examples"]:
+        lines.append(
+            f"| `{item['calibration_id']}` | `{item['expected_result']}` | "
+            f"`{item['actual_recommendation']}` | {str(item['agreement']).lower()} | "
+            f"{item['overall_score']:.3f} |"
+        )
+    path.write_text("\n".join(lines) + "\n")
+
+
 def write_judge_prompt_dry_run(
     source_summary: dict[str, Any],
     judge_models: list[str],
@@ -1148,6 +1284,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--list-models", action="store_true")
     parser.add_argument("--judge-source-report", default=None, help="load an existing benchmark report for future LLM judge evaluation")
     parser.add_argument("--judge-context-mode", default="hybrid", choices=["full_golden", "hybrid", "reduced_rubric"])
+    parser.add_argument("--judge-calibration-dry-run", action="store_true")
     return parser.parse_args()
 
 
@@ -1172,6 +1309,9 @@ def main() -> int:
 
     if args.judge_source_report:
         return run_judge_source_mode(args, models)
+
+    if args.judge_calibration_dry_run:
+        return run_judge_calibration_dry_run(args)
 
     if not args.benchmark:
         print("FATAL: --benchmark is required unless --list-models is used", file=sys.stderr)

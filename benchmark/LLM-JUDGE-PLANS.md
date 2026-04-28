@@ -555,7 +555,7 @@ Non-goals:
 
 ### LJ5b — Calibration Replay Dry Run
 
-Status: planned
+Status: completed
 
 Goal: prove the judge pipeline can replay calibration expectations without
 external model calls.
