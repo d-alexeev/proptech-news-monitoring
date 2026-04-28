@@ -1,0 +1,409 @@
+{
+  "schema_version": "request_article_synthesis_judge_calibration_v1",
+  "benchmark_id": "request-article-synthesis",
+  "case_id": "art-syn-nd-001",
+  "expert_review_status": "expert_review_pending",
+  "calibration_format": "partial_candidate_output_excerpts",
+  "format_note": "Examples intentionally use compact candidate-output excerpts, not full benchmark outputs. They calibrate judge behavior for recurring failure modes before live judging.",
+  "score_scale": "0-4, inherited from judge_schema.json",
+  "dimensions": [
+    "article_relevance_judgment",
+    "semantic_must_point_coverage",
+    "request_specificity",
+    "analogue_vs_direct_handling",
+    "distractor_handling",
+    "forbidden_claim_detection"
+  ],
+  "examples": [
+    {
+      "calibration_id": "art-syn-cal-001-good-request-specific",
+      "expected_result": "pass",
+      "purpose": "A good answer connects article facts to the Avito ND request, separates direct evidence from analogues, and keeps distractors low.",
+      "candidate_status": "judgeable",
+      "referenced_article_ids": [
+        "art_58952c33fa",
+        "art_82b95d2e44",
+        "art_f54777679f",
+        "art_7ed2a76ff5"
+      ],
+      "candidate_output_excerpt": {
+        "case_id": "art-syn-nd-001",
+        "article_summaries": [
+          {
+            "article_id": "art_58952c33fa",
+            "relevance": "high",
+            "support_type": "direct_evidence",
+            "request_specific_summary": "Direct new-homes evidence that AI can keep large lead pipelines warm, extract intent over time, and hand off ready buyers to human sales teams.",
+            "theses": [
+              {
+                "statement": "AI-assisted engagement can recover neglected new-development leads while preserving human handoff.",
+                "supports": "confirms",
+                "evidence": "The article describes Eva engaging many new-home leads and escalating ready buyers to agents."
+              }
+            ],
+            "avito_implication": "Useful for Avito ND operator workflow and lead nurturing, but not proof of lower paid traffic spend.",
+            "caveats": [
+              "Does not validate Avito economics or developer CPA pricing."
+            ]
+          },
+          {
+            "article_id": "art_82b95d2e44",
+            "relevance": "high",
+            "support_type": "direct_evidence",
+            "request_specific_summary": "Direct signal for using real-time buyer behavior and CRM data to surface high-intent leads before response lag kills conversion.",
+            "theses": [
+              {
+                "statement": "Real-time intent signals are useful when connected to broad CRM and behavioral data.",
+                "supports": "confirms",
+                "evidence": "Streams aggregates platform signals and pushes hot lead actions to agents."
+              }
+            ],
+            "avito_implication": "Supports Avito ND prioritization and operator routing logic, with vendor metrics treated cautiously.",
+            "caveats": [
+              "Vendor-reported beta metrics are not independent proof."
+            ]
+          },
+          {
+            "article_id": "art_f54777679f",
+            "relevance": "high",
+            "support_type": "analogue",
+            "request_specific_summary": "Strong analogue for engagement scoring, contact enrichment, and AI search translating buyer preferences into better property alerts.",
+            "theses": [
+              {
+                "statement": "Engagement scoring and AI search are relevant analogues for Avito ND matching and follow-up prioritization.",
+                "supports": "nuances",
+                "evidence": "RealScout combines AI search, Scout Score, and enrichment to improve follow-up."
+              }
+            ],
+            "avito_implication": "Useful analogue for CDP-style prioritization, not a direct developer CPA case.",
+            "caveats": [
+              "Adjacent residential workflow evidence."
+            ]
+          },
+          {
+            "article_id": "art_7ed2a76ff5",
+            "relevance": "irrelevant",
+            "support_type": "distractor",
+            "request_specific_summary": "Generic AI marketing productivity discussion with no substantive evidence for Avito ND lead scoring, matching, or developer CPA.",
+            "theses": [],
+            "avito_implication": "No useful implication for the investment hypothesis.",
+            "caveats": [
+              "Should not be promoted beyond a generic caution about human voice."
+            ]
+          }
+        ]
+      },
+      "expected_dimension_scores": [
+        {
+          "dimension": "article_relevance_judgment",
+          "score": 4,
+          "rationale": "Core articles are high and the distractor is irrelevant."
+        },
+        {
+          "dimension": "semantic_must_point_coverage",
+          "score": 3,
+          "rationale": "Must-cover points for the excerpted core articles are covered with some compression."
+        },
+        {
+          "dimension": "request_specificity",
+          "score": 4,
+          "rationale": "Summaries are written in terms of the Avito ND hypothesis."
+        },
+        {
+          "dimension": "analogue_vs_direct_handling",
+          "score": 4,
+          "rationale": "RealScout is explicitly marked as analogue rather than proof."
+        },
+        {
+          "dimension": "distractor_handling",
+          "score": 4,
+          "rationale": "The generic marketing article is not promoted into evidence."
+        },
+        {
+          "dimension": "forbidden_claim_detection",
+          "score": 4,
+          "rationale": "The output avoids causal paid-traffic and CPA claims."
+        }
+      ],
+      "expected_failure_modes": []
+    },
+    {
+      "calibration_id": "art-syn-cal-002-generic-recaps",
+      "expected_result": "fail",
+      "purpose": "A generic recap can sound plausible while failing the request-specific synthesis task.",
+      "candidate_status": "judgeable",
+      "referenced_article_ids": [
+        "art_58952c33fa",
+        "art_82b95d2e44",
+        "art_f54777679f"
+      ],
+      "candidate_output_excerpt": {
+        "case_id": "art-syn-nd-001",
+        "article_summaries": [
+          {
+            "article_id": "art_58952c33fa",
+            "relevance": "high",
+            "support_type": "direct_evidence",
+            "request_specific_summary": "The article is about an AI sales agent for new homes and says AI is becoming important.",
+            "theses": [
+              {
+                "statement": "AI is changing real estate.",
+                "supports": "confirms",
+                "evidence": "The article discusses an AI sales agent."
+              }
+            ],
+            "avito_implication": "Avito should use AI.",
+            "caveats": []
+          },
+          {
+            "article_id": "art_82b95d2e44",
+            "relevance": "high",
+            "support_type": "direct_evidence",
+            "request_specific_summary": "The article launches a mobile app and says agents need to respond faster.",
+            "theses": [
+              {
+                "statement": "Apps can help agents.",
+                "supports": "confirms",
+                "evidence": "The app is mobile and uses AI."
+              }
+            ],
+            "avito_implication": "Avito can make an app.",
+            "caveats": []
+          },
+          {
+            "article_id": "art_f54777679f",
+            "relevance": "high",
+            "support_type": "analogue",
+            "request_specific_summary": "The article is about RealScout platform updates.",
+            "theses": [
+              {
+                "statement": "RealScout has AI features.",
+                "supports": "confirms",
+                "evidence": "The update includes AI search."
+              }
+            ],
+            "avito_implication": "Avito can use AI features.",
+            "caveats": []
+          }
+        ]
+      },
+      "expected_dimension_scores": [
+        {
+          "dimension": "article_relevance_judgment",
+          "score": 3,
+          "rationale": "Relevance labels are not the main failure."
+        },
+        {
+          "dimension": "semantic_must_point_coverage",
+          "score": 1,
+          "rationale": "The answer misses lead warming, handoff, CRM signal breadth, and AI search-to-signal mechanics."
+        },
+        {
+          "dimension": "request_specificity",
+          "score": 1,
+          "rationale": "Implications are generic and not tied to Avito ND data-driven CPA."
+        },
+        {
+          "dimension": "analogue_vs_direct_handling",
+          "score": 2,
+          "rationale": "Analogue evidence is labeled but not explained."
+        },
+        {
+          "dimension": "distractor_handling",
+          "score": 4,
+          "rationale": "No distractor is promoted in this excerpt."
+        },
+        {
+          "dimension": "forbidden_claim_detection",
+          "score": 4,
+          "rationale": "No forbidden claims are made."
+        }
+      ],
+      "expected_failure_modes": [
+        "generic_article_recaps",
+        "weak_request_specificity"
+      ]
+    },
+    {
+      "calibration_id": "art-syn-cal-003-analogue-overstated",
+      "expected_result": "fail",
+      "purpose": "The judge must punish treating adjacent analogues as direct proof of developer CPA or buyer-to-lot matching.",
+      "candidate_status": "judgeable",
+      "referenced_article_ids": [
+        "art_f54777679f",
+        "art_4030ad1705",
+        "art_c0a637c253"
+      ],
+      "candidate_output_excerpt": {
+        "case_id": "art-syn-nd-001",
+        "article_summaries": [
+          {
+            "article_id": "art_f54777679f",
+            "relevance": "high",
+            "support_type": "direct_evidence",
+            "request_specific_summary": "RealScout proves that buyer engagement scoring directly validates Avito's data-driven CPA model for developers.",
+            "theses": [
+              {
+                "statement": "AI search and Scout Score prove that Avito can price developer leads by quality.",
+                "supports": "confirms",
+                "evidence": "RealScout has AI search and an engagement score."
+              }
+            ],
+            "avito_implication": "Avito can confidently monetize lead quality using CPA.",
+            "caveats": []
+          },
+          {
+            "article_id": "art_4030ad1705",
+            "relevance": "high",
+            "support_type": "direct_evidence",
+            "request_specific_summary": "RealReports validates that property data is enough to power personalized new-development recommendations and lead pricing.",
+            "theses": [
+              {
+                "statement": "Property data platforms prove the full Avito matching and monetization hypothesis.",
+                "supports": "confirms",
+                "evidence": "The article describes property reports and tax records."
+              }
+            ],
+            "avito_implication": "Avito can rely on property data vendors to solve lead pricing.",
+            "caveats": []
+          },
+          {
+            "article_id": "art_c0a637c253",
+            "relevance": "high",
+            "support_type": "direct_evidence",
+            "request_specific_summary": "Homes.com proves quality-based developer CPA because portals can monetize traffic.",
+            "theses": [
+              {
+                "statement": "Portal traffic economics directly prove quality-based developer CPA.",
+                "supports": "confirms",
+                "evidence": "CoStar discusses Homes.com traffic and portal strategy."
+              }
+            ],
+            "avito_implication": "Avito should use this as direct proof for developer CPA.",
+            "caveats": []
+          }
+        ]
+      },
+      "expected_dimension_scores": [
+        {
+          "dimension": "article_relevance_judgment",
+          "score": 1,
+          "rationale": "Medium and low/background articles are inflated to high direct evidence."
+        },
+        {
+          "dimension": "semantic_must_point_coverage",
+          "score": 2,
+          "rationale": "Some mechanics are named, but the key nuance is lost."
+        },
+        {
+          "dimension": "request_specificity",
+          "score": 2,
+          "rationale": "The answer is request-related but unsafe."
+        },
+        {
+          "dimension": "analogue_vs_direct_handling",
+          "score": 0,
+          "rationale": "Analogues and background are repeatedly framed as direct proof."
+        },
+        {
+          "dimension": "distractor_handling",
+          "score": 1,
+          "rationale": "A low/background article is promoted to high direct evidence."
+        },
+        {
+          "dimension": "forbidden_claim_detection",
+          "score": 0,
+          "rationale": "The output makes forbidden CPA and lead-pricing proof claims."
+        }
+      ],
+      "expected_failure_modes": [
+        "analogue_overstated_as_direct_proof",
+        "forbidden_claims",
+        "background_promoted"
+      ]
+    },
+    {
+      "calibration_id": "art-syn-cal-004-distractor-promoted",
+      "expected_result": "fail",
+      "purpose": "The judge must catch a generic AI marketing article being promoted into evidence for lead scoring and developer CPA.",
+      "candidate_status": "judgeable",
+      "referenced_article_ids": [
+        "art_7ed2a76ff5",
+        "art_72bf1d2512"
+      ],
+      "candidate_output_excerpt": {
+        "case_id": "art-syn-nd-001",
+        "article_summaries": [
+          {
+            "article_id": "art_7ed2a76ff5",
+            "relevance": "high",
+            "support_type": "direct_evidence",
+            "request_specific_summary": "This CMO discussion proves that AI marketing efficiency supports Avito ND lead scoring and developer CPA.",
+            "theses": [
+              {
+                "statement": "AI marketing productivity directly validates Avito's lead scoring and CPA strategy.",
+                "supports": "confirms",
+                "evidence": "CMOs discuss AI improving marketing work."
+              }
+            ],
+            "avito_implication": "Avito should treat AI marketing productivity as evidence for ND monetization.",
+            "caveats": []
+          },
+          {
+            "article_id": "art_72bf1d2512",
+            "relevance": "medium",
+            "support_type": "risk",
+            "request_specific_summary": "AI voice outreach can create consent and legal risk.",
+            "theses": [
+              {
+                "statement": "Automated outreach needs compliance design.",
+                "supports": "risk",
+                "evidence": "The mortgage lawsuit describes TCPA risk around artificial voice calls."
+              }
+            ],
+            "avito_implication": "Useful risk check for AI outreach workflows.",
+            "caveats": [
+              "This is a mortgage cold-call case, not a ban on all AI follow-up."
+            ]
+          }
+        ]
+      },
+      "expected_dimension_scores": [
+        {
+          "dimension": "article_relevance_judgment",
+          "score": 1,
+          "rationale": "The distractor is incorrectly marked high direct evidence."
+        },
+        {
+          "dimension": "semantic_must_point_coverage",
+          "score": 2,
+          "rationale": "The risk article is handled reasonably, but the distractor adds false support."
+        },
+        {
+          "dimension": "request_specificity",
+          "score": 2,
+          "rationale": "The output uses Avito terms but does not ground the distractor connection."
+        },
+        {
+          "dimension": "analogue_vs_direct_handling",
+          "score": 1,
+          "rationale": "Generic marketing material is treated as direct evidence."
+        },
+        {
+          "dimension": "distractor_handling",
+          "score": 0,
+          "rationale": "The distractor is promoted into a confirming thesis."
+        },
+        {
+          "dimension": "forbidden_claim_detection",
+          "score": 0,
+          "rationale": "The output violates the must-not-use guard for the generic AI marketing article."
+        }
+      ],
+      "expected_failure_modes": [
+        "distractor_promoted",
+        "forbidden_claims"
+      ]
+    }
+  ]
+}

@@ -267,7 +267,7 @@ Non-goals:
 
 ### LJ2a — Article-Synthesis Calibration Set
 
-Status: planned
+Status: completed
 
 Goal: create calibration examples for `request-article-synthesis`.
 
