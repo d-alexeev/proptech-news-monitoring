@@ -39,6 +39,7 @@
     "medium",
     "high"
   ],
+  "numeric_confidence_policy": "Numeric confidence in the 0-1 range is accepted by the parser and normalized to low, medium, or high while preserving confidence_numeric.",
   "dimensions": [
     {
       "id": "semantic_thesis_coverage",

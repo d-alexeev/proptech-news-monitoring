@@ -57,6 +57,8 @@
       "medium",
       "high"
     ],
+    "numeric_confidence_policy": "Judge parser accepts numeric confidence in the 0-1 range and normalizes it to low, medium, or high while preserving confidence_numeric.",
+    "per_article_review_normalization_policy": "Judge parser accepts compact per-article review fields from live judges and normalizes notes/relevance_label_correct/must_cover_points_hit/forbidden_claim_violations into the canonical review fields.",
     "candidate_statuses": {
       "judgeable": "Candidate output parsed against its benchmark contract and can receive semantic judge scores.",
       "candidate_parse_error": "Candidate output failed JSON parsing or required top-level shape before semantic judging.",

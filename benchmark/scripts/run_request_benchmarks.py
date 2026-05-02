@@ -844,8 +844,17 @@ def run_judge_source_mode(args: argparse.Namespace, models: list[str]) -> int:
             )
             return 2
         if not args.dry_run:
+            api_key = os.environ.get("OPENROUTER_API_KEY") or os.environ.get("OPENAI_API_KEY")
+            if not api_key:
+                print("FATAL: OPENROUTER_API_KEY or OPENAI_API_KEY is required for judge execution.", file=sys.stderr)
+                return 2
+            if not models:
+                print("FATAL: no judge model configured. Set LLM_MODEL in .env or pass --model.", file=sys.stderr)
+                return 2
+            report_path, markdown_path = write_judge_live_report(summary, models, args, api_key)
             print_judge_source_summary(summary)
-            print("Judge execution is not implemented in this milestone; use --dry-run for prompt reporting.")
+            print(f"Judge report: {report_path.relative_to(ROOT)}")
+            print(f"Judge summary: {markdown_path.relative_to(ROOT)}")
             return 0
         judge_models = models or ["dry/judge"]
         report_path, markdown_path = write_judge_prompt_dry_run(summary, judge_models, args.judge_context_mode)
@@ -1058,6 +1067,196 @@ def write_judge_prompt_dry_run(
     return report_path, markdown_path
 
 
+def write_judge_live_report(
+    source_summary: dict[str, Any],
+    judge_models: list[str],
+    args: argparse.Namespace,
+    api_key: str,
+) -> tuple[Path, Path]:
+    benchmark = source_summary["benchmark"]
+    dataset_dir = DATASETS / BENCHMARK_DIRS[benchmark]
+    inputs = {row["id"]: row for row in load_jsonl(dataset_dir / "inputs.jsonl")}
+    golden = {row["id"]: row for row in load_jsonl(dataset_dir / "golden.jsonl")}
+    schema = json.loads((dataset_dir / "judge_schema.json").read_text())
+    prompt_spec = json.loads((dataset_dir / "judge_prompt_spec.json").read_text())
+    valid_article_ids = {article["article_id"] for case in inputs.values() for article in case["articles"]}
+    timestamp = dt.datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+    RESULTS.mkdir(parents=True, exist_ok=True)
+    RAW.mkdir(parents=True, exist_ok=True)
+    report: dict[str, Any] = {
+        "meta": {
+            "type": "llm_judge_run",
+            "benchmark": benchmark,
+            "timestamp": timestamp,
+            "source_report": source_summary["source_report"],
+            "source_run_id": source_summary["source_run_id"],
+            "judge_context_mode": args.judge_context_mode,
+            "judge_models": judge_models,
+            "dry_run": False,
+        },
+        "judge_models": [],
+    }
+    for judge_model in judge_models:
+        rows: list[dict[str, Any]] = []
+        started = time.time()
+        for candidate in source_summary["candidates"]:
+            rows.append(
+                run_judge_for_candidate(
+                    api_key=api_key,
+                    benchmark=benchmark,
+                    judge_model=judge_model,
+                    candidate=candidate,
+                    case=inputs[candidate["case_id"]],
+                    gold=golden[candidate["case_id"]],
+                    schema=schema,
+                    prompt_spec=prompt_spec,
+                    valid_article_ids=valid_article_ids,
+                    args=args,
+                )
+            )
+        raw_path = RAW / f"llm-judge-{benchmark}-{safe_model_name(judge_model)}-{timestamp}.jsonl"
+        with raw_path.open("w") as fh:
+            for row in rows:
+                fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+        total_cost = sum((row.get("usage") or {}).get("cost") or 0 for row in rows)
+        report["judge_models"].append(
+            {
+                "judge_model": judge_model,
+                "elapsed_s": round(time.time() - started, 1),
+                "total_cost_usd": round(total_cost, 5),
+                "raw_path": str(raw_path.relative_to(ROOT)),
+                "n_candidates": len(rows),
+                "n_judge_parse_errors": len([row for row in rows if not row.get("judge_parse_ok")]),
+                "candidates": [
+                    {
+                        "case_id": row["case_id"],
+                        "candidate_model": row["candidate_model"],
+                        "candidate_status": row["candidate_status"],
+                        "judge_parse_ok": row.get("judge_parse_ok", False),
+                        "judge_overall_score": row.get("judge_overall_score"),
+                        "final_recommendation": row.get("final_recommendation"),
+                        "deterministic_primary_score": row.get("deterministic_primary_score"),
+                        "error": row.get("error"),
+                    }
+                    for row in rows
+                ],
+            }
+        )
+    report_path = RESULTS / f"llm-judge-{benchmark}-{timestamp}.json"
+    markdown_path = RESULTS / f"llm-judge-{benchmark}-{timestamp}.md"
+    report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
+    write_judge_live_markdown(report, markdown_path)
+    return report_path, markdown_path
+
+
+def run_judge_for_candidate(
+    api_key: str,
+    benchmark: str,
+    judge_model: str,
+    candidate: dict[str, Any],
+    case: dict[str, Any],
+    gold: dict[str, Any],
+    schema: dict[str, Any],
+    prompt_spec: dict[str, Any],
+    valid_article_ids: set[str],
+    args: argparse.Namespace,
+) -> dict[str, Any]:
+    row: dict[str, Any] = {
+        "case_id": candidate["case_id"],
+        "candidate_model": candidate["candidate_model"],
+        "judge_model": judge_model,
+        "candidate_status": candidate["candidate_status"],
+        "source_report": candidate["source_report"],
+        "source_raw_path": candidate["source_raw_path"],
+        "source_run_id": candidate["source_run_id"],
+        "deterministic_primary_score": primary_deterministic_score(benchmark, candidate.get("deterministic_scores")),
+        "judge_parse_ok": False,
+    }
+    if candidate["candidate_status"] not in {"judgeable", "candidate_schema_error_judgeable"}:
+        row["error"] = f"candidate not semantically judgeable: {candidate['candidate_status']}"
+        return row
+    started = time.time()
+    try:
+        messages = build_judge_messages(
+            benchmark=benchmark,
+            candidate=candidate,
+            case=case,
+            gold=gold,
+            schema=schema,
+            prompt_spec=prompt_spec,
+            judge_model=judge_model,
+            context_mode=args.judge_context_mode,
+        )
+        prompt_json = json.dumps(messages, ensure_ascii=False, sort_keys=True)
+        row["judge_prompt_hash"] = "sha256:" + hashlib.sha256(prompt_json.encode("utf-8")).hexdigest()
+        row["prompt_chars"] = sum(len(message["content"]) for message in messages)
+        content, usage, finish_reason = call_openrouter(
+            api_key=api_key,
+            model=judge_model,
+            messages=messages,
+            max_tokens=args.max_tokens,
+            timeout=args.timeout,
+            retries=args.retries,
+        )
+        row["raw"] = content
+        row["usage"] = usage
+        row["finish_reason"] = finish_reason
+        parsed = extract_json(content)
+        judged = parse_judge_output(parsed, schema, valid_article_ids, candidate["case_id"])
+        row["judge"] = judged["judge"]
+        row["judge_overall_score"] = judged["overall_score"]
+        row["final_recommendation"] = judged["judge"]["final_recommendation"]
+        row["judge_parse_ok"] = True
+    except Exception as exc:  # noqa: BLE001 - per-candidate judge failure should remain visible.
+        row["error"] = f"{type(exc).__name__}: {exc}"
+    row["latency_s"] = round(time.time() - started, 2)
+    return row
+
+
+def primary_deterministic_score(benchmark: str, scores: dict[str, Any] | None) -> float | None:
+    if not scores:
+        return None
+    if benchmark == "request-synthesis":
+        return scores.get("avg_thesis_recall_by_evidence_overlap")
+    if benchmark == "request-article-synthesis":
+        return scores.get("must_point_recall")
+    return None
+
+
+def write_judge_live_markdown(report: dict[str, Any], path: Path) -> None:
+    lines = [
+        f"# LLM judge run {report['meta']['timestamp']}",
+        "",
+        f"Benchmark: `{report['meta']['benchmark']}`",
+        f"Context mode: `{report['meta']['judge_context_mode']}`",
+        f"Source report: `{report['meta']['source_report']}`",
+        "",
+    ]
+    for item in report["judge_models"]:
+        lines.extend(
+            [
+                f"## `{item['judge_model']}`",
+                "",
+                f"Cost: ${item['total_cost_usd']:.5f} · Parse errors: {item['n_judge_parse_errors']}",
+                "",
+                "| Candidate model | Status | Judge score | Deterministic score | Recommendation | Error |",
+                "|---|---|---:|---:|---|---|",
+            ]
+        )
+        for candidate in item["candidates"]:
+            judge_score = candidate["judge_overall_score"]
+            det_score = candidate["deterministic_primary_score"]
+            lines.append(
+                f"| `{candidate['candidate_model']}` | `{candidate['candidate_status']}` | "
+                f"{judge_score if judge_score is not None else ''} | "
+                f"{det_score if det_score is not None else ''} | "
+                f"`{candidate.get('final_recommendation') or ''}` | "
+                f"{candidate.get('error') or ''} |"
+            )
+        lines.append("")
+    path.write_text("\n".join(lines) + "\n")
+
+
 def build_judge_messages(
     benchmark: str,
     candidate: dict[str, Any],
@@ -1082,6 +1281,7 @@ def build_judge_messages(
         "source_raw_path": candidate["source_raw_path"],
         "source_run_id": candidate["source_run_id"],
         "judge_schema_version": schema["schema_version"],
+        "judge_prompt_hash": "sha256:provided_by_runner",
         "self_judged": candidate["candidate_model"] == judge_model,
         "candidate_status": candidate["candidate_status"],
         "schema_issue": candidate.get("schema_issue"),
@@ -1227,8 +1427,19 @@ def validate_judge_dimension_scores(
         score = item["score"]
         if not isinstance(score, (int, float)) or not 0 <= score <= 4:
             raise ValueError(f"judge dimension score out of range for {dimension}: {score!r}")
-        if item["confidence"] not in schema["confidence_values"]:
-            raise ValueError(f"invalid confidence for {dimension}: {item['confidence']!r}")
+        confidence = item["confidence"]
+        if isinstance(confidence, (int, float)):
+            if not 0 <= confidence <= 1:
+                raise ValueError(f"numeric confidence out of range for {dimension}: {confidence!r}")
+            item["confidence_numeric"] = confidence
+            if confidence < 0.5:
+                item["confidence"] = "low"
+            elif confidence < 0.8:
+                item["confidence"] = "medium"
+            else:
+                item["confidence"] = "high"
+        elif confidence not in schema["confidence_values"]:
+            raise ValueError(f"invalid confidence for {dimension}: {confidence!r}")
         if not isinstance(item["rationale"], str) or not item["rationale"].strip():
             raise ValueError(f"missing rationale for {dimension}")
         cited = item["cited_article_ids"]
@@ -1256,6 +1467,7 @@ def validate_judge_per_article_reviews(
     for item in reviews:
         if not isinstance(item, dict):
             raise ValueError("per_article_reviews items must be objects")
+        normalize_judge_per_article_review(item)
         missing = [field for field in required if field not in item]
         if missing:
             raise ValueError(f"per-article review missing fields: {missing}")
@@ -1269,6 +1481,17 @@ def validate_judge_per_article_reviews(
             raise ValueError(f"invalid overstatement_risk for {item['article_id']}: {item['overstatement_risk']!r}")
         if not isinstance(item["rationale"], str) or not item["rationale"].strip():
             raise ValueError(f"missing per-article rationale for {item['article_id']}")
+
+
+def normalize_judge_per_article_review(item: dict[str, Any]) -> None:
+    if "rationale" not in item and isinstance(item.get("notes"), str):
+        item["rationale"] = item["notes"]
+    if "relevance_score" not in item and isinstance(item.get("relevance_label_correct"), bool):
+        item["relevance_score"] = 4 if item["relevance_label_correct"] else 2
+    if "coverage_score" not in item and isinstance(item.get("must_cover_points_hit"), list):
+        item["coverage_score"] = 3 if item["must_cover_points_hit"] else 1
+    if "overstatement_risk" not in item and isinstance(item.get("forbidden_claim_violations"), list):
+        item["overstatement_risk"] = "high" if item["forbidden_claim_violations"] else "low"
 
 
 def parse_args() -> argparse.Namespace:
