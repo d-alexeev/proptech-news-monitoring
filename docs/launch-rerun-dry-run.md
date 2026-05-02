@@ -151,3 +151,13 @@ Canonical requirement instead is:
 
 If a runner-specific command surface exists elsewhere, it should be treated as an
 execution wrapper around this source-of-truth layer, not as a replacement for it.
+
+## Optional Codex CLI Server Launch
+
+MVP server-side launch through `codex exec` is documented in
+[`docs/codex-cli-server-launch.md`](./codex-cli-server-launch.md).
+
+The launch pack lives under [`ops/codex-cli/`](../ops/codex-cli/) and is an
+external orchestration wrapper. It must not be treated as a canonical runtime
+mode and is intentionally not referenced from
+[`config/runtime/runtime_manifest.yaml`](../config/runtime/runtime_manifest.yaml).
