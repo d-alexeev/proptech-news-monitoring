@@ -2,9 +2,10 @@
 """
 rss_fetch.py — HTTP/RSS fetcher for PropTech News Monitoring.
 
-Fetches raw content for sources with fetch_strategy in {rss, html_scrape}.
-Emits a single JSON document on stdout with parsed feed items (for RSS/Atom)
-or raw body (for plain HTTP). Does not write to ./.state/.
+Fetches raw content for sources with fetch_strategy in {rss, html_scrape,
+itunes_api}. The fetcher interface stays minimal: kind=rss parses RSS/Atom
+items, and kind=http returns raw HTML or JSON/API bodies for adapter-aware
+normalization by the runner. Does not write to ./.state/.
 
 Two input modes:
 
@@ -41,7 +42,7 @@ Output (stdout, one JSON document):
         ],
         "body": null,                # only for kind=http: raw text
         "error": null,
-        "soft_fail": null            # "blocked" | "paywall" | ... when status says so
+        "soft_fail": null            # blocked_or_paywall | rate_limited | anti_bot | timeout | ...
       }
     ]
   }

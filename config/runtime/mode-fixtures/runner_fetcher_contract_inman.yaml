@@ -1,0 +1,50 @@
+fixture_id: runner_fetcher_contract_inman
+mode_id: runner_fetcher_contract
+
+purpose: >
+  Offline dry-run sample showing that Inman remains a regular recurring
+  scraping-analysis source through the generic RSS fetcher path.
+
+source:
+  id: inman_tech_innovation
+  source_group_config: ./config/runtime/source-groups/weekly_context.yaml
+  fetch_strategy: rss
+  rss_feed: https://feeds.feedburner.com/inmannews
+  cadence_hint: twice_weekly
+
+fetcher_invocation:
+  source_id: inman_tech_innovation
+  url: https://feeds.feedburner.com/inmannews
+  kind: rss
+
+offline_fixture_body: |
+  <?xml version="1.0" encoding="UTF-8"?>
+  <rss version="2.0">
+    <channel>
+      <title>Inman</title>
+      <item>
+        <guid>inman-tech-1</guid>
+        <title>Brokerage launches AI home search pilot</title>
+        <link>https://www.inman.com/2026/05/01/ai-home-search-pilot/</link>
+        <pubDate>Fri, 01 May 2026 12:30:00 GMT</pubDate>
+        <description>Technology and Innovation channel sample.</description>
+      </item>
+    </channel>
+  </rss>
+
+expected_fetcher_contract:
+  stdout_json: true
+  state_writes: none
+  result:
+    source_id: inman_tech_innovation
+    kind: rss
+    http:
+      status: 200
+      content_type: application/rss+xml
+    items_min: 1
+    body: null
+    soft_fail: null
+
+validation:
+  offline_test: python3 tools/test_rss_fetch.py
+  no_live_network_required: true
