@@ -15,8 +15,9 @@
 - **Stdin/stdout:** где возможно, вход — JSON в stdin, выход — одна JSON-строка
   в stdout. Логи и диагностика — только в stderr.
 - **Exit codes:** `0` — успех; `1` — ошибка исполнения (network/parse/auth);
-  `2` — неверные аргументы; `10` — soft-fail, который должен превратиться
-  в `change_request` (blocked/anti-bot, paywall, 4xx не-auth). Exit codes
+  `2` — неверные аргументы; `10` — все результаты завершились soft-fail,
+  а вызывающий runtime решает по adapter policy, нужен ли `change_request`,
+  manual reminder, retry или snippet fallback. Exit codes
   `3-9` зарезервированы.
 - **Env vars:** читаются из process env. Ни один скрипт не пишет секреты в
   stdout и не логирует их в stderr.
