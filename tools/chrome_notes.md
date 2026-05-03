@@ -98,8 +98,10 @@ Field notes:
   practical: `blocked_or_paywall`, `rate_limited`, `origin_blocked`, `anti_bot`,
   or `timeout`.
 - `soft_fail_detail` records the observed reason, for example
-  `captcha_or_human_check_visible`, `login_required`, `http_429_observed`, or
-  `manual_only_permanent_skip`.
+  `captcha_or_human_check_visible`, `login_required`, or `http_429_observed`.
+
+Manual-only sources are not browser results. Record them in the run manifest or
+manual intake reminder flow described by `cowork/adapters/blocked_manual_access.md`.
 
 If a browser-eligible public page is blocked, the runner returns a soft-fail
 result with available provenance. It must not continue into login, CAPTCHA,

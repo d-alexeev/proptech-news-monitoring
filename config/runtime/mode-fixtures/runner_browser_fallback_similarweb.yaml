@@ -23,6 +23,8 @@ eligibility:
     - proxy_rotation
 
 expected_browser_contract:
+  provenance: offline_fixture_expected_shape
+  synthetic_sample: true
   stdout_json: true
   state_writes: none
   fetched_at: 2026-05-04T09:30:00Z
@@ -52,6 +54,8 @@ expected_browser_contract:
         network_events_available: false
 
 soft_fail_sample:
+  provenance: offline_fixture_expected_shape
+  synthetic_sample: true
   result:
     source_id: similarweb_global_real_estate
     url: https://www.similarweb.com/website/zillow.com/#overview
