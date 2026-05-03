@@ -17,7 +17,7 @@ they are not required runtime context for implementing RT-M2 through RT-M7.
 | Claude Cowork Agent Refactor | completed/inactive | `docs/plans/archive/claude-cowork-agent-refactor.md` | Preserves base refactor requirements, milestone progress, detailed M0-M19 plan, coverage, dependency graph, guardrails, and cutover checklist. |
 | Codex CLI Server Launch Mode | completed/inactive | `docs/plans/archive/codex-cli-server-launch-mode.md` | Preserves CLI-M1..CLI-M3 launch-mode requirements, coverage, and implementation status. |
 | Stakeholder Request Deployment Setup | inactive prior addendum | `docs/plans/archive/stakeholder-request-deployment-setup.md` | Preserves stakeholder deployment setup requirements, milestones, acceptance tests, weak spot audit, and status. |
-| CR Fix: cr_telegram_formatting__20260422 | completed/inactive | `docs/plans/archive/cr-telegram-formatting-20260422.md` | Preserves root-cause notes, CR milestones, and acceptance criteria for Telegram formatting. |
+| CR Fix: cr_telegram_formatting__20260422 | inactive/unresolved | `docs/plans/archive/cr-telegram-formatting-20260422.md` | Preserves root-cause notes, CR milestones, and unchecked acceptance criteria for Telegram formatting. |
 
 ## Context Hygiene Notes
 
