@@ -158,9 +158,10 @@ browser automation script.
 It checks that configured source IDs resolve through `cowork/adapters/source_map.md`
 or `none`, validates required fields and lightweight types for the sample
 `raw_candidate`, `shortlisted_item`, `enriched_item`, `run_manifest`, and
-`change_request` artifacts, and scans non-enrichment mode fixtures for forbidden
-full-text fields such as `article_file`, `full_text`, `body_text`, and non-null
-`body`.
+`change_request` artifacts, validates mode fixtures that expect
+`change_request` output, and scans non-enrichment mode fixtures plus unsafe
+`scrape_and_enrich` sections for forbidden full-text fields such as
+`article_file`, `full_text`, `body_text`, and non-null `body`.
 
 Commands:
 

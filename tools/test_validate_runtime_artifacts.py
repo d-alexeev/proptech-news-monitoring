@@ -152,6 +152,44 @@ def test_mode_fixture_embedded_change_request_requires_schema_fields() -> None:
     assert any("failure_type" in error for error in errors)
 
 
+def test_mode_fixture_metadata_change_request_requires_reviewable_fields() -> None:
+    schema = {
+        "artifacts": {
+            "change_request": {
+                "required_fields": [
+                    {"name": "request_id", "type": "string"},
+                    {"name": "failure_type", "type": "enum[adapter_gap,scrape_failure]"},
+                    {"name": "source_id", "type": "string_or_null"},
+                ]
+            }
+        }
+    }
+    with tempfile.TemporaryDirectory() as tmpdir:
+        root = pathlib.Path(tmpdir)
+        write_yaml(
+            root / "config/runtime/mode-fixtures/scrape_and_enrich_bad_metadata_cr.yaml",
+            {
+                "fixture_id": "scrape_and_enrich_bad_metadata_change_request",
+                "mode_id": "scrape_and_enrich",
+                "inputs": {
+                    "run_id": "scrape_and_enrich__fixture",
+                    "stage": "full_text_fetch",
+                },
+                "expected": {
+                    "action": "emit_change_request",
+                    "change_request_output_path": ".state/change-requests/bad.json",
+                    "required_fields": ["run_id", "mode", "stage"],
+                },
+            },
+        )
+
+        errors = validator.check_mode_fixture_change_requests(schema, root)
+
+    assert any("failure_type" in error for error in errors)
+    assert any("source_id" in error for error in errors)
+    assert any("suggested_target_files/tests_to_add" in error for error in errors)
+
+
 def main() -> None:
     tests = [
         test_adapter_validation_requires_configured_sources_to_resolve,
@@ -159,6 +197,7 @@ def main() -> None:
         test_full_text_boundary_allows_enrichment_but_blocks_monitor_sources,
         test_enrichment_boundary_blocks_full_text_on_non_shortlisted_sections,
         test_mode_fixture_embedded_change_request_requires_schema_fields,
+        test_mode_fixture_metadata_change_request_requires_reviewable_fields,
     ]
     for test in tests:
         test()
