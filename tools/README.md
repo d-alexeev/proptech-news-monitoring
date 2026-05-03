@@ -31,6 +31,7 @@
 |---|---|
 | `rss_fetch.py` | Единый минимальный fetcher для `fetch_strategy: rss`, `html_scrape` и простых JSON/API источников вроде `itunes_api`. |
 | `pdf_extract.py` | Enrichment-only PDF-to-text helper for shortlisted public PDFs such as Rightmove RNS documents. |
+| `validate_runtime_artifacts.py` | Offline validator for source adapter resolution, compact state fixtures, change-request fixtures, and full-text boundaries in mode fixtures. |
 | `telegram_send.py` | Доставка markdown в Telegram по `delivery_profile` из `schedule_bindings.yaml`. |
 | `chrome_notes.md` | Bounded browser fallback contract for `fetch_strategy: chrome_scrape` and explicit adapter fallback cases. |
 
@@ -150,6 +151,28 @@ Local interactive Codex/browser use is an operator interface. Cron/server runs
 need a future headless implementation that emits the same `kind: browser`
 JSON-shaped result; RT-M3 defines that output contract but does not add a live
 browser automation script.
+
+## `validate_runtime_artifacts.py`
+
+`validate_runtime_artifacts.py` is an offline review gate for runner artifacts.
+It checks that configured source IDs resolve through `cowork/adapters/source_map.md`
+or `none`, validates required fields and lightweight types for the sample
+`raw_candidate`, `shortlisted_item`, `enriched_item`, `run_manifest`, and
+`change_request` artifacts, and scans non-enrichment mode fixtures for forbidden
+full-text fields such as `article_file`, `full_text`, `body_text`, and non-null
+`body`.
+
+Commands:
+
+```bash
+python3 tools/validate_runtime_artifacts.py --check adapters
+python3 tools/validate_runtime_artifacts.py --check fixtures
+python3 tools/validate_runtime_artifacts.py --check full-text-boundary
+python3 tools/validate_runtime_artifacts.py --check all
+```
+
+The validator performs no live source fetch, digest editorial scoring check, or
+Telegram send validation.
 
 ## Зависимости
 
