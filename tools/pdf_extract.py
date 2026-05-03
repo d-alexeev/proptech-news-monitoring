@@ -182,6 +182,8 @@ def extract_source(spec: dict[str, Any]) -> dict[str, Any]:
                     page_texts.append(page.extract_text() or "")
                 except Exception:  # noqa: BLE001 - keep extracting later pages
                     page_texts.append("")
+            page_count = len(getattr(reader, "pages", []))
+            metadata = getattr(reader, "metadata", None)
         finally:
             close = getattr(stream, "close", None)
             if callable(close):
@@ -192,10 +194,9 @@ def extract_source(spec: dict[str, Any]) -> dict[str, Any]:
 
     text = _normalize_text("\n".join(page_texts))
     text_char_count = len(text)
-    metadata = getattr(reader, "metadata", None)
     result["metadata"].update(
         {
-            "page_count": len(getattr(reader, "pages", [])),
+            "page_count": page_count,
             "title": _metadata_value(metadata, "/Title"),
             "author": _metadata_value(metadata, "/Author"),
         }

@@ -22,6 +22,53 @@ import requests
 import pdf_extract
 
 
+def _pdf_literal(text: str) -> str:
+    return text.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+
+
+def make_minimal_text_pdf(lines: list[str]) -> bytes:
+    """Create a tiny valid PDF whose text is extractable by pypdf."""
+    text_ops = ["BT", "/F1 12 Tf", "72 720 Td", "14 TL"]
+    for index, line in enumerate(lines):
+        if index:
+            text_ops.append("T*")
+        text_ops.append(f"({_pdf_literal(line)}) Tj")
+    text_ops.append("ET")
+    stream = "\n".join(text_ops).encode("ascii")
+
+    objects = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        (
+            b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
+            b"/Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>"
+        ),
+        b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+        b"<< /Length %d >>\nstream\n%s\nendstream" % (len(stream), stream),
+        b"<< /Title (Rightmove PLC RNS) /Author (London Stock Exchange) >>",
+    ]
+
+    pdf = bytearray(b"%PDF-1.4\n")
+    offsets = [0]
+    for number, body in enumerate(objects, start=1):
+        offsets.append(len(pdf))
+        pdf.extend(f"{number} 0 obj\n".encode("ascii"))
+        pdf.extend(body)
+        pdf.extend(b"\nendobj\n")
+    xref_offset = len(pdf)
+    pdf.extend(f"xref\n0 {len(objects) + 1}\n".encode("ascii"))
+    pdf.extend(b"0000000000 65535 f \n")
+    for offset in offsets[1:]:
+        pdf.extend(f"{offset:010d} 00000 n \n".encode("ascii"))
+    pdf.extend(
+        (
+            f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R /Info 6 0 R >>\n"
+            f"startxref\n{xref_offset}\n%%EOF\n"
+        ).encode("ascii")
+    )
+    return bytes(pdf)
+
+
 class FakePage:
     def __init__(self, text: str | None) -> None:
         self._text = text
@@ -127,6 +174,39 @@ def test_local_pdf_extracts_compact_text_metadata_and_full_hint() -> None:
     assert result["error"] is None
 
 
+def test_local_pdf_fixture_uses_real_pypdf_parser() -> None:
+    """A generated valid PDF fixture exercises actual pypdf text extraction."""
+    if pdf_extract.PdfReader is None:
+        raise AssertionError("pypdf must be installed for real PDF fixture coverage")
+
+    fixture_text = [
+        "Rightmove plc RNS real parser fixture",
+        "Directorate change announced today.",
+        "Enrichment text should be compact and classified as full.",
+    ]
+    with tempfile.NamedTemporaryFile(suffix=".pdf") as pdf_file:
+        pdf_file.write(make_minimal_text_pdf(fixture_text))
+        pdf_file.flush()
+        result = pdf_extract.extract_source(
+            {
+                "source_id": "rightmove_plc_rns",
+                "path": pdf_file.name,
+                "max_chars": 500,
+                "min_text_chars": 50,
+            }
+        )
+
+    assert result["error"] is None
+    assert result["soft_fail"] is None
+    assert result["metadata"]["page_count"] == 1
+    assert result["metadata"]["title"] == "Rightmove PLC RNS"
+    assert result["metadata"]["author"] == "London Stock Exchange"
+    assert "Rightmove plc RNS real parser fixture" in result["text"]
+    assert "Directorate change announced today." in result["text"]
+    assert result["text_char_count"] >= 50
+    assert result["body_status_hint"] == "full"
+
+
 def test_downloaded_pdf_uses_url_and_maps_short_text_to_snippet_fallback() -> None:
     """Public PDF URL extraction is supported for shortlisted enrichment items."""
     reader = FakeReader(["Short notice."])
@@ -221,6 +301,7 @@ def test_cli_emits_one_json_document_for_batch_stdin() -> None:
 def main() -> None:
     tests = [
         test_local_pdf_extracts_compact_text_metadata_and_full_hint,
+        test_local_pdf_fixture_uses_real_pypdf_parser,
         test_downloaded_pdf_uses_url_and_maps_short_text_to_snippet_fallback,
         test_blocked_download_maps_to_paywall_stub_soft_fail,
         test_pdf_extract_does_not_write_state,
