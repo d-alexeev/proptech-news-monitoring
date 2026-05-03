@@ -31,7 +31,7 @@
 |---|---|
 | `rss_fetch.py` | Единый минимальный fetcher для `fetch_strategy: rss`, `html_scrape` и простых JSON/API источников вроде `itunes_api`. |
 | `telegram_send.py` | Доставка markdown в Telegram по `delivery_profile` из `schedule_bindings.yaml`. |
-| `chrome_notes.md` | Операционка для `fetch_strategy: chrome_scrape` источников через Claude in Chrome. |
+| `chrome_notes.md` | Bounded browser fallback contract for `fetch_strategy: chrome_scrape` and explicit adapter fallback cases. |
 
 ## `rss_fetch.py`
 
@@ -85,6 +85,19 @@ Soft-fail labels are explicit and stable for runner handling:
 
 Offline contract coverage lives in `tools/test_rss_fetch.py`, including the
 regular `inman_tech_innovation` RSS path and iTunes API via `kind=http`.
+
+## Browser fallback
+
+Browser fallback is documented in `tools/chrome_notes.md`. It is separate from
+`rss_fetch.py` and is allowed only for configured `chrome_scrape` sources or
+explicit adapter fallback cases after static fetch is insufficient. It must not
+be used for `manual_only_permanent` sources, login, CAPTCHA, paywall bypass, or
+proxy workarounds.
+
+Local interactive Codex/browser use is an operator interface. Cron/server runs
+need a future headless implementation that emits the same `kind: browser`
+JSON-shaped result; RT-M3 defines that output contract but does not add a live
+browser automation script.
 
 ## Зависимости
 

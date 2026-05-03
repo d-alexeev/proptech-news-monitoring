@@ -1,0 +1,81 @@
+fixture_id: runner_browser_fallback_similarweb
+mode_id: runner_browser_fallback_contract
+
+purpose: >
+  Offline dry-run sample showing the expected browser fallback output shape for
+  a configured chrome_scrape source without live browser scraping.
+
+source:
+  id: similarweb_global_real_estate
+  source_group_config: ./config/runtime/source-groups/daily_core.yaml
+  fetch_strategy: chrome_scrape
+  landing_url: https://www.similarweb.com/website/zillow.com/#overview
+  adapter: ./cowork/adapters/similarweb_site_overview.md
+
+eligibility:
+  allowed_reason: configured_chrome_scrape
+  static_fetch_replaced: false
+  manual_only_permanent: false
+  disallowed_flows:
+    - login
+    - captcha
+    - paywall_bypass
+    - proxy_rotation
+
+expected_browser_contract:
+  stdout_json: true
+  state_writes: none
+  fetched_at: 2026-05-04T09:30:00Z
+  results:
+    - source_id: similarweb_global_real_estate
+      url: https://www.similarweb.com/website/zillow.com/#overview
+      kind: browser
+      http:
+        status_like: 200
+        content_type: text/html
+        source: browser_observation
+      final_url: https://www.similarweb.com/website/zillow.com/#overview
+      elapsed_ms: 1840
+      text: >
+        Similarweb overview sample text for zillow.com. Public page listing
+        metadata, traffic summary snippets, and visible ranking context only.
+      html: null
+      items: []
+      error: null
+      soft_fail: null
+      soft_fail_detail: null
+      browser:
+        interface: codex_in_app_browser
+        mode: interactive
+        headless: false
+        user_agent_family: chrome
+        network_events_available: false
+
+soft_fail_sample:
+  result:
+    source_id: similarweb_global_real_estate
+    url: https://www.similarweb.com/website/zillow.com/#overview
+    kind: browser
+    http:
+      status_like: null
+      content_type: null
+      source: browser_observation
+    final_url: null
+    elapsed_ms: 30000
+    text: ""
+    html: null
+    items: []
+    error: blocked_by_human_check
+    soft_fail: anti_bot
+    soft_fail_detail: captcha_or_human_check_visible
+    browser:
+      interface: headless_runner_future
+      mode: headless
+      headless: true
+      user_agent_family: chrome
+      network_events_available: true
+
+validation:
+  no_live_network_required: true
+  no_login_captcha_paywall_proxy_automation: true
+  discovery_mode_text_only: true
