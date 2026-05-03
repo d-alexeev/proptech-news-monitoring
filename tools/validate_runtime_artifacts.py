@@ -481,6 +481,8 @@ def validate_runner_fixture_reference(
         paths = references
     else:
         return [f"{label}: fixture_coverage must reference one or more fixture paths"]
+    if not paths:
+        return [f"{label}: fixture_coverage must reference one or more fixture paths"]
 
     errors: list[str] = []
     for reference in paths:

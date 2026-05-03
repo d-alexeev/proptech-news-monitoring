@@ -256,6 +256,106 @@ def test_runner_integration_validation_requires_complete_strategy_map() -> None:
     assert any("rea_group_investor_centre" in error and "must not define fetch invocation" in error for error in errors)
 
 
+def test_runner_integration_validation_rejects_empty_fixture_coverage() -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        root = pathlib.Path(tmpdir)
+        write_yaml(
+            root / "config/runtime/source-groups/daily_core.yaml",
+            {
+                "group_id": "daily_core",
+                "sources": [
+                    {
+                        "id": "inman_tech_innovation",
+                        "fetch_strategy": "rss",
+                        "rss_feed": "https://feeds.feedburner.com/inmannews",
+                    }
+                ],
+            },
+        )
+        write_yaml(
+            root / "config/runtime/source-groups/weekly_context.yaml",
+            {"group_id": "weekly_context", "sources": []},
+        )
+        write_yaml(
+            root / "config/runtime/mode-fixtures/runner_integration_map.yaml",
+            {
+                "fixture_id": "runner_integration_map",
+                "sources": [
+                    {
+                        "group_id": "daily_core",
+                        "source_id": "inman_tech_innovation",
+                        "fetch_strategy": "rss",
+                        "primary_tool_path": "HTTP/RSS fetcher",
+                        "invocation_kind": "rss",
+                        "invocation_url_field": "rss_feed",
+                        "adapter": "none",
+                        "optional_fallback": None,
+                        "manual_policy": None,
+                        "fixture_coverage": [],
+                        "live_residual_risk": "Feed could be unavailable during live RT-M7.",
+                    }
+                ],
+            },
+        )
+
+        errors = validator.check_runner_integration(root)
+
+    assert any("fixture_coverage" in error and "one or more" in error for error in errors)
+
+
+def test_runner_integration_validation_reports_missing_and_duplicate_sources() -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        root = pathlib.Path(tmpdir)
+        write_yaml(
+            root / "config/runtime/source-groups/daily_core.yaml",
+            {
+                "group_id": "daily_core",
+                "sources": [
+                    {
+                        "id": "inman_tech_innovation",
+                        "fetch_strategy": "rss",
+                        "rss_feed": "https://feeds.feedburner.com/inmannews",
+                    },
+                    {
+                        "id": "redfin_news",
+                        "fetch_strategy": "rss",
+                        "rss_feed": "https://www.redfin.com/news/feed/",
+                    },
+                ],
+            },
+        )
+        write_yaml(
+            root / "config/runtime/source-groups/weekly_context.yaml",
+            {"group_id": "weekly_context", "sources": []},
+        )
+        write_yaml(
+            root / "config/runtime/mode-fixtures/runner_fetcher_contract_inman.yaml",
+            {"fixture_id": "fetcher"},
+        )
+        row = {
+            "group_id": "daily_core",
+            "source_id": "inman_tech_innovation",
+            "fetch_strategy": "rss",
+            "primary_tool_path": "HTTP/RSS fetcher",
+            "invocation_kind": "rss",
+            "invocation_url_field": "rss_feed",
+            "adapter": "none",
+            "optional_fallback": None,
+            "manual_policy": None,
+            "fixture_coverage": "config/runtime/mode-fixtures/runner_fetcher_contract_inman.yaml",
+            "live_residual_risk": "Feed could be unavailable during live RT-M7.",
+        }
+        write_yaml(
+            root / "config/runtime/mode-fixtures/runner_integration_map.yaml",
+            {"fixture_id": "runner_integration_map", "sources": [row, row]},
+        )
+
+        errors = validator.check_runner_integration(root)
+
+    assert any("duplicate runner integration row" in error for error in errors)
+    assert any("missing source daily_core/redfin_news" in error for error in errors)
+
+
 def main() -> None:
     tests = [
         test_adapter_validation_requires_configured_sources_to_resolve,
@@ -265,6 +365,8 @@ def main() -> None:
         test_mode_fixture_embedded_change_request_requires_schema_fields,
         test_mode_fixture_metadata_change_request_requires_reviewable_fields,
         test_runner_integration_validation_requires_complete_strategy_map,
+        test_runner_integration_validation_rejects_empty_fixture_coverage,
+        test_runner_integration_validation_reports_missing_and_duplicate_sources,
     ]
     for test in tests:
         test()
