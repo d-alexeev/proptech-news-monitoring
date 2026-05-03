@@ -85,6 +85,36 @@ def _normalize_text(text: str) -> str:
     return "\n".join(lines)
 
 
+def _normalize_text_limited(text: str, max_chars: int) -> tuple[str, int]:
+    """Normalize text while storing at most max_chars.
+
+    Returns (stored_text, observed_normalized_chars). The observed count can
+    exceed max_chars, but the returned text never does.
+    """
+    if max_chars <= 0:
+        return "", 0
+    chars: list[str] = []
+    stored = 0
+    observed = 0
+    pending_space = False
+    for char in text:
+        if char.isspace():
+            if observed > 0:
+                pending_space = True
+            continue
+        if pending_space:
+            observed += 1
+            if stored < max_chars:
+                chars.append(" ")
+                stored += 1
+            pending_space = False
+        observed += 1
+        if stored < max_chars:
+            chars.append(char)
+            stored += 1
+    return "".join(chars), observed
+
+
 def _metadata_value(metadata: Any, key: str) -> str | None:
     if not metadata:
         return None
@@ -127,57 +157,62 @@ def _download_pdf(spec: dict[str, Any]) -> tuple[io.BytesIO | None, dict[str, An
     except requests.RequestException as exc:
         return None, {}, "download_failed", f"download failed: {exc}"
 
-    elapsed_ms = int((time.monotonic() - started) * 1000)
-    metadata = {
-        "http_status": resp.status_code,
-        "final_url": resp.url,
-        "content_type": resp.headers.get("Content-Type"),
-        "content_length": resp.headers.get("Content-Length"),
-        "elapsed_ms": elapsed_ms,
-    }
-    if resp.status_code in (401, 402, 403, 451):
-        return None, metadata, "blocked_or_paywall", f"HTTP {resp.status_code}"
-    if resp.status_code == 429:
-        return None, metadata, "rate_limited", "HTTP 429"
-    if resp.status_code >= 400:
-        return None, metadata, "download_failed", f"HTTP {resp.status_code}"
-
-    content_length = resp.headers.get("Content-Length")
-    if content_length:
-        try:
-            declared_size = int(content_length)
-        except ValueError:
-            declared_size = None
-        if declared_size is not None and declared_size > max_bytes:
-            return (
-                None,
-                metadata,
-                "download_failed",
-                f"download exceeds max_bytes: Content-Length {declared_size} > {max_bytes}",
-            )
-
-    chunks = []
-    total = 0
     try:
-        iterator = resp.iter_content(chunk_size=DOWNLOAD_CHUNK_SIZE)
-    except AttributeError:
-        iterator = (getattr(resp, "content", b""),)
-    for chunk in iterator:
-        if not chunk:
-            continue
-        if total + len(chunk) > max_bytes:
-            return (
-                None,
-                metadata,
-                "download_failed",
-                f"download exceeds max_bytes during read: > {max_bytes}",
-            )
-        chunks.append(chunk)
-        total += len(chunk)
-    content = b"".join(chunks)
-    if not content:
-        return None, metadata, "download_failed", "empty PDF response"
-    return io.BytesIO(content), metadata, None, None
+        elapsed_ms = int((time.monotonic() - started) * 1000)
+        metadata = {
+            "http_status": resp.status_code,
+            "final_url": resp.url,
+            "content_type": resp.headers.get("Content-Type"),
+            "content_length": resp.headers.get("Content-Length"),
+            "elapsed_ms": elapsed_ms,
+        }
+        if resp.status_code in (401, 402, 403, 451):
+            return None, metadata, "blocked_or_paywall", f"HTTP {resp.status_code}"
+        if resp.status_code == 429:
+            return None, metadata, "rate_limited", "HTTP 429"
+        if resp.status_code >= 400:
+            return None, metadata, "download_failed", f"HTTP {resp.status_code}"
+
+        content_length = resp.headers.get("Content-Length")
+        if content_length:
+            try:
+                declared_size = int(content_length)
+            except ValueError:
+                declared_size = None
+            if declared_size is not None and declared_size > max_bytes:
+                return (
+                    None,
+                    metadata,
+                    "download_failed",
+                    f"download exceeds max_bytes: Content-Length {declared_size} > {max_bytes}",
+                )
+
+        iter_content = getattr(resp, "iter_content", None)
+        if not callable(iter_content):
+            return None, metadata, "download_failed", "response missing iter_content"
+
+        chunks = []
+        total = 0
+        for chunk in iter_content(chunk_size=DOWNLOAD_CHUNK_SIZE):
+            if not chunk:
+                continue
+            if total + len(chunk) > max_bytes:
+                return (
+                    None,
+                    metadata,
+                    "download_failed",
+                    f"download exceeds max_bytes during read: > {max_bytes}",
+                )
+            chunks.append(chunk)
+            total += len(chunk)
+        content = b"".join(chunks)
+        if not content:
+            return None, metadata, "download_failed", "empty PDF response"
+        return io.BytesIO(content), metadata, None, None
+    finally:
+        close = getattr(resp, "close", None)
+        if callable(close):
+            close()
 
 
 def _open_pdf_stream(spec: dict[str, Any]) -> tuple[io.BufferedIOBase | io.BytesIO | None, dict[str, Any], str | None, str | None]:
@@ -222,18 +257,26 @@ def extract_source(spec: dict[str, Any]) -> dict[str, Any]:
         try:
             reader = PdfReader(stream)
             page_texts = []
+            stored_chars = 0
+            observed_text_char_count = 0
             page_count = len(getattr(reader, "pages", []))
             metadata = getattr(reader, "metadata", None)
             for index, page in enumerate(reader.pages):
                 if index >= max_pages:
                     break
                 try:
-                    page_text = _normalize_text(page.extract_text() or "")
+                    raw_page_text = page.extract_text() or ""
                 except Exception:  # noqa: BLE001 - keep extracting later pages
-                    page_text = ""
-                if page_text:
-                    page_texts.append(page_text)
-                if len("\n".join(page_texts)) >= max_chars:
+                    raw_page_text = ""
+                if raw_page_text:
+                    separator_budget = 1 if page_texts else 0
+                    remaining = max_chars - stored_chars - separator_budget
+                    page_text, observed_chars = _normalize_text_limited(raw_page_text, remaining)
+                    observed_text_char_count += observed_chars
+                    if page_text:
+                        page_texts.append(page_text)
+                        stored_chars += separator_budget + len(page_text)
+                if stored_chars >= max_chars:
                     break
         finally:
             close = getattr(stream, "close", None)
@@ -244,7 +287,7 @@ def extract_source(spec: dict[str, Any]) -> dict[str, Any]:
         return result
 
     text = "\n".join(page_texts)
-    text_char_count = len(text)
+    text_char_count = observed_text_char_count
     result["metadata"].update(
         {
             "page_count": page_count,

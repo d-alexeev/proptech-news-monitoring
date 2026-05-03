@@ -100,17 +100,44 @@ class FakeResponse:
         headers: dict[str, str] | None = None,
     ) -> None:
         self.status_code = status_code
-        self.content = content
+        self._content = content
         self.url = url
         self.headers = headers or {"Content-Type": "application/pdf"}
+        self.closed = False
+        self.content_accessed = False
+
+    @property
+    def content(self) -> bytes:
+        self.content_accessed = True
+        raise AssertionError("streaming PDF download must not access response.content")
+
+    def close(self) -> None:
+        self.closed = True
 
     def raise_for_status(self) -> None:
         if self.status_code >= 400:
             raise requests.HTTPError(f"{self.status_code} error")
 
     def iter_content(self, chunk_size: int = 8192) -> Iterator[bytes]:
-        for start in range(0, len(self.content), chunk_size):
-            yield self.content[start : start + chunk_size]
+        for start in range(0, len(self._content), chunk_size):
+            yield self._content[start : start + chunk_size]
+
+
+class FakeResponseWithoutIterContent:
+    def __init__(self) -> None:
+        self.status_code = 200
+        self.url = "https://example.test/no-iterator.pdf"
+        self.headers = {"Content-Type": "application/pdf"}
+        self.closed = False
+        self.content_accessed = False
+
+    @property
+    def content(self) -> bytes:
+        self.content_accessed = True
+        raise AssertionError("response.content must not be used as a fallback")
+
+    def close(self) -> None:
+        self.closed = True
 
 
 @contextmanager
@@ -236,6 +263,8 @@ def test_downloaded_pdf_uses_url_and_maps_short_text_to_snippet_fallback() -> No
     assert result["body_status_hint"] == "snippet_fallback"
     assert result["soft_fail"] is None
     assert result["error"] is None
+    assert response.closed is True
+    assert response.content_accessed is False
 
 
 def test_download_refuses_pdf_when_content_length_exceeds_max_bytes() -> None:
@@ -256,6 +285,8 @@ def test_download_refuses_pdf_when_content_length_exceeds_max_bytes() -> None:
     assert result["soft_fail"] == "download_failed"
     assert result["body_status_hint"] == "paywall_stub"
     assert "exceeds max_bytes" in result["error"]
+    assert response.closed is True
+    assert response.content_accessed is False
 
 
 def test_download_refuses_pdf_when_stream_exceeds_max_bytes() -> None:
@@ -278,6 +309,27 @@ def test_download_refuses_pdf_when_stream_exceeds_max_bytes() -> None:
     assert result["soft_fail"] == "download_failed"
     assert result["body_status_hint"] == "paywall_stub"
     assert "exceeds max_bytes" in result["error"]
+    assert response.closed is True
+    assert response.content_accessed is False
+
+
+def test_download_without_iter_content_fails_without_content_fallback() -> None:
+    """Responses that cannot stream chunks fail without reading resp.content."""
+    response = FakeResponseWithoutIterContent()
+    with fake_request(response), fake_reader(FakeReader(["must not parse"])):
+        result = pdf_extract.extract_source(
+            {
+                "source_id": "no_iter_content",
+                "url": "https://example.test/no-iterator.pdf",
+            }
+        )
+
+    assert result["text"] == ""
+    assert result["soft_fail"] == "download_failed"
+    assert result["body_status_hint"] == "paywall_stub"
+    assert "missing iter_content" in result["error"]
+    assert response.closed is True
+    assert response.content_accessed is False
 
 
 def test_extraction_stops_after_max_pages() -> None:
@@ -322,9 +374,31 @@ def test_extraction_stops_after_compact_text_budget() -> None:
     assert [page.extract_calls for page in reader.pages] == [1, 0, 0]
 
 
+def test_huge_single_page_text_is_bounded_before_accumulation() -> None:
+    """A huge page is sliced to the compact budget before storing result text."""
+    reader = FakeReader(["A" * 10000, "B" * 10000])
+    with tempfile.NamedTemporaryFile(suffix=".pdf") as pdf_file:
+        pdf_file.write(b"%PDF-1.4\nfixture\n")
+        pdf_file.flush()
+        with fake_reader(reader):
+            result = pdf_extract.extract_source(
+                {
+                    "source_id": "huge_page",
+                    "path": pdf_file.name,
+                    "max_pages": 8,
+                    "max_chars": 128,
+                }
+            )
+
+    assert result["text"] == "A" * 128
+    assert result["text_char_count"] == 10000
+    assert [page.extract_calls for page in reader.pages] == [1, 0]
+
+
 def test_blocked_download_maps_to_paywall_stub_soft_fail() -> None:
     """Blocked or inaccessible PDF downloads surface as paywall_stub hints."""
-    with fake_request(FakeResponse(status_code=403)):
+    response = FakeResponse(status_code=403)
+    with fake_request(response):
         result = pdf_extract.extract_source(
             {
                 "source_id": "blocked_pdf",
@@ -337,6 +411,8 @@ def test_blocked_download_maps_to_paywall_stub_soft_fail() -> None:
     assert result["body_status_hint"] == "paywall_stub"
     assert result["soft_fail"] == "blocked_or_paywall"
     assert "HTTP 403" in result["error"]
+    assert response.closed is True
+    assert response.content_accessed is False
 
 
 def test_pdf_extract_does_not_write_state() -> None:
@@ -419,8 +495,10 @@ def main() -> None:
         test_downloaded_pdf_uses_url_and_maps_short_text_to_snippet_fallback,
         test_download_refuses_pdf_when_content_length_exceeds_max_bytes,
         test_download_refuses_pdf_when_stream_exceeds_max_bytes,
+        test_download_without_iter_content_fails_without_content_fallback,
         test_extraction_stops_after_max_pages,
         test_extraction_stops_after_compact_text_budget,
+        test_huge_single_page_text_is_bounded_before_accumulation,
         test_blocked_download_maps_to_paywall_stub_soft_fail,
         test_pdf_extract_does_not_write_state,
         test_missing_pypdf_returns_before_opening_local_stream,
