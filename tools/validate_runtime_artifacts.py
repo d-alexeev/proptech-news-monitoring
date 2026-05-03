@@ -48,6 +48,18 @@ FORBIDDEN_FULL_TEXT_KEYS = {
     "body_word_count",
     "extracted_text",
 }
+UNSAFE_ENRICHMENT_KEYS = {
+    "forbidden_fetch_urls",
+    "raw_candidates_not_shortlisted",
+}
+UNSAFE_ENRICHMENT_KEY_PARTS = (
+    "non_shortlisted",
+    "not_shortlisted",
+)
+CHANGE_REQUEST_SIGNAL_KEYS = {
+    "change_request",
+    "change_request_output_path",
+}
 
 
 def load_yaml(path: pathlib.Path) -> Any:
@@ -220,18 +232,59 @@ def check_fixtures(root: pathlib.Path = ROOT) -> list[str]:
             str(SAMPLE_CHANGE_REQUEST),
         )
     )
+    errors.extend(check_mode_fixture_change_requests(schema, root))
     return errors
 
 
 def find_full_text_violations(data: Any, path: pathlib.Path) -> list[str]:
     mode_id = data.get("mode_id") if isinstance(data, dict) else None
     if mode_id in ENRICHMENT_MODE_IDS:
-        return []
+        return find_enrichment_full_text_violations(data, path)
     return [
         f"{path}: {location} uses forbidden full-text key {key!r}"
         for location, key, value in walk_forbidden_keys(data)
         if is_forbidden_full_text_value(key, value)
     ]
+
+
+def find_enrichment_full_text_violations(data: Any, path: pathlib.Path) -> list[str]:
+    errors: list[str] = []
+    for location, section in walk_unsafe_enrichment_sections(data):
+        for body_location, key, value in walk_forbidden_keys(section, location):
+            if is_forbidden_full_text_value(key, value):
+                errors.append(
+                    f"{path}: {body_location} uses forbidden full-text key {key!r} "
+                    f"inside non-shortlisted/forbidden-fetch section {location}"
+                )
+    return errors
+
+
+def walk_unsafe_enrichment_sections(
+    data: Any,
+    location: str = "$",
+) -> Iterable[tuple[str, Any]]:
+    if isinstance(data, dict):
+        if is_unsafe_enrichment_section(data):
+            yield location, data
+        for key, value in data.items():
+            child_location = f"{location}.{key}"
+            if is_unsafe_enrichment_key(key):
+                yield child_location, value
+            yield from walk_unsafe_enrichment_sections(value, child_location)
+    elif isinstance(data, list):
+        for index, value in enumerate(data):
+            yield from walk_unsafe_enrichment_sections(value, f"{location}[{index}]")
+
+
+def is_unsafe_enrichment_key(key: str) -> bool:
+    return key in UNSAFE_ENRICHMENT_KEYS or any(part in key for part in UNSAFE_ENRICHMENT_KEY_PARTS)
+
+
+def is_unsafe_enrichment_section(data: dict[str, Any]) -> bool:
+    triage_decision = data.get("triage_decision")
+    if triage_decision is not None and triage_decision != "shortlist":
+        return True
+    return any(is_unsafe_enrichment_key(key) for key in data)
 
 
 def walk_forbidden_keys(data: Any, location: str = "$") -> Iterable[tuple[str, str, Any]]:
@@ -258,6 +311,135 @@ def check_full_text_boundary(root: pathlib.Path = ROOT) -> list[str]:
         data = load_yaml(path)
         errors.extend(find_full_text_violations(data, path.relative_to(root)))
     return errors
+
+
+def check_mode_fixture_change_requests(
+    schema: dict[str, Any],
+    root: pathlib.Path = ROOT,
+) -> list[str]:
+    errors: list[str] = []
+    for path in sorted((root / MODE_FIXTURES).glob("*.yaml")):
+        data = load_yaml(path)
+        errors.extend(
+            validate_mode_fixture_change_requests(
+                schema,
+                data,
+                path.relative_to(root),
+            )
+        )
+    return errors
+
+
+def validate_mode_fixture_change_requests(
+    schema: dict[str, Any],
+    fixture: dict[str, Any],
+    path: pathlib.Path,
+) -> list[str]:
+    errors: list[str] = []
+    for location, change_request in find_embedded_change_requests(fixture):
+        errors.extend(
+            validate_artifact_fixture(
+                schema,
+                {"change_request": change_request},
+                ["change_request"],
+                f"{path}: {location}",
+            )
+        )
+    if is_change_request_expectation(fixture):
+        errors.extend(validate_change_request_expectation_metadata(fixture, path))
+    return errors
+
+
+def find_embedded_change_requests(
+    data: Any,
+    location: str = "$",
+) -> Iterable[tuple[str, dict[str, Any]]]:
+    if isinstance(data, dict):
+        for key, value in data.items():
+            child_location = f"{location}.{key}"
+            if key == "change_request" and isinstance(value, dict):
+                yield child_location, value
+            yield from find_embedded_change_requests(value, child_location)
+    elif isinstance(data, list):
+        for index, value in enumerate(data):
+            yield from find_embedded_change_requests(value, f"{location}[{index}]")
+
+
+def is_change_request_expectation(fixture: dict[str, Any]) -> bool:
+    if "change_request" in str(fixture.get("fixture_id", "")):
+        return True
+    return has_change_request_signal(fixture)
+
+
+def has_change_request_signal(data: Any) -> bool:
+    if isinstance(data, dict):
+        for key, value in data.items():
+            if key in CHANGE_REQUEST_SIGNAL_KEYS:
+                return True
+            if key == "action" and value == "emit_change_request":
+                return True
+            if has_change_request_signal(value):
+                return True
+    elif isinstance(data, list):
+        return any(has_change_request_signal(value) for value in data)
+    return False
+
+
+def validate_change_request_expectation_metadata(
+    fixture: dict[str, Any],
+    path: pathlib.Path,
+) -> list[str]:
+    errors: list[str] = []
+    if find_first_value(fixture, "failure_type") is None:
+        errors.append(f"{path}: change-request fixture must include failure_type")
+    if find_first_value(fixture, "source_id") is None:
+        errors.append(f"{path}: change-request fixture must include source_id")
+    if find_first_value(fixture, "action") != "emit_change_request":
+        errors.append(f"{path}: change-request fixture must expect action emit_change_request")
+    if find_first_value(fixture, "change_request_output_path") is None:
+        errors.append(f"{path}: change-request fixture must include change_request_output_path")
+    if not has_reviewable_change_request_followup(fixture):
+        errors.append(
+            f"{path}: change-request fixture must include suggested_target_files/tests_to_add "
+            "or require both fields explicitly"
+        )
+    return errors
+
+
+def has_reviewable_change_request_followup(fixture: dict[str, Any]) -> bool:
+    if find_first_value(fixture, "suggested_target_files") is not None and find_first_value(
+        fixture,
+        "tests_to_add",
+    ) is not None:
+        return True
+    for _location, required_fields in find_key_values(fixture, "required_fields"):
+        if isinstance(required_fields, list):
+            names = set(required_fields)
+            if {"suggested_target_files", "tests_to_add"}.issubset(names):
+                return True
+    return False
+
+
+def find_first_value(data: Any, key_name: str) -> Any:
+    for _location, value in find_key_values(data, key_name):
+        return value
+    return None
+
+
+def find_key_values(
+    data: Any,
+    key_name: str,
+    location: str = "$",
+) -> Iterable[tuple[str, Any]]:
+    if isinstance(data, dict):
+        for key, value in data.items():
+            child_location = f"{location}.{key}"
+            if key == key_name:
+                yield child_location, value
+            yield from find_key_values(value, key_name, child_location)
+    elif isinstance(data, list):
+        for index, value in enumerate(data):
+            yield from find_key_values(value, key_name, f"{location}[{index}]")
 
 
 def run_check(check: str, root: pathlib.Path = ROOT) -> list[str]:

@@ -90,11 +90,75 @@ def test_full_text_boundary_allows_enrichment_but_blocks_monitor_sources() -> No
     assert good_errors == []
 
 
+def test_enrichment_boundary_blocks_full_text_on_non_shortlisted_sections() -> None:
+    fixture = {
+        "fixture_id": "bad_enrichment_guard",
+        "mode_id": "scrape_and_enrich",
+        "inputs": {
+            "raw_candidates_not_shortlisted": [
+                {
+                    "source_id": "redfin_news",
+                    "url": "https://example.test/not-shortlisted",
+                    "triage_decision": "drop",
+                    "body": "This body must not be available for non-shortlisted input.",
+                }
+            ]
+        },
+        "expected": {
+            "forbidden_fetch_urls": ["https://example.test/not-shortlisted"],
+            "article_file": ".state/articles/non-shortlisted.md",
+        },
+    }
+
+    errors = validator.find_full_text_violations(
+        fixture,
+        pathlib.Path("scrape_and_enrich_non_shortlisted_bad.yaml"),
+    )
+
+    assert any("non-shortlisted" in error or "forbidden_fetch_urls" in error for error in errors)
+    assert any("body" in error or "article_file" in error for error in errors)
+
+
+def test_mode_fixture_embedded_change_request_requires_schema_fields() -> None:
+    schema = {
+        "artifacts": {
+            "change_request": {
+                "required_fields": [
+                    {"name": "request_id", "type": "string"},
+                    {"name": "failure_type", "type": "enum[adapter_gap,scrape_failure]"},
+                    {"name": "source_id", "type": "string_or_null"},
+                ]
+            }
+        }
+    }
+    fixture = {
+        "fixture_id": "bad_change_request_fixture",
+        "mode_id": "scrape_and_enrich",
+        "expected": {
+            "action": "emit_change_request",
+            "change_request": {
+                "request_id": "change_request__fixture",
+                "source_id": "zillow_newsroom",
+            },
+        },
+    }
+
+    errors = validator.validate_mode_fixture_change_requests(
+        schema,
+        fixture,
+        pathlib.Path("scrape_and_enrich_bad_cr.yaml"),
+    )
+
+    assert any("failure_type" in error for error in errors)
+
+
 def main() -> None:
     tests = [
         test_adapter_validation_requires_configured_sources_to_resolve,
         test_fixture_validation_reports_missing_required_fields,
         test_full_text_boundary_allows_enrichment_but_blocks_monitor_sources,
+        test_enrichment_boundary_blocks_full_text_on_non_shortlisted_sections,
+        test_mode_fixture_embedded_change_request_requires_schema_fields,
     ]
     for test in tests:
         test()
