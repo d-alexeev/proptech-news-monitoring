@@ -1,0 +1,49 @@
+fixture_id: runner_pdf_extract_rightmove
+mode_id: scrape_and_enrich
+description: >
+  Offline contract sample for RT-M4. Rightmove RNS PDF extraction is available
+  only after monitor_sources has discovered and shortlisted a public PDF link.
+boundary:
+  enrichment_only: true
+  monitor_sources_must_not_call_pdf_extract: true
+  no_state_writes_by_helper: true
+  no_ocr: true
+  no_table_reconstruction: true
+input:
+  shortlisted_item:
+    source_id: rightmove_plc_rns
+    title: Rightmove plc RNS PDF discovered from static investor page
+    url: https://otp.tools.investis.com/clients/uk/rightmove/rns/regulatory-story.aspx?cid=1346&newsid=fixture
+    discovered_by_mode: monitor_sources
+    body: null
+  helper_invocation:
+    tool: tools/pdf_extract.py
+    stdin:
+      sources:
+        - source_id: rightmove_plc_rns
+          url: https://otp.tools.investis.com/clients/uk/rightmove/rns/example.pdf
+          kind: pdf
+          max_chars: 12000
+expected_helper_output:
+  result_shape:
+    source_id: rightmove_plc_rns
+    kind: pdf
+    metadata:
+      page_count: 1
+      title: Rightmove PLC RNS
+      author: null
+    text: compact extracted PDF text for Codex classification
+    text_char_count: 3200
+    error: null
+    soft_fail: null
+    body_status_hint: full
+downstream_policy:
+  consumer: scrape_and_enrich
+  allowed_body_status_values:
+    - full
+    - snippet_fallback
+    - paywall_stub
+  note: >
+    scrape_and_enrich may normalize body_status from body_status_hint. The helper
+    output is enrichment input, not a digest context artifact and not a
+    monitor_sources discovery body.

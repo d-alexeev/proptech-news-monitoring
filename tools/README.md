@@ -30,6 +30,7 @@
 | Файл | Назначение |
 |---|---|
 | `rss_fetch.py` | Единый минимальный fetcher для `fetch_strategy: rss`, `html_scrape` и простых JSON/API источников вроде `itunes_api`. |
+| `pdf_extract.py` | Enrichment-only PDF-to-text helper for shortlisted public PDFs such as Rightmove RNS documents. |
 | `telegram_send.py` | Доставка markdown в Telegram по `delivery_profile` из `schedule_bindings.yaml`. |
 | `chrome_notes.md` | Bounded browser fallback contract for `fetch_strategy: chrome_scrape` and explicit adapter fallback cases. |
 
@@ -85,6 +86,50 @@ Soft-fail labels are explicit and stable for runner handling:
 
 Offline contract coverage lives in `tools/test_rss_fetch.py`, including the
 regular `inman_tech_innovation` RSS path and iTunes API via `kind=http`.
+
+## `pdf_extract.py`
+
+`pdf_extract.py` extracts compact text and metadata from public PDFs only after
+an item has been shortlisted for `scrape_and_enrich`. It is not a discovery
+tool, and `monitor_sources` must not call it or consume its extracted body text.
+Typical use is Rightmove PLC RNS enrichment after static discovery has found a
+public PDF link.
+
+The helper accepts a local runner-provided PDF path or downloads a public PDF
+URL, emits exactly one JSON document to stdout, and writes no `.state/` files.
+Diagnostics go to stderr. It does not perform OCR, table reconstruction, bulk
+archive download, login, CAPTCHA handling, paywall bypass, or live scraping.
+
+Single-source examples:
+
+```bash
+python3 tools/pdf_extract.py \
+  --source-id rightmove_plc_rns \
+  --path ./rightmove-rns.pdf
+
+python3 tools/pdf_extract.py \
+  --source-id rightmove_plc_rns \
+  --url https://example.test/rightmove-rns.pdf
+```
+
+Batch example:
+
+```bash
+printf '%s\n' '{"sources":[{"source_id":"rightmove_plc_rns","url":"https://example.test/rightmove-rns.pdf","kind":"pdf"}]}' \
+  | python3 tools/pdf_extract.py --stdin
+```
+
+Each result includes `source_id`, `url` or `path`, `kind: pdf`, `metadata`
+(`page_count`, PDF title/author when available, and download metadata for URL
+inputs), compact `text`, `text_char_count`, `error`, `soft_fail`, and
+`body_status_hint`. `scrape_and_enrich` may normalize `body_status_hint` into
+the existing `body_status` policy: `full` for useful text, `snippet_fallback`
+for too little extractable text, or `paywall_stub` for blocked/download
+failures.
+
+Offline contract coverage lives in `tools/test_pdf_extract.py`; the Rightmove
+enrichment-only boundary is represented in
+`config/runtime/mode-fixtures/runner_pdf_extract_rightmove.yaml`.
 
 ## Browser fallback
 

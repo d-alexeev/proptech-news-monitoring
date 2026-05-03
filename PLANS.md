@@ -8,7 +8,7 @@ they are not required runtime context for implementing RT-M2 through RT-M7.
 
 | Title | Status | Stable heading | Notes |
 | --- | --- | --- | --- |
-| Minimal Codex Runner Scraping Tooling | active; RT-M1, RT-M2, RT-M3, and RT-M8 completed; RT-M4 through RT-M7 pending | `## Addendum: Minimal Codex Runner Scraping Tooling` | Current runner scraping tooling plan. Load this heading for active implementation context. |
+| Minimal Codex Runner Scraping Tooling | active; RT-M1 through RT-M4 and RT-M8 completed; RT-M5 through RT-M7 pending | `## Addendum: Minimal Codex Runner Scraping Tooling` | Current runner scraping tooling plan. Load this heading for active implementation context. |
 
 ## Archived and Inactive Plans
 
@@ -458,7 +458,7 @@ the initial plan, but it is a pre-implementation hygiene milestone.
 | RT-M8 | completed |
 | RT-M2 | completed |
 | RT-M3 | completed |
-| RT-M4 | pending |
+| RT-M4 | completed |
 | RT-M5 | pending |
 | RT-M6 | pending |
 | RT-M7 | pending |
