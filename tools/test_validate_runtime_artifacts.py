@@ -190,6 +190,72 @@ def test_mode_fixture_metadata_change_request_requires_reviewable_fields() -> No
     assert any("suggested_target_files/tests_to_add" in error for error in errors)
 
 
+def test_runner_integration_validation_requires_complete_strategy_map() -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        root = pathlib.Path(tmpdir)
+        write_yaml(
+            root / "config/runtime/source-groups/daily_core.yaml",
+            {
+                "group_id": "daily_core",
+                "sources": [
+                    {
+                        "id": "inman_tech_innovation",
+                        "fetch_strategy": "rss",
+                        "rss_feed": "https://feeds.feedburner.com/inmannews",
+                    },
+                    {
+                        "id": "rea_group_investor_centre",
+                        "fetch_strategy": "blocked",
+                        "blocked_mode": "manual_only_permanent",
+                        "landing_urls": ["https://example.test/rea"],
+                    },
+                ],
+            },
+        )
+        write_yaml(root / "config/runtime/source-groups/weekly_context.yaml", {"group_id": "weekly_context", "sources": []})
+        write_yaml(root / "config/runtime/mode-fixtures/runner_fetcher_contract_inman.yaml", {"fixture_id": "fetcher"})
+        write_yaml(root / "config/runtime/mode-fixtures/monitor_sources_blocked_manual_change_request.yaml", {"fixture_id": "blocked"})
+        write_yaml(
+            root / "config/runtime/mode-fixtures/runner_integration_map.yaml",
+            {
+                "fixture_id": "runner_integration_map",
+                "sources": [
+                    {
+                        "group_id": "daily_core",
+                        "source_id": "inman_tech_innovation",
+                        "fetch_strategy": "rss",
+                        "primary_tool_path": "Browser fallback",
+                        "invocation_kind": "rss",
+                        "invocation_url_field": "rss_feed",
+                        "adapter": "none",
+                        "optional_fallback": None,
+                        "manual_policy": None,
+                        "fixture_coverage": "config/runtime/mode-fixtures/runner_fetcher_contract_inman.yaml",
+                        "live_residual_risk": "Feed could be unavailable during live RT-M7.",
+                    },
+                    {
+                        "group_id": "daily_core",
+                        "source_id": "rea_group_investor_centre",
+                        "fetch_strategy": "blocked",
+                        "primary_tool_path": "No fetch / manual intake policy",
+                        "invocation_kind": "browser",
+                        "invocation_url_field": "landing_urls",
+                        "adapter": "cowork/adapters/blocked_manual_access.md",
+                        "optional_fallback": None,
+                        "manual_policy": "manual_only_permanent",
+                        "fixture_coverage": "config/runtime/mode-fixtures/monitor_sources_blocked_manual_change_request.yaml",
+                        "live_residual_risk": "Manual intake remains outside automated runner fetch.",
+                    },
+                ],
+            },
+        )
+
+        errors = validator.check_runner_integration(root)
+
+    assert any("inman_tech_innovation" in error and "HTTP/RSS fetcher" in error for error in errors)
+    assert any("rea_group_investor_centre" in error and "must not define fetch invocation" in error for error in errors)
+
+
 def main() -> None:
     tests = [
         test_adapter_validation_requires_configured_sources_to_resolve,
@@ -198,6 +264,7 @@ def main() -> None:
         test_enrichment_boundary_blocks_full_text_on_non_shortlisted_sections,
         test_mode_fixture_embedded_change_request_requires_schema_fields,
         test_mode_fixture_metadata_change_request_requires_reviewable_fields,
+        test_runner_integration_validation_requires_complete_strategy_map,
     ]
     for test in tests:
         test()

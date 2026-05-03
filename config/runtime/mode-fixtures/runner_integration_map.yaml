@@ -1,0 +1,259 @@
+fixture_id: runner_integration_map
+mode_id: runner_dry_run_integration
+description: >
+  Offline RT-M6 source-by-source dry-run map for the minimal Codex runner tool
+  set. This fixture proves current daily_core and weekly_context source groups
+  resolve to exactly one primary minimal tool path without live network fetch.
+
+validation_contract:
+  command: python3 tools/validate_runtime_artifacts.py --check runner-integration
+  no_live_network_required: true
+  no_telegram_delivery: true
+  no_secrets_required: true
+  no_captcha_or_proxy_required: true
+  primary_tool_path_policy: exactly_one_per_source
+  blocked_manual_policy: represented_explicitly_and_not_fetched
+
+strategy_family_coverage:
+  rss:
+    primary_tool_path: HTTP/RSS fetcher
+    fixture_coverage:
+      - config/runtime/mode-fixtures/runner_fetcher_contract_inman.yaml
+      - tools/test_rss_fetch.py
+  html_scrape:
+    primary_tool_path: HTTP/RSS fetcher
+    fixture_coverage:
+      - tools/test_rss_fetch.py
+  itunes_api:
+    primary_tool_path: HTTP/RSS fetcher
+    fixture_coverage:
+      - tools/test_rss_fetch.py
+  chrome_scrape:
+    primary_tool_path: Browser fallback
+    fixture_coverage:
+      - config/runtime/mode-fixtures/runner_browser_fallback_similarweb.yaml
+  blocked:
+    primary_tool_path: No fetch / manual intake policy
+    fixture_coverage:
+      - config/runtime/mode-fixtures/monitor_sources_blocked_manual_change_request.yaml
+  pdf_enrichment:
+    optional_tool_path: PDF text extractor
+    fixture_coverage:
+      - config/runtime/mode-fixtures/runner_pdf_extract_rightmove.yaml
+      - tools/test_pdf_extract.py
+
+sources:
+  - group_id: daily_core
+    source_id: aim_group_real_estate_intelligence
+    fetch_strategy: rss
+    primary_tool_path: HTTP/RSS fetcher
+    invocation_kind: rss
+    invocation_url_field: rss_feed
+    adapter: none
+    optional_fallback: null
+    manual_policy: null
+    fixture_coverage:
+      - config/runtime/mode-fixtures/runner_fetcher_contract_inman.yaml
+      - tools/test_rss_fetch.py
+    live_residual_risk: RSS endpoint availability, feed item freshness, or origin rate limits can still fail during RT-M7 live testing.
+
+  - group_id: daily_core
+    source_id: onlinemarketplaces
+    fetch_strategy: chrome_scrape
+    primary_tool_path: Browser fallback
+    invocation_kind: browser
+    invocation_url_field: landing_urls
+    adapter: cowork/adapters/onlinemarketplaces_family.md
+    optional_fallback: null
+    manual_policy: null
+    fixture_coverage:
+      - config/runtime/mode-fixtures/runner_browser_fallback_similarweb.yaml
+    live_residual_risk: Public listing pages may change layout or present human checks; runner must soft-fail rather than bypass controls.
+
+  - group_id: daily_core
+    source_id: mike_delprete
+    fetch_strategy: html_scrape
+    primary_tool_path: HTTP/RSS fetcher
+    invocation_kind: http
+    invocation_url_field: landing_urls
+    adapter: cowork/adapters/mike_delprete_library.md
+    optional_fallback: null
+    manual_policy: null
+    fixture_coverage:
+      - tools/test_rss_fetch.py
+    live_residual_risk: Static article index structure may change; live run may need an adapter change_request if expected listing cues disappear.
+
+  - group_id: daily_core
+    source_id: zillow_newsroom
+    fetch_strategy: rss
+    primary_tool_path: HTTP/RSS fetcher
+    invocation_kind: rss
+    invocation_url_field: rss_feed
+    adapter: cowork/adapters/zillow_newsroom_html.md
+    optional_fallback: null
+    manual_policy: null
+    fixture_coverage:
+      - config/runtime/mode-fixtures/runner_fetcher_contract_inman.yaml
+      - tools/test_rss_fetch.py
+    live_residual_risk: Mediaroom RSS may be temporarily unavailable; blocked Zillow HTML paths remain out of scope for automated bypass.
+
+  - group_id: daily_core
+    source_id: costar_homes
+    fetch_strategy: rss
+    primary_tool_path: HTTP/RSS fetcher
+    invocation_kind: rss
+    invocation_url_field: rss_feed
+    adapter: none
+    optional_fallback: null
+    manual_policy: null
+    fixture_coverage:
+      - config/runtime/mode-fixtures/runner_fetcher_contract_inman.yaml
+      - tools/test_rss_fetch.py
+    live_residual_risk: Investor RSS availability and content freshness remain live-source risks.
+
+  - group_id: daily_core
+    source_id: redfin_news
+    fetch_strategy: rss
+    primary_tool_path: HTTP/RSS fetcher
+    invocation_kind: rss
+    invocation_url_field: rss_feed
+    adapter: none
+    optional_fallback: null
+    manual_policy: null
+    fixture_coverage:
+      - config/runtime/mode-fixtures/runner_fetcher_contract_inman.yaml
+      - tools/test_rss_fetch.py
+    live_residual_risk: Feed availability, item metadata drift, or origin rate limits can still affect live discovery.
+
+  - group_id: daily_core
+    source_id: rea_group_investor_centre
+    fetch_strategy: blocked
+    primary_tool_path: No fetch / manual intake policy
+    invocation_kind: null
+    invocation_url_field: null
+    adapter: cowork/adapters/blocked_manual_access.md
+    optional_fallback: null
+    manual_policy: manual_only_permanent
+    fixture_coverage:
+      - config/runtime/mode-fixtures/monitor_sources_blocked_manual_change_request.yaml
+    live_residual_risk: Source remains manual-only; runner must not fetch it and should rely on manual intake reminders.
+
+  - group_id: daily_core
+    source_id: rightmove_plc
+    fetch_strategy: html_scrape
+    primary_tool_path: HTTP/RSS fetcher
+    invocation_kind: http
+    invocation_url_field: landing_urls
+    adapter: cowork/adapters/rightmove_plc.md
+    optional_fallback: PDF text extractor for shortlisted public RNS PDFs during scrape_and_enrich only
+    manual_policy: null
+    fixture_coverage:
+      - tools/test_rss_fetch.py
+      - config/runtime/mode-fixtures/runner_pdf_extract_rightmove.yaml
+      - tools/test_pdf_extract.py
+    live_residual_risk: Investor-page HTML and downstream RNS PDF links may change; PDF extraction is not used for discovery.
+
+  - group_id: daily_core
+    source_id: similarweb_global_real_estate
+    fetch_strategy: chrome_scrape
+    primary_tool_path: Browser fallback
+    invocation_kind: browser
+    invocation_url_field: landing_urls
+    adapter: cowork/adapters/similarweb_site_overview.md
+    optional_fallback: null
+    manual_policy: null
+    fixture_coverage:
+      - config/runtime/mode-fixtures/runner_browser_fallback_similarweb.yaml
+    live_residual_risk: Similarweb overview pages may hide data, change rendering, or show anti-bot checks in live testing.
+
+  - group_id: weekly_context
+    source_id: property_portal_watch
+    fetch_strategy: chrome_scrape
+    primary_tool_path: Browser fallback
+    invocation_kind: browser
+    invocation_url_field: landing_urls
+    adapter: cowork/adapters/onlinemarketplaces_family.md
+    optional_fallback: null
+    manual_policy: null
+    fixture_coverage:
+      - config/runtime/mode-fixtures/runner_browser_fallback_similarweb.yaml
+    live_residual_risk: Publisher family listing pages may change layout or require human checks; no bypass is allowed.
+
+  - group_id: weekly_context
+    source_id: inman_tech_innovation
+    fetch_strategy: rss
+    primary_tool_path: HTTP/RSS fetcher
+    invocation_kind: rss
+    invocation_url_field: rss_feed
+    adapter: none
+    optional_fallback: null
+    manual_policy: null
+    fixture_coverage:
+      - config/runtime/mode-fixtures/runner_fetcher_contract_inman.yaml
+      - tools/test_rss_fetch.py
+    live_residual_risk: Inman feed availability and downstream paywall/snippet limits remain live risks; RT-M6 only proves offline discovery contract.
+
+  - group_id: weekly_context
+    source_id: similarweb_country_real_estate
+    fetch_strategy: chrome_scrape
+    primary_tool_path: Browser fallback
+    invocation_kind: browser
+    invocation_url_field: landing_urls
+    adapter: cowork/adapters/similarweb_site_overview.md
+    optional_fallback: null
+    manual_policy: null
+    fixture_coverage:
+      - config/runtime/mode-fixtures/runner_browser_fallback_similarweb.yaml
+    live_residual_risk: Country overview pages may render partial public data or anti-bot checks during live testing.
+
+  - group_id: weekly_context
+    source_id: zillow_ios
+    fetch_strategy: itunes_api
+    primary_tool_path: HTTP/RSS fetcher
+    invocation_kind: http
+    invocation_url_field: itunes_api_url
+    adapter: cowork/adapters/itunes_lookup_api.md
+    optional_fallback: null
+    manual_policy: null
+    fixture_coverage:
+      - tools/test_rss_fetch.py
+    live_residual_risk: iTunes lookup endpoint availability, storefront response shape, or app metadata freshness can still vary live.
+
+  - group_id: weekly_context
+    source_id: zillow_android
+    fetch_strategy: chrome_scrape
+    primary_tool_path: Browser fallback
+    invocation_kind: browser
+    invocation_url_field: landing_urls
+    adapter: cowork/adapters/google_play_app_page.md
+    optional_fallback: null
+    manual_policy: null
+    fixture_coverage:
+      - config/runtime/mode-fixtures/runner_browser_fallback_similarweb.yaml
+    live_residual_risk: Google Play pages may change markup, localize content, or present anti-bot controls.
+
+  - group_id: weekly_context
+    source_id: rightmove_ios
+    fetch_strategy: itunes_api
+    primary_tool_path: HTTP/RSS fetcher
+    invocation_kind: http
+    invocation_url_field: itunes_api_url
+    adapter: cowork/adapters/itunes_lookup_api.md
+    optional_fallback: null
+    manual_policy: null
+    fixture_coverage:
+      - tools/test_rss_fetch.py
+    live_residual_risk: iTunes lookup endpoint availability, storefront response shape, or app metadata freshness can still vary live.
+
+  - group_id: weekly_context
+    source_id: rightmove_android
+    fetch_strategy: chrome_scrape
+    primary_tool_path: Browser fallback
+    invocation_kind: browser
+    invocation_url_field: landing_urls
+    adapter: cowork/adapters/google_play_app_page.md
+    optional_fallback: null
+    manual_policy: null
+    fixture_coverage:
+      - config/runtime/mode-fixtures/runner_browser_fallback_similarweb.yaml
+    live_residual_risk: Google Play pages may change markup, localize content, or present anti-bot controls.

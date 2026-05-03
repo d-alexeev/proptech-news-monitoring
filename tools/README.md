@@ -31,7 +31,7 @@
 |---|---|
 | `rss_fetch.py` | Единый минимальный fetcher для `fetch_strategy: rss`, `html_scrape` и простых JSON/API источников вроде `itunes_api`. |
 | `pdf_extract.py` | Enrichment-only PDF-to-text helper for shortlisted public PDFs such as Rightmove RNS documents. |
-| `validate_runtime_artifacts.py` | Offline validator for source adapter resolution, compact state fixtures, change-request fixtures, and full-text boundaries in mode fixtures. |
+| `validate_runtime_artifacts.py` | Offline validator for source adapter resolution, compact state fixtures, change-request fixtures, full-text boundaries, and runner integration dry-run maps. |
 | `telegram_send.py` | Доставка markdown в Telegram по `delivery_profile` из `schedule_bindings.yaml`. |
 | `chrome_notes.md` | Bounded browser fallback contract for `fetch_strategy: chrome_scrape` and explicit adapter fallback cases. |
 
@@ -161,7 +161,10 @@ or `none`, validates required fields and lightweight types for the sample
 `change_request` artifacts, validates mode fixtures that expect
 `change_request` output, and scans non-enrichment mode fixtures plus unsafe
 `scrape_and_enrich` sections for forbidden full-text fields such as
-`article_file`, `full_text`, `body_text`, and non-null `body`.
+`article_file`, `full_text`, `body_text`, and non-null `body`. It also validates
+the RT-M6 runner integration dry-run map so every configured `daily_core` and
+`weekly_context` source has exactly one primary minimal tool path, explicit
+blocked/manual handling, fixture coverage, and residual live-fetch risk notes.
 
 Commands:
 
@@ -169,6 +172,7 @@ Commands:
 python3 tools/validate_runtime_artifacts.py --check adapters
 python3 tools/validate_runtime_artifacts.py --check fixtures
 python3 tools/validate_runtime_artifacts.py --check full-text-boundary
+python3 tools/validate_runtime_artifacts.py --check runner-integration
 python3 tools/validate_runtime_artifacts.py --check all
 ```
 

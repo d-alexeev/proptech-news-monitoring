@@ -314,3 +314,79 @@ repo-side contract/docs layer.
 - follow-up plan **завершён по артефактам репозитория**;
 - full operational completion **ещё требует живого external-runner rehearsal и
   финального doc cleanup вокруг secondary legacy materials**.
+
+## RT-M6 Completion Audit: Minimal Codex Runner Scraping Tooling
+
+Audit date: 2026-05-04
+
+Scope: RT-M2 through RT-M6 offline tooling and contracts for the reduced Codex
+runner scraping tool set. This audit does not claim RT-M7 live scraping results.
+
+### Summary
+
+RT-M6 adds an offline runner integration map at
+`config/runtime/mode-fixtures/runner_integration_map.yaml` and a validator check
+for `--check runner-integration`. The map covers every configured source in
+`daily_core` and `weekly_context`, assigns exactly one primary minimal tool path
+per source, represents manual-only sources as no-fetch rows, and documents
+source-level residual live-fetch risks.
+
+RT-M7 remains pending. No live network fetch, Telegram delivery, CAPTCHA
+automation, proxy handling, or permanent adapter fix was performed as part of
+this audit.
+
+### Requirement Audit
+
+| Requirement | Implemented behavior | Status | Evidence |
+| --- | --- | --- | --- |
+| RT-R1 | RSS/Atom and static HTTP share the `tools/rss_fetch.py` JSON-in/JSON-out fetcher contract. | Implemented offline | `tools/README.md`; `tools/test_rss_fetch.py`; runner map rows for `rss` and `html_scrape`. |
+| RT-R2 | iTunes lookup URLs use the same HTTP fetcher path via `kind=http`; no separate iTunes client was added. | Implemented offline | `tools/README.md`; runner map rows for `zillow_ios` and `rightmove_ios`; `tools/test_rss_fetch.py`. |
+| RT-R3 | Static fetch results include HTTP metadata, final URL, soft-fail labels, and raw body/item data for adapter reasoning. | Implemented offline | `tools/rss_fetch.py`; `tools/README.md`; `tools/test_rss_fetch.py`. |
+| RT-R4 | Browser automation is documented as a bounded fallback for configured `chrome_scrape` and explicit adapter fallback cases. | Implemented as contract | `tools/chrome_notes.md`; `config/runtime/mode-fixtures/runner_browser_fallback_similarweb.yaml`; runner map `chrome_scrape` rows. |
+| RT-R5 | Browser fallback is not allowed for login, CAPTCHA, paywall bypass, proxy rotation, or manual-only sources. | Implemented as contract and validation | `tools/chrome_notes.md`; runner map blocked row; `--check runner-integration` rejects blocked fetch invocation. |
+| RT-R6 | PDF extraction exists for enrichment-only Rightmove RNS PDF cases. | Implemented offline | `tools/pdf_extract.py`; `tools/test_pdf_extract.py`; `config/runtime/mode-fixtures/runner_pdf_extract_rightmove.yaml`; Rightmove optional fallback row. |
+| RT-R7 | Source adapter resolution is validated against configured source groups and `cowork/adapters/source_map.md`. | Implemented offline | `tools/validate_runtime_artifacts.py --check adapters`; runner integration adapter checks. |
+| RT-R8 | `monitor_sources` full-text boundaries are guarded by fixture validation. | Implemented offline | `tools/validate_runtime_artifacts.py --check full-text-boundary`; mode fixtures. |
+| RT-R9 | `scrape_and_enrich` full-text handling is limited to shortlisted/enrichment contexts and body statuses remain `full`, `snippet_fallback`, or `paywall_stub`. | Implemented offline | `config/runtime/mode-fixtures/scrape_and_enrich_*`; `runner_pdf_extract_rightmove.yaml`; full-text boundary validator. |
+| RT-R10 | Persistent source/tool failures are represented through change-request contracts rather than silent runtime workarounds. | Implemented offline | `config/runtime/change_request_schema.yaml`; change-request fixtures; validator fixture checks. |
+| RT-R11 | Acceptance checks run offline without live source fetch, Telegram delivery, secrets, proxy services, or CAPTCHA solving. | Implemented | RT-M6 validation command set; runner integration map `validation_contract`. |
+| RT-R12 | Inman remains a regular recurring source with explicit RSS/feed-based discovery coverage. | Implemented | `weekly_context` source row; `runner_fetcher_contract_inman.yaml`; runner map row with primary tool path `HTTP/RSS fetcher`. |
+
+### Pending Or Out Of Scope
+
+| Item | Status | Notes |
+| --- | --- | --- |
+| RT-R13 / RT-M7 live scraping pass | Pending | Requires bounded live test after offline RT-M6 gates pass. This audit makes no reachability claim for external sites. |
+| Permanent adapter fixes | Out of scope for RT-M6 | Any persistent source issue discovered later should be handled by RT-M7 follow-up proposal or change-request artifacts. |
+| Broad crawler behavior | Out of scope | The runner map preserves one configured source-to-tool path per source, not a generic crawler launch. |
+
+### Residual Live-Fetch Risks
+
+- External RSS, HTML, iTunes, Google Play, Similarweb, and publisher pages may
+  change availability, markup, metadata shape, rate limits, or anti-bot behavior
+  during RT-M7 or future scheduled runs.
+- Offline fixture validation proves contract coverage, not live reachability or
+  future stability of remote sources.
+- Browser fallback remains a bounded public-page observation path. It must
+  soft-fail on login, CAPTCHA, paywall, proxy, or manual-only conditions.
+- REA Group Investor Centre remains `manual_only_permanent` and must not be
+  fetched by the runner.
+- Rightmove PDF extraction is enrichment-only for shortlisted public PDF links;
+  it is not primary discovery and does not expand full text into
+  `monitor_sources`.
+
+### Verification Gates For RT-M6
+
+Required gates:
+
+- `PYTHONPYCACHEPREFIX=.pycache-local python3 -m py_compile tools/validate_runtime_artifacts.py tools/test_validate_runtime_artifacts.py`
+- `python3 tools/test_validate_runtime_artifacts.py`
+- `python3 tools/validate_runtime_artifacts.py --check adapters`
+- `python3 tools/validate_runtime_artifacts.py --check fixtures`
+- `python3 tools/validate_runtime_artifacts.py --check full-text-boundary`
+- `python3 tools/validate_runtime_artifacts.py --check runner-integration`
+- `python3 tools/validate_runtime_artifacts.py --check all`
+- `git diff --check`
+
+RT-M6 is complete only if those gates pass and `PLANS.md` marks RT-M6 complete
+without marking RT-M7 complete.

@@ -31,6 +31,7 @@ SAMPLE_CHANGE_REQUEST = pathlib.Path(
     "config/runtime/change-request-fixtures/sample_change_request.yaml"
 )
 MODE_FIXTURES = pathlib.Path("config/runtime/mode-fixtures")
+RUNNER_INTEGRATION_MAP = MODE_FIXTURES / "runner_integration_map.yaml"
 REQUIRED_ARTIFACTS = (
     "raw_candidate",
     "shortlisted_item",
@@ -59,6 +60,25 @@ UNSAFE_ENRICHMENT_KEY_PARTS = (
 CHANGE_REQUEST_SIGNAL_KEYS = {
     "change_request",
     "change_request_output_path",
+}
+EXPECTED_PRIMARY_TOOL_PATH_BY_STRATEGY = {
+    "rss": "HTTP/RSS fetcher",
+    "html_scrape": "HTTP/RSS fetcher",
+    "itunes_api": "HTTP/RSS fetcher",
+    "chrome_scrape": "Browser fallback",
+    "blocked": "No fetch / manual intake policy",
+}
+EXPECTED_INVOCATION_KIND_BY_STRATEGY = {
+    "rss": "rss",
+    "html_scrape": "http",
+    "itunes_api": "http",
+    "chrome_scrape": "browser",
+}
+EXPECTED_URL_FIELD_BY_STRATEGY = {
+    "rss": "rss_feed",
+    "html_scrape": "landing_urls",
+    "itunes_api": "itunes_api_url",
+    "chrome_scrape": "landing_urls",
 }
 
 
@@ -92,6 +112,18 @@ def configured_source_ids(root: pathlib.Path) -> list[tuple[str, pathlib.Path]]:
             if source_id:
                 source_ids.append((source_id, relative_path))
     return source_ids
+
+
+def configured_sources_by_group(root: pathlib.Path) -> dict[tuple[str, str], dict[str, Any]]:
+    configured: dict[tuple[str, str], dict[str, Any]] = {}
+    for relative_path in SOURCE_GROUPS:
+        data = load_yaml(root / relative_path)
+        group_id = data.get("group_id")
+        for source in data.get("sources", []):
+            source_id = source.get("id")
+            if group_id and source_id:
+                configured[(group_id, source_id)] = source
+    return configured
 
 
 def check_adapters(root: pathlib.Path = ROOT) -> list[str]:
@@ -313,6 +345,150 @@ def check_full_text_boundary(root: pathlib.Path = ROOT) -> list[str]:
     return errors
 
 
+def check_runner_integration(root: pathlib.Path = ROOT) -> list[str]:
+    errors: list[str] = []
+    path = root / RUNNER_INTEGRATION_MAP
+    if not path.exists():
+        return [f"{RUNNER_INTEGRATION_MAP}: runner integration map is missing"]
+    data = load_yaml(path)
+    rows = data.get("sources")
+    if not isinstance(rows, list):
+        return [f"{RUNNER_INTEGRATION_MAP}: sources must be a list"]
+
+    configured = configured_sources_by_group(root)
+    expected_keys = set(configured)
+    seen_keys: set[tuple[str, str]] = set()
+    adapters = parse_source_map(root) if (root / SOURCE_MAP).exists() else {}
+
+    for index, row in enumerate(rows):
+        row_label = f"{RUNNER_INTEGRATION_MAP}: sources[{index}]"
+        if not isinstance(row, dict):
+            errors.append(f"{row_label} must be a map")
+            continue
+
+        group_id = row.get("group_id")
+        source_id = row.get("source_id")
+        key = (group_id, source_id)
+        label = f"{row_label} {group_id}/{source_id}"
+        if key in seen_keys:
+            errors.append(f"{label}: duplicate runner integration row")
+        seen_keys.add(key)
+        if key not in expected_keys:
+            errors.append(f"{label}: source is not configured in daily_core or weekly_context")
+            continue
+
+        configured_source = configured[key]
+        fetch_strategy = configured_source.get("fetch_strategy")
+        if row.get("fetch_strategy") != fetch_strategy:
+            errors.append(
+                f"{label}: fetch_strategy must match source group "
+                f"{fetch_strategy!r}, got {row.get('fetch_strategy')!r}"
+            )
+
+        errors.extend(validate_runner_primary_tool(row, fetch_strategy, label))
+        errors.extend(validate_runner_invocation(row, configured_source, fetch_strategy, label))
+        errors.extend(validate_runner_adapter(row, adapters, source_id, label))
+        errors.extend(validate_runner_fixture_reference(root, row, label))
+        if not isinstance(row.get("live_residual_risk"), str) or not row.get("live_residual_risk"):
+            errors.append(f"{label}: live_residual_risk must document remaining live-fetch risk")
+
+    for missing_group, missing_source in sorted(expected_keys - seen_keys):
+        errors.append(
+            f"{RUNNER_INTEGRATION_MAP}: missing source {missing_group}/{missing_source}"
+        )
+    return errors
+
+
+def validate_runner_primary_tool(
+    row: dict[str, Any],
+    fetch_strategy: str,
+    label: str,
+) -> list[str]:
+    primary_tool_path = row.get("primary_tool_path")
+    expected = EXPECTED_PRIMARY_TOOL_PATH_BY_STRATEGY.get(fetch_strategy)
+    if not isinstance(primary_tool_path, str) or not primary_tool_path:
+        return [f"{label}: primary_tool_path must be exactly one non-empty string"]
+    if expected is None:
+        return [f"{label}: unsupported fetch_strategy {fetch_strategy!r}"]
+    if primary_tool_path != expected:
+        return [f"{label}: primary_tool_path must be {expected!r}, got {primary_tool_path!r}"]
+    return []
+
+
+def validate_runner_invocation(
+    row: dict[str, Any],
+    configured_source: dict[str, Any],
+    fetch_strategy: str,
+    label: str,
+) -> list[str]:
+    errors: list[str] = []
+    if fetch_strategy == "blocked":
+        if row.get("invocation_kind") is not None or row.get("invocation_url_field") is not None:
+            errors.append(f"{label}: blocked/manual source must not define fetch invocation")
+        manual_policy = row.get("manual_policy")
+        if manual_policy != configured_source.get("blocked_mode"):
+            errors.append(
+                f"{label}: manual_policy must match blocked_mode "
+                f"{configured_source.get('blocked_mode')!r}"
+            )
+        return errors
+
+    expected_kind = EXPECTED_INVOCATION_KIND_BY_STRATEGY.get(fetch_strategy)
+    expected_url_field = EXPECTED_URL_FIELD_BY_STRATEGY.get(fetch_strategy)
+    if row.get("invocation_kind") != expected_kind:
+        errors.append(
+            f"{label}: invocation_kind must be {expected_kind!r}, "
+            f"got {row.get('invocation_kind')!r}"
+        )
+    if row.get("invocation_url_field") != expected_url_field:
+        errors.append(
+            f"{label}: invocation_url_field must be {expected_url_field!r}, "
+            f"got {row.get('invocation_url_field')!r}"
+        )
+    if expected_url_field and expected_url_field not in configured_source:
+        errors.append(f"{label}: configured source is missing {expected_url_field!r}")
+    if row.get("manual_policy") is not None:
+        errors.append(f"{label}: non-blocked source manual_policy must be null")
+    return errors
+
+
+def validate_runner_adapter(
+    row: dict[str, Any],
+    adapters: dict[str, str],
+    source_id: str,
+    label: str,
+) -> list[str]:
+    if not adapters:
+        return []
+    expected_adapter = adapters.get(source_id)
+    if row.get("adapter") != expected_adapter:
+        return [
+            f"{label}: adapter must match source_map.md {expected_adapter!r}, "
+            f"got {row.get('adapter')!r}"
+        ]
+    return []
+
+
+def validate_runner_fixture_reference(
+    root: pathlib.Path,
+    row: dict[str, Any],
+    label: str,
+) -> list[str]:
+    references = row.get("fixture_coverage")
+    if isinstance(references, str):
+        paths = [references]
+    elif isinstance(references, list) and all(isinstance(item, str) for item in references):
+        paths = references
+    else:
+        return [f"{label}: fixture_coverage must reference one or more fixture paths"]
+
+    errors: list[str] = []
+    for reference in paths:
+        if not (root / reference).exists():
+            errors.append(f"{label}: fixture_coverage path {reference!r} does not exist")
+    return errors
+
+
 def check_mode_fixture_change_requests(
     schema: dict[str, Any],
     root: pathlib.Path = ROOT,
@@ -449,9 +625,11 @@ def run_check(check: str, root: pathlib.Path = ROOT) -> list[str]:
         return check_fixtures(root)
     if check == "full-text-boundary":
         return check_full_text_boundary(root)
+    if check == "runner-integration":
+        return check_runner_integration(root)
     if check == "all":
         errors: list[str] = []
-        for subcheck in ("adapters", "fixtures", "full-text-boundary"):
+        for subcheck in ("adapters", "fixtures", "full-text-boundary", "runner-integration"):
             errors.extend(run_check(subcheck, root))
         return errors
     raise ValueError(f"unknown check: {check}")
@@ -461,7 +639,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--check",
-        choices=("adapters", "fixtures", "full-text-boundary", "all"),
+        choices=("adapters", "fixtures", "full-text-boundary", "runner-integration", "all"),
         default="all",
         help="Validation check to run.",
     )
