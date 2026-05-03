@@ -72,8 +72,10 @@ def make_minimal_text_pdf(lines: list[str]) -> bytes:
 class FakePage:
     def __init__(self, text: str | None) -> None:
         self._text = text
+        self.extract_calls = 0
 
     def extract_text(self) -> str | None:
+        self.extract_calls += 1
         return self._text
 
 
@@ -105,6 +107,10 @@ class FakeResponse:
     def raise_for_status(self) -> None:
         if self.status_code >= 400:
             raise requests.HTTPError(f"{self.status_code} error")
+
+    def iter_content(self, chunk_size: int = 8192) -> Iterator[bytes]:
+        for start in range(0, len(self.content), chunk_size):
+            yield self.content[start : start + chunk_size]
 
 
 @contextmanager
@@ -232,6 +238,90 @@ def test_downloaded_pdf_uses_url_and_maps_short_text_to_snippet_fallback() -> No
     assert result["error"] is None
 
 
+def test_download_refuses_pdf_when_content_length_exceeds_max_bytes() -> None:
+    """URL downloads stop before parsing when declared size exceeds budget."""
+    response = FakeResponse(headers={"Content-Type": "application/pdf", "Content-Length": "12"})
+    with fake_request(response), fake_reader(FakeReader(["must not parse"])):
+        result = pdf_extract.extract_source(
+            {
+                "source_id": "oversized_pdf",
+                "url": "https://example.test/oversized.pdf",
+                "max_bytes": 10,
+            }
+        )
+
+    assert result["text"] == ""
+    assert result["text_char_count"] == 0
+    assert result["metadata"]["content_length"] == "12"
+    assert result["soft_fail"] == "download_failed"
+    assert result["body_status_hint"] == "paywall_stub"
+    assert "exceeds max_bytes" in result["error"]
+
+
+def test_download_refuses_pdf_when_stream_exceeds_max_bytes() -> None:
+    """Chunked URL downloads stop once the read budget is exceeded."""
+    response = FakeResponse(
+        content=b"0123456789ABCDEF",
+        headers={"Content-Type": "application/pdf"},
+    )
+    with fake_request(response), fake_reader(FakeReader(["must not parse"])):
+        result = pdf_extract.extract_source(
+            {
+                "source_id": "chunked_oversized_pdf",
+                "url": "https://example.test/chunked.pdf",
+                "max_bytes": 10,
+            }
+        )
+
+    assert result["text"] == ""
+    assert result["text_char_count"] == 0
+    assert result["soft_fail"] == "download_failed"
+    assert result["body_status_hint"] == "paywall_stub"
+    assert "exceeds max_bytes" in result["error"]
+
+
+def test_extraction_stops_after_max_pages() -> None:
+    """Parser reads only the bounded page window, even when more pages exist."""
+    reader = FakeReader(["one", "two", "three", "four"])
+    with tempfile.NamedTemporaryFile(suffix=".pdf") as pdf_file:
+        pdf_file.write(b"%PDF-1.4\nfixture\n")
+        pdf_file.flush()
+        with fake_reader(reader):
+            result = pdf_extract.extract_source(
+                {
+                    "source_id": "bounded_pages",
+                    "path": pdf_file.name,
+                    "max_pages": 2,
+                    "max_chars": 1000,
+                }
+            )
+
+    assert result["metadata"]["page_count"] == 4
+    assert result["text"] == "one\ntwo"
+    assert [page.extract_calls for page in reader.pages] == [1, 1, 0, 0]
+
+
+def test_extraction_stops_after_compact_text_budget() -> None:
+    """Parser does not keep extracting once enough compact text was collected."""
+    reader = FakeReader(["alpha " * 30, "beta " * 30, "gamma " * 30])
+    with tempfile.NamedTemporaryFile(suffix=".pdf") as pdf_file:
+        pdf_file.write(b"%PDF-1.4\nfixture\n")
+        pdf_file.flush()
+        with fake_reader(reader):
+            result = pdf_extract.extract_source(
+                {
+                    "source_id": "bounded_text",
+                    "path": pdf_file.name,
+                    "max_pages": 8,
+                    "max_chars": 40,
+                }
+            )
+
+    assert len(result["text"]) == 40
+    assert result["text"].startswith("alpha alpha")
+    assert [page.extract_calls for page in reader.pages] == [1, 0, 0]
+
+
 def test_blocked_download_maps_to_paywall_stub_soft_fail() -> None:
     """Blocked or inaccessible PDF downloads surface as paywall_stub hints."""
     with fake_request(FakeResponse(status_code=403)):
@@ -273,6 +363,30 @@ def test_pdf_extract_does_not_write_state() -> None:
             os.chdir(original_cwd)
 
 
+def test_missing_pypdf_returns_before_opening_local_stream() -> None:
+    """Dependency failure must not open and leak local PDF streams."""
+    open_calls: list[str] = []
+
+    def _fake_open(self, *args, **kwargs):  # noqa: ANN001, ANN002, ANN003, ANN202
+        open_calls.append(str(self))
+        return StringIO("pdf")
+
+    with patch("pdf_extract.PdfReader", None), patch(
+        "pdf_extract.Path.exists", return_value=True
+    ), patch("pdf_extract.Path.is_file", return_value=True), patch(
+        "pdf_extract.Path.open", _fake_open
+    ):
+        result = pdf_extract.extract_source(
+            {
+                "source_id": "missing_pypdf",
+                "path": "/tmp/local.pdf",
+            }
+        )
+
+    assert result["error"] == "missing dependency: pypdf"
+    assert open_calls == []
+
+
 def test_cli_emits_one_json_document_for_batch_stdin() -> None:
     """The CLI keeps JSON-in/JSON-out shape for runner batch calls."""
     reader = FakeReader(["Rightmove plc RNS content for enrichment only. " * 3])
@@ -303,8 +417,13 @@ def main() -> None:
         test_local_pdf_extracts_compact_text_metadata_and_full_hint,
         test_local_pdf_fixture_uses_real_pypdf_parser,
         test_downloaded_pdf_uses_url_and_maps_short_text_to_snippet_fallback,
+        test_download_refuses_pdf_when_content_length_exceeds_max_bytes,
+        test_download_refuses_pdf_when_stream_exceeds_max_bytes,
+        test_extraction_stops_after_max_pages,
+        test_extraction_stops_after_compact_text_budget,
         test_blocked_download_maps_to_paywall_stub_soft_fail,
         test_pdf_extract_does_not_write_state,
+        test_missing_pypdf_returns_before_opening_local_stream,
         test_cli_emits_one_json_document_for_batch_stdin,
     ]
     for test in tests:

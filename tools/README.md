@@ -127,6 +127,13 @@ the existing `body_status` policy: `full` for useful text, `snippet_fallback`
 for too little extractable text, or `paywall_stub` for blocked/download
 failures.
 
+Resource limits are intentionally modest for enrichment use. URL downloads use
+`max_bytes` / `--max-bytes` with a default 5 MB budget, precheck
+`Content-Length`, and stop chunked reads before parsing if the budget is
+exceeded. Text extraction uses `max_pages` / `--max-pages` with a default
+8-page parser window and stops after enough compact text is collected for
+`max_chars`.
+
 Offline contract coverage lives in `tools/test_pdf_extract.py`; the Rightmove
 enrichment-only boundary is represented in
 `config/runtime/mode-fixtures/runner_pdf_extract_rightmove.yaml`.

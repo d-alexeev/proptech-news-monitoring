@@ -48,6 +48,9 @@ DEFAULT_USER_AGENT = os.environ.get(
 DEFAULT_TIMEOUT = (10, 45)
 DEFAULT_MAX_CHARS = 12000
 DEFAULT_MIN_TEXT_CHARS = 80
+DEFAULT_MAX_BYTES = 5_000_000
+DEFAULT_MAX_PAGES = 8
+DOWNLOAD_CHUNK_SIZE = 64 * 1024
 
 
 def _now_iso() -> str:
@@ -105,13 +108,20 @@ def _status_hint(text_char_count: int, min_text_chars: int) -> str:
 def _download_pdf(spec: dict[str, Any]) -> tuple[io.BytesIO | None, dict[str, Any], str | None, str | None]:
     url = spec.get("url") or ""
     timeout = tuple(spec.get("timeout") or DEFAULT_TIMEOUT)
+    max_bytes = int(spec.get("max_bytes") or DEFAULT_MAX_BYTES)
     headers = {
         "User-Agent": DEFAULT_USER_AGENT,
         "Accept": "application/pdf,application/octet-stream;q=0.8,*/*;q=0.5",
     }
     started = time.monotonic()
     try:
-        resp = requests.get(url, headers=headers, timeout=timeout, allow_redirects=True)
+        resp = requests.get(
+            url,
+            headers=headers,
+            timeout=timeout,
+            allow_redirects=True,
+            stream=True,
+        )
     except (requests.ConnectTimeout, requests.ReadTimeout) as exc:
         return None, {}, "timeout", f"timeout: {exc}"
     except requests.RequestException as exc:
@@ -131,9 +141,43 @@ def _download_pdf(spec: dict[str, Any]) -> tuple[io.BytesIO | None, dict[str, An
         return None, metadata, "rate_limited", "HTTP 429"
     if resp.status_code >= 400:
         return None, metadata, "download_failed", f"HTTP {resp.status_code}"
-    if not resp.content:
+
+    content_length = resp.headers.get("Content-Length")
+    if content_length:
+        try:
+            declared_size = int(content_length)
+        except ValueError:
+            declared_size = None
+        if declared_size is not None and declared_size > max_bytes:
+            return (
+                None,
+                metadata,
+                "download_failed",
+                f"download exceeds max_bytes: Content-Length {declared_size} > {max_bytes}",
+            )
+
+    chunks = []
+    total = 0
+    try:
+        iterator = resp.iter_content(chunk_size=DOWNLOAD_CHUNK_SIZE)
+    except AttributeError:
+        iterator = (getattr(resp, "content", b""),)
+    for chunk in iterator:
+        if not chunk:
+            continue
+        if total + len(chunk) > max_bytes:
+            return (
+                None,
+                metadata,
+                "download_failed",
+                f"download exceeds max_bytes during read: > {max_bytes}",
+            )
+        chunks.append(chunk)
+        total += len(chunk)
+    content = b"".join(chunks)
+    if not content:
         return None, metadata, "download_failed", "empty PDF response"
-    return io.BytesIO(resp.content), metadata, None, None
+    return io.BytesIO(content), metadata, None, None
 
 
 def _open_pdf_stream(spec: dict[str, Any]) -> tuple[io.BufferedIOBase | io.BytesIO | None, dict[str, Any], str | None, str | None]:
@@ -158,6 +202,11 @@ def extract_source(spec: dict[str, Any]) -> dict[str, Any]:
     result = _empty_result(spec)
     max_chars = int(spec.get("max_chars") or DEFAULT_MAX_CHARS)
     min_text_chars = int(spec.get("min_text_chars") or DEFAULT_MIN_TEXT_CHARS)
+    max_pages = int(spec.get("max_pages") or DEFAULT_MAX_PAGES)
+
+    if PdfReader is None:
+        result["error"] = "missing dependency: pypdf"
+        return result
 
     stream, download_metadata, soft_fail, error = _open_pdf_stream(spec)
     result["metadata"].update(download_metadata)
@@ -168,22 +217,24 @@ def extract_source(spec: dict[str, Any]) -> dict[str, Any]:
             result["body_status_hint"] = "paywall_stub"
         return result
 
-    if PdfReader is None:
-        result["error"] = "missing dependency: pypdf"
-        return result
-
     try:
         assert stream is not None
         try:
             reader = PdfReader(stream)
             page_texts = []
-            for page in reader.pages:
-                try:
-                    page_texts.append(page.extract_text() or "")
-                except Exception:  # noqa: BLE001 - keep extracting later pages
-                    page_texts.append("")
             page_count = len(getattr(reader, "pages", []))
             metadata = getattr(reader, "metadata", None)
+            for index, page in enumerate(reader.pages):
+                if index >= max_pages:
+                    break
+                try:
+                    page_text = _normalize_text(page.extract_text() or "")
+                except Exception:  # noqa: BLE001 - keep extracting later pages
+                    page_text = ""
+                if page_text:
+                    page_texts.append(page_text)
+                if len("\n".join(page_texts)) >= max_chars:
+                    break
         finally:
             close = getattr(stream, "close", None)
             if callable(close):
@@ -192,7 +243,7 @@ def extract_source(spec: dict[str, Any]) -> dict[str, Any]:
         result["error"] = f"PDF parse failed: {exc}"
         return result
 
-    text = _normalize_text("\n".join(page_texts))
+    text = "\n".join(page_texts)
     text_char_count = len(text)
     result["metadata"].update(
         {
@@ -230,6 +281,8 @@ def _build_arg_parser() -> argparse.ArgumentParser:
     group.add_argument("--url", help="public PDF URL")
     parser.add_argument("--max-chars", type=int, default=DEFAULT_MAX_CHARS)
     parser.add_argument("--min-text-chars", type=int, default=DEFAULT_MIN_TEXT_CHARS)
+    parser.add_argument("--max-bytes", type=int, default=DEFAULT_MAX_BYTES)
+    parser.add_argument("--max-pages", type=int, default=DEFAULT_MAX_PAGES)
     return parser
 
 
@@ -249,6 +302,8 @@ def main(argv: list[str] | None = None) -> int:
                     "url": args.url,
                     "max_chars": args.max_chars,
                     "min_text_chars": args.min_text_chars,
+                    "max_bytes": args.max_bytes,
+                    "max_pages": args.max_pages,
                 }
             ]
     except ValueError as exc:
