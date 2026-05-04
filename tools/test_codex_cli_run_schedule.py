@@ -174,6 +174,37 @@ def test_staged_prompt_files_exist_and_have_stage_boundaries() -> None:
     assert "review_digest" in finish_text
 
 
+def test_weekday_self_test_reports_direct_article_prefetch_wiring() -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        root = pathlib.Path(tmpdir)
+        script_path = make_wrapper_fixture(root)
+        for name in ["weekday_digest_discovery.md", "weekday_digest_finish.md"]:
+            (root / "ops/codex-cli/prompts" / name).write_text(f"{name}\n", encoding="utf-8")
+        env_file = root / ".env.good"
+        env_file.write_text(
+            "HTTP_USER_AGENT='PropTechNewsMonitor/1.0 (+team@example.com)'\n",
+            encoding="utf-8",
+        )
+
+        result = run_wrapper(script_path, env_file)
+
+    assert result.returncode == 0
+    assert "Stage A prompt:" in result.stdout
+    assert "Stage B helper:" in result.stdout
+    assert "Stage C prompt:" in result.stdout
+
+
+def test_wrapper_invokes_article_prefetch_helper_directly() -> None:
+    wrapper_text = WRAPPER.read_text(encoding="utf-8")
+
+    assert "-s workspace-write" in wrapper_text
+    assert "tools/shortlist_article_prefetch.py" in wrapper_text
+    assert "snapshot-shortlists" in wrapper_text
+    assert "find-new-shortlist" in wrapper_text
+    assert "synthetic-article-prefetch" in wrapper_text
+    assert "danger-full-access" not in wrapper_text
+
+
 def main() -> None:
     tests = [
         test_malformed_env_fails_with_operator_error_without_secret_values,
@@ -183,6 +214,8 @@ def main() -> None:
         test_wrapper_uses_supported_codex_exec_flags_and_quotes_user_agent_template,
         test_self_test_reports_prefetch_wiring_without_live_network,
         test_staged_prompt_files_exist_and_have_stage_boundaries,
+        test_weekday_self_test_reports_direct_article_prefetch_wiring,
+        test_wrapper_invokes_article_prefetch_helper_directly,
     ]
     for test in tests:
         test()
