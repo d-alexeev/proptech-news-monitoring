@@ -159,6 +159,17 @@ language_policy:
     - product names
     - source names
     - URLs
+  forbidden_editorial_jargon_examples:
+    - agent tooling
+    - lead quality
+    - profit pools
+    - pre-market
+    - source discovery
+    - snippet fallback
+    - paywall stubs
+    - unit economics
+    - tech stack
+    - traffic monetization
 
 non_goals:
   - no markdown rendering

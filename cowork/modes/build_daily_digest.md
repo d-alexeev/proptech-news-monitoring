@@ -65,6 +65,10 @@ Translate or summarize English source evidence into Russian. Keep source names,
 company names, product names, article titles in links, and URLs in their
 original language when needed, but do not render English section headings,
 labels, summaries, or Avito implications.
+Do not leave English business jargon in the visible prose when a Russian
+equivalent exists. Translate terms such as `agent tooling`, `lead quality`,
+`profit pools`, `pre-market`, `source discovery`, `snippet fallback`,
+`paywall stubs`, `unit economics`, `tech stack`, and `traffic monetization`.
 
 **File write rule:**
 Always write the digest file using a full overwrite (`Write`), never a partial edit (`Edit`).

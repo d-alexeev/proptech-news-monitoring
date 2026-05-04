@@ -44,6 +44,11 @@ product names, URLs, and short source names may remain in their original
 language, but headings, labels, summaries, implications, and evidence notes must
 be Russian.
 
+Do not use English business jargon in Russian editorial prose when a Russian
+equivalent exists. Translate terms such as `agent tooling`, `lead quality`,
+`profit pools`, `pre-market`, `source discovery`, `snippet fallback`,
+`paywall stubs`, `unit economics`, `tech stack`, and `traffic monetization`.
+
 ## Required Finish Draft
 
 Write exactly one compact JSON draft to the generated prompt's `Finish draft path`.

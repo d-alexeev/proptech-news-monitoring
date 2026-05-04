@@ -60,6 +60,13 @@ Proposed behavior:
 
 This is intentionally a production guard, not a translation engine. Translation remains the Stage C Codex responsibility.
 
+Implementation adjustment discovered during test run: the gate must also reject
+common English editorial jargon inside otherwise Russian prose. Source titles,
+company names, product names, and URLs remain allowed, but visible prose should
+translate terms such as `agent tooling`, `lead quality`, `profit pools`,
+`pre-market`, `source discovery`, `snippet fallback`, `paywall stubs`,
+`unit economics`, `tech stack`, and `traffic monetization`.
+
 ## Acceptance Criteria
 
 - `telegram_digest` finish drafts with English-only digest prose fail materialization.

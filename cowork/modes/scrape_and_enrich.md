@@ -54,6 +54,9 @@ For `telegram_digest` and `telegram_weekly_digest` downstream profiles, emit
 editorial prose fields in Russian: `analyst_summary`, `why_it_matters`,
 `avito_implication`, and digest-visible `evidence_points`. Source titles,
 company names, product names, and URLs may remain in the original language.
+Do not leave English business jargon in those fields when a Russian equivalent
+exists; translate terms such as `agent tooling`, `lead quality`, `profit pools`,
+`snippet fallback`, `unit economics`, `tech stack`, and `traffic monetization`.
 Do not preload the whole adapter directory; resolve `source_id -> adapter` first.
 Do not assemble daily, weekly, or stakeholder digests here.
 If fetch or normalization fails beyond contract-allowed fallback, or an adapter gap is discovered, emit `change_request` and never edit prompts, config, or adapters on disk.
