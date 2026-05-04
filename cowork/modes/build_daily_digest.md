@@ -70,6 +70,53 @@ equivalent exists. Translate terms such as `agent tooling`, `lead quality`,
 `profit pools`, `pre-market`, `source discovery`, `snippet fallback`,
 `paywall stubs`, `unit economics`, `tech stack`, and `traffic monetization`.
 
+**Template for `telegram_digest`:**
+Use this exact visible structure so daily runs are stable:
+
+```md
+# PropTech Monitor Daily | D month YYYY
+
+## ТОП СИГНАЛЫ
+
+### <emoji> <title>
+Score: XX | <topic/category> | <short regions> | [Источник](url)
+
+<analyst_summary>
+
+**Что это значит:** <why_it_matters>
+
+**Для Avito:** <avito_implication>
+
+Статус запуска: источники X/Y | статьи A/B | качество: <validated/warnings>; <short scrape-quality note>
+```
+
+Rules:
+- Use a Russian month name in the title, for example `4 мая 2026`.
+- Render up to 3 signal cards.
+- Pick one relevant emoji per card; do not use emoji elsewhere.
+- `Score:` is the only allowed English fixed label in the visible digest.
+- Use compact Russian topic/category labels and short region labels such as
+  `US`, `UK`, `AU`, `EU`, `GCC`, `Global`.
+- The `Источник` link points to the article/source URL for that card.
+- End with exactly one `Статус запуска:` line.
+- Do not add separate `Стоит отслеживать`, `Слабые сигналы`,
+  `Вывод для Авито`, or `Качество доказательств` sections in the compact
+  Telegram daily template.
+
+**Length budget for `telegram_digest`:**
+- Target raw markdown length: <= 3000 characters before Telegram HTML conversion.
+- Hard maximum raw markdown length: <= 3400 characters.
+- `## ТОП СИГНАЛЫ`: up to 3 story cards.
+- Each story field must be one short paragraph, with no nested story bullets.
+
+If evidence is mixed or partial, keep the evidence-quality disclosure but compress it
+into the final `Статус запуска:` line. Do not include source counts in multiple sections.
+
+**Preview policy for `telegram_digest`:**
+Prefer ordering the first rendered top signal so it has `lead_image.status = available`.
+The first story source URL is used as the Telegram large link preview URL.
+If no top signal has usable image metadata, render and deliver the digest without preview.
+
 **File write rule:**
 Always write the digest file using a full overwrite (`Write`), never a partial edit (`Edit`).
 Reason: `Edit` leaves content from prior runs in the file tail, causing mixed-run output.

@@ -25,10 +25,16 @@ delivery_profiles:
     chat_id_env: TELEGRAM_CHAT_ID
     message_thread_id_env: TELEGRAM_MESSAGE_THREAD_ID
     parse_mode: HTML
-    disable_web_page_preview: true
+    disable_web_page_preview: false
     split_long_messages: true
     max_message_length: 3800
-    title_template: "PropTech Monitor | {date}"
+    title_template: ""
+    link_preview:
+      enabled: true
+      url_mode: first_markdown_link
+      prefer_large_media: true
+      show_above_text: true
+      only_first_part: true
   telegram_weekly_digest:
     enabled: true
     bot_token_env: TELEGRAM_BOT_TOKEN

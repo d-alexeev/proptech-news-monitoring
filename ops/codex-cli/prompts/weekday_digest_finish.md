@@ -49,6 +49,45 @@ equivalent exists. Translate terms such as `agent tooling`, `lead quality`,
 `profit pools`, `pre-market`, `source discovery`, `snippet fallback`,
 `paywall stubs`, `unit economics`, `tech stack`, and `traffic monetization`.
 
+## Template, Length, and Preview Requirement
+
+For `delivery_profile = telegram_digest`, `digest_markdown` must follow the compact
+daily template:
+
+- title line: `# PropTech Monitor Daily | D month YYYY` with a Russian month name;
+- main section: `## ТОП СИГНАЛЫ`;
+- at most 3 story cards;
+- each card includes `### <emoji> <title>`, `Score: XX | <topic/category> | <short regions> | [Источник](url)`, `**Что это значит:**`, and `**Для Avito:**`;
+- final line starts with `Статус запуска:`;
+- no nested story bullets;
+- raw markdown target <= 3000 characters; hard maximum <= 3400 characters.
+
+Each enriched item and story card must include `lead_image`. Use
+`lead_image.status = available` only when article prefetch found image metadata
+for that same URL. Add `telegram_preview` to the finish draft:
+
+```json
+{
+  "status": "available",
+  "preview_url": "https://article-url.example",
+  "source_story_id": "story_id",
+  "lead_image_url": "https://image-url.example",
+  "reason": "first_top_signal_has_lead_image"
+}
+```
+
+If no selected top signal has image metadata, use:
+
+```json
+{
+  "status": "unavailable",
+  "preview_url": null,
+  "source_story_id": null,
+  "lead_image_url": null,
+  "reason": "no_selected_top_signal_with_lead_image"
+}
+```
+
 ## Required Finish Draft
 
 Write exactly one compact JSON draft to the generated prompt's `Finish draft path`.
@@ -67,6 +106,7 @@ The draft JSON must contain:
 - `daily_brief`
 - `digest_markdown`
 - `qa_review`
+- `telegram_preview`
 - `telegram_delivery`
 
 Each `enriched_items[]` entry must match a current-run shortlisted URL and a

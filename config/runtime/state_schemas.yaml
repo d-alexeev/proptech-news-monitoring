@@ -130,6 +130,8 @@ artifacts:
         type: list[string]
       - name: source_quality
         type: enum[primary_source,industry_analysis,expert_analysis,trade_media,behavioral_signal,mobile_store,manual_blocked]
+      - name: lead_image
+        type: object
     optional_fields:
       - name: raw_snippet
         type: string
@@ -138,6 +140,18 @@ artifacts:
     notes:
       - enriched_item is the compact downstream-ready record for daily, weekly, and alert modes
       - confidence policy and evidence cardinality are defined in config/runtime/mode-contracts/scrape_and_enrich_output.yaml
+      - lead_image stores compact metadata only; image binaries are not part of enriched_item state
+    lead_image:
+      type: object
+      required: false
+      fields:
+        status: enum[available,unavailable]
+        url: string|null
+        source: enum[og_image,twitter_image,image_src,article_image,none]
+        alt: string|null
+        content_type: string|null
+        width: integer|null
+        height: integer|null
 
   story_brief:
     shard_collection: stories
@@ -389,6 +403,15 @@ artifacts:
           - delivery_failed_api
           - delivery_failed_unknown
           - skipped
+      telegram_preview:
+        type: object
+        required: false
+        fields:
+          status: enum[available,unavailable]
+          preview_url: string|null
+          source_story_id: string|null
+          lead_image_url: string|null
+          reason: string
       mixed_status_rule: A downstream build_daily_digest run may have status completed when it generated files, but partial upstream evidence must be surfaced in the final operator report. Source discovery canonical_source_complete is false only when configured source discovery itself is partial or failed; enrichment partiality does not force canonical_source_complete false. Partial enrichment affects enrichment.evidence_completeness, digest_generation.digest_status, overall_readiness, and final warnings.
       example_fixture: config/runtime/mode-fixtures/weekday_digest_mixed_status_operator_report.yaml
     legacy_dependencies: none

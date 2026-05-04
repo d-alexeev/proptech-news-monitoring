@@ -601,12 +601,36 @@ def test_russian_language_contracts_are_declared() -> None:
     root = pathlib.Path(__file__).resolve().parents[1]
     scrape = (root / "config/runtime/mode-contracts/scrape_and_enrich_output.yaml").read_text(encoding="utf-8")
     digest = (root / "config/runtime/mode-contracts/build_daily_digest_selection.yaml").read_text(encoding="utf-8")
+    rendering = (root / "config/runtime/mode-contracts/build_daily_digest_rendering.yaml").read_text(encoding="utf-8")
+    schemas = (root / "config/runtime/state_schemas.yaml").read_text(encoding="utf-8")
+    schedule = (root / "config/runtime/schedule_bindings.yaml").read_text(encoding="utf-8")
     assert "language_policy" in scrape
     assert "telegram_digest" in scrape
     assert "Russian" in scrape or "русск" in scrape.lower()
+    assert "lead_image" in scrape
     assert "language_policy" in digest
     assert "telegram_digest" in digest
     assert "Russian" in digest or "русск" in digest.lower()
+    assert "length_policy" in digest
+    assert "max_top_story_count: 3" in digest
+    assert "max_watchlist_count: 0" in digest
+    assert "preview_policy" in digest
+    assert "length_policy" in rendering
+    assert "target_markdown_chars: 3000" in rendering
+    assert "hard_max_markdown_chars: 3400" in rendering
+    assert "telegram_parts_target: 1" in rendering
+    assert "template_policy" in rendering
+    assert "PropTech Monitor Daily" in rendering
+    assert "ТОП СИГНАЛЫ" in rendering
+    assert "Статус запуска" in rendering
+    assert "preview_policy" in rendering
+    assert "link_preview_options" in rendering
+    assert "lead_image" in schemas
+    assert "telegram_preview" in schemas
+    assert "title_template: \"\"" in schedule
+    assert "link_preview:" in schedule
+    assert "prefer_large_media: true" in schedule
+    assert "show_above_text: true" in schedule
 
 
 def main() -> None:

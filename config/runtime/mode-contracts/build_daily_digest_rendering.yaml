@@ -54,6 +54,43 @@ markdown_output_contract:
     - source_status
     - context_summary
   must_be_built_from_compact_inputs_only: true
+  length_policy:
+    profiles: [telegram_digest]
+    target_markdown_chars: 3000
+    hard_max_markdown_chars: 3400
+    telegram_parts_target: 1
+    max_top_story_count: 3
+    max_watchlist_count: 0
+    story_item_style: one_sentence_no_nested_bullets
+  template_policy:
+    profiles: [telegram_digest]
+    title_format: "PropTech Monitor Daily | D month YYYY"
+    title_month_language: Russian
+    required_main_section: "ТОП СИГНАЛЫ"
+    max_signal_cards: 3
+    card_heading: "### <emoji> <title>"
+    metadata_line: "Score: XX | <topic/category> | <short regions> | [Источник](url)"
+    required_card_labels:
+      - "Что это значит:"
+      - "Для Avito:"
+    final_status_prefix: "Статус запуска:"
+    final_status_fields:
+      - source_count
+      - article_count
+      - scrape_quality
+    forbidden_compact_sections:
+      - "Стоит отслеживать"
+      - "Слабые сигналы"
+      - "Вывод для Авито"
+      - "Качество доказательств"
+  preview_policy:
+    profiles: [telegram_digest]
+    telegram_method: sendMessage
+    preview_transport: link_preview_options
+    url_mode: first_top_signal_article_url_with_lead_image
+    prefer_large_media: true
+    show_above_text: true
+    fallback: deliver_without_preview
 
 daily_brief_contract:
   path_template: ./.state/briefs/daily/{digest_date}__{delivery_profile}.json

@@ -48,6 +48,14 @@ artifacts:
       - Zillow launched a new AI-led discovery feature in production.
       - The feature reframes search around user intent rather than rigid filters.
     source_quality: primary_source
+    lead_image:
+      status: unavailable
+      url: null
+      source: none
+      alt: null
+      content_type: null
+      width: null
+      height: null
 
   story_brief:
     story_id: story_zillow_ai_feature

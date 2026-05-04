@@ -84,6 +84,7 @@ runner_article_prefetch_contract:
       - article_file
       - fetch_method
       - text_char_count
+      - lead_image
       - soft_fail
       - failure_class
   summary_manifest:
@@ -138,6 +139,19 @@ downstream_required_enriched_fields:
   - article_file
   - evidence_points
   - source_quality
+  - lead_image
+
+lead_image:
+  description: compact image metadata from Stage B article prefetch, used only for Telegram link preview selection
+  required_fields:
+    - status
+    - url
+    - source
+    - alt
+  allowed_statuses:
+    - available
+    - unavailable
+  storage_rule: store metadata only; do not store image binaries
 
 language_policy:
   profiles:

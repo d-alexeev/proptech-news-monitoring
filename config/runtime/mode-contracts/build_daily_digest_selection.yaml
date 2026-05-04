@@ -140,6 +140,22 @@ selection_stage_outputs:
   evidence_limitation_notes:
     description: compact operator-facing notes required when digest_status is partial_digest because evidence is all snippet_fallback
 
+length_policy:
+  profiles: [telegram_digest]
+  max_top_story_count: 3
+  max_watchlist_count: 0
+  weak_signals_default: omit
+  selection_rule: select harder rather than rendering every useful signal
+  evidence_disclosure_rule: keep one compact scrape-quality note in the final status line when coverage is mixed or partial
+  rendered_sections:
+    - ТОП СИГНАЛЫ
+
+preview_policy:
+  profiles: [telegram_digest]
+  preferred_first_card: highest-ranked selected top story with lead_image.status = available
+  fallback_first_card: highest-ranked selected top story
+  preview_url_source: story_card.url
+
 language_policy:
   profiles:
     - telegram_digest
