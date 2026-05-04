@@ -152,6 +152,7 @@ def _manifest_entry(result: dict, article_file: str | None) -> dict:
         "soft_fail": result.get("soft_fail"),
         "soft_fail_detail": result.get("soft_fail_detail"),
         "http": result.get("http"),
+        "lead_image": result.get("lead_image") or article_fetch.unavailable_lead_image(),
     }
 
 
@@ -193,6 +194,9 @@ def _summary(
             1 for result in results if result.get("body_status_hint") == "snippet_fallback"
         ),
         "paywall_stub_count": sum(1 for result in results if result.get("body_status_hint") == "paywall_stub"),
+        "lead_image_available_count": sum(
+            1 for result in results if (result.get("lead_image") or {}).get("status") == "available"
+        ),
         "batch_status": batch_doc.get("batch_status"),
         "failure_class": batch_doc.get("failure_class"),
         "run_failure": batch_doc.get("run_failure"),

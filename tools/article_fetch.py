@@ -18,6 +18,7 @@ from datetime import datetime, timezone
 from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any, Iterable
+from urllib.parse import urljoin
 
 import requests
 
@@ -93,6 +94,102 @@ class ArticleTextParser(HTMLParser):
         return _compact_text(" ".join(chunks))
 
 
+class LeadImageParser(HTMLParser):
+    def __init__(self, base_url: str) -> None:
+        super().__init__(convert_charrefs=True)
+        self.base_url = base_url
+        self.og_image: str | None = None
+        self.twitter_image: str | None = None
+        self.image_src: str | None = None
+        self.article_image: dict[str, Any] | None = None
+        self.og_width: int | None = None
+        self.og_height: int | None = None
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        tag = tag.lower()
+        attr = {key.lower(): value for key, value in attrs if key and value}
+        if tag == "meta":
+            prop = (attr.get("property") or attr.get("name") or "").lower()
+            content = attr.get("content")
+            if prop == "og:image" and content:
+                self.og_image = content
+            elif prop == "og:image:width":
+                self.og_width = _safe_int(content)
+            elif prop == "og:image:height":
+                self.og_height = _safe_int(content)
+            elif prop == "twitter:image" and content:
+                self.twitter_image = content
+        elif tag == "link" and (attr.get("rel") or "").lower() == "image_src" and attr.get("href"):
+            self.image_src = attr["href"]
+        elif tag == "img" and attr.get("src") and self.article_image is None:
+            self.article_image = {
+                "url": attr["src"],
+                "alt": attr.get("alt"),
+                "width": _safe_int(attr.get("width")),
+                "height": _safe_int(attr.get("height")),
+            }
+
+    def best(self) -> dict[str, Any]:
+        if self.og_image:
+            return _available_lead_image(
+                url=urljoin(self.base_url, self.og_image),
+                source="og_image",
+                width=self.og_width,
+                height=self.og_height,
+            )
+        if self.twitter_image:
+            return _available_lead_image(url=urljoin(self.base_url, self.twitter_image), source="twitter_image")
+        if self.image_src:
+            return _available_lead_image(url=urljoin(self.base_url, self.image_src), source="image_src")
+        if self.article_image:
+            return _available_lead_image(
+                url=urljoin(self.base_url, str(self.article_image["url"])),
+                source="article_image",
+                alt=self.article_image.get("alt"),
+                width=self.article_image.get("width"),
+                height=self.article_image.get("height"),
+            )
+        return unavailable_lead_image()
+
+
+def _safe_int(value: str | None) -> int | None:
+    try:
+        return int(str(value)) if value is not None and str(value).strip() else None
+    except ValueError:
+        return None
+
+
+def unavailable_lead_image() -> dict[str, Any]:
+    return {
+        "status": "unavailable",
+        "url": None,
+        "source": "none",
+        "alt": None,
+        "content_type": None,
+        "width": None,
+        "height": None,
+    }
+
+
+def _available_lead_image(
+    *,
+    url: str,
+    source: str,
+    alt: str | None = None,
+    width: int | None = None,
+    height: int | None = None,
+) -> dict[str, Any]:
+    return {
+        "status": "available",
+        "url": url,
+        "source": source,
+        "alt": alt,
+        "content_type": None,
+        "width": width,
+        "height": height,
+    }
+
+
 def _compact_text(text: str, *, max_chars: int | None = None) -> str:
     compact = re.sub(r"\s+", " ", text or "").strip()
     if max_chars is None or len(compact) <= max_chars:
@@ -106,6 +203,12 @@ def _extract_article_text(body: str, *, max_chars: int) -> str:
     parser = ArticleTextParser()
     parser.feed(body or "")
     return _compact_text(parser.best_text(), max_chars=max_chars)
+
+
+def _extract_lead_image(body: str, *, base_url: str) -> dict[str, Any]:
+    parser = LeadImageParser(base_url)
+    parser.feed(body or "")
+    return parser.best()
 
 
 def _classify_soft_fail(status: int | None, body_preview: str) -> tuple[str | None, str | None]:
@@ -264,6 +367,7 @@ def _base_result(spec: dict) -> dict[str, Any]:
         "fetch_method": "static_http",
         "http": None,
         "body_status_hint": "snippet_fallback",
+        "lead_image": unavailable_lead_image(),
         "text": "",
         "text_char_count": 0,
         "error": None,
@@ -304,6 +408,7 @@ def fetch_source(
     elapsed_ms = int((time.monotonic() - started) * 1000)
     body = response.text or ""
     status = response.status_code
+    result["lead_image"] = _extract_lead_image(body, base_url=response.url or url)
     result["http"] = {
         "status": status,
         "elapsed_ms": elapsed_ms,

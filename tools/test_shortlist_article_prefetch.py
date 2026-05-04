@@ -69,6 +69,15 @@ def fake_fetch_batch(specs: list[dict], *, fetched_at: str | None = None) -> dic
                 "soft_fail_detail": None,
                 "fetch_method": "static_http",
                 "http": {"status": 200},
+                "lead_image": {
+                    "status": "available",
+                    "url": "https://example.test/images/lead.jpg",
+                    "source": "og_image",
+                    "alt": None,
+                    "content_type": None,
+                    "width": 1200,
+                    "height": 630,
+                },
             },
             {
                 "source_id": "example_source",
@@ -85,6 +94,15 @@ def fake_fetch_batch(specs: list[dict], *, fetched_at: str | None = None) -> dic
                 "soft_fail_detail": "http_403_observed",
                 "fetch_method": "static_http",
                 "http": {"status": 403},
+                "lead_image": {
+                    "status": "unavailable",
+                    "url": None,
+                    "source": "none",
+                    "alt": None,
+                    "content_type": None,
+                    "width": None,
+                    "height": None,
+                },
             },
         ],
     }
@@ -122,6 +140,7 @@ def test_prefetch_fetches_only_shortlisted_items_and_writes_outputs() -> None:
         assert summary["full_count"] == 1
         assert summary["snippet_fallback_count"] == 0
         assert summary["paywall_stub_count"] == 1
+        assert summary["lead_image_available_count"] == 1
         assert summary["result_path"] == ".state/codex-runs/20260504T121000Z-weekday_digest-article-prefetch-result.json"
         assert summary["summary_path"] == ".state/codex-runs/20260504T121000Z-weekday_digest-article-prefetch-summary.json"
 
@@ -129,6 +148,8 @@ def test_prefetch_fetches_only_shortlisted_items_and_writes_outputs() -> None:
         paywall_entry = doc["results"][1]
         assert full_entry["article_file"] == ".state/articles/2026-05/2026-05-04_full-article.md"
         assert full_entry["body_status_hint"] == "full"
+        assert full_entry["lead_image"]["status"] == "available"
+        assert full_entry["lead_image"]["url"] == "https://example.test/images/lead.jpg"
         assert paywall_entry["article_file"] is None
         assert paywall_entry["body_status_hint"] == "paywall_stub"
 

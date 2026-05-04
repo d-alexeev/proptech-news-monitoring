@@ -56,6 +56,10 @@ ARTICLE_HTML = """<!doctype html>
 <html>
   <head>
     <title>Portal launches verified seller tools</title>
+    <meta property="og:image" content="/images/lead.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:image" content="https://cdn.example.test/twitter.jpg">
     <script>ignoreMe()</script>
     <style>.hidden { display:none }</style>
   </head>
@@ -132,6 +136,15 @@ def test_fetch_source_extracts_article_like_text_and_full_hint() -> None:
     assert result["text_char_count"] == len(result["text"])
     assert result["error"] is None
     assert result["soft_fail"] is None
+    assert result["lead_image"] == {
+        "status": "available",
+        "url": "https://example.test/images/lead.jpg",
+        "source": "og_image",
+        "alt": None,
+        "content_type": None,
+        "width": 1200,
+        "height": 630,
+    }
 
 
 def test_fetch_source_caps_extracted_text() -> None:
@@ -153,6 +166,25 @@ def test_fetch_source_uses_snippet_fallback_for_short_body() -> None:
     assert result["soft_fail"] is None
     assert result["failure_class"] == "below_minimum_body_threshold"
     assert result["text"] == "Short but useful snippet."
+
+
+def test_fetch_source_marks_lead_image_unavailable_when_missing() -> None:
+    html = "<article><p>Short but useful snippet.</p></article>"
+    with fake_request(FakeResponse(text=html, url="https://example.test/no-image")):
+        result = article_fetch.fetch_source(
+            article_spec(url="https://example.test/no-image"),
+            min_full_chars=120,
+        )
+
+    assert result["lead_image"] == {
+        "status": "unavailable",
+        "url": None,
+        "source": "none",
+        "alt": None,
+        "content_type": None,
+        "width": None,
+        "height": None,
+    }
 
 
 def test_fetch_source_classifies_blocked_and_rate_limited_responses() -> None:
@@ -308,6 +340,7 @@ def main() -> None:
         test_fetch_source_extracts_article_like_text_and_full_hint,
         test_fetch_source_caps_extracted_text,
         test_fetch_source_uses_snippet_fallback_for_short_body,
+        test_fetch_source_marks_lead_image_unavailable_when_missing,
         test_fetch_source_classifies_blocked_and_rate_limited_responses,
         test_fetch_source_keeps_visible_inman_paywall_text_as_snippet_fallback,
         test_fetch_source_uses_public_browser_fallback_for_inman_static_403,
