@@ -49,7 +49,7 @@
 - **Claude Cowork desktop app** установлен и авторизован.
 - **Git** установлен.
 - **Python 3.11+** (скрипты в `tools/` проверены на 3.11).
-- (Опционально) **Claude in Chrome** MCP — нужен только для источников с `fetch_strategy: chrome_scrape`. Без него blocked-источники просто эмитят `change_request` при попытке fetch.
+- **Playwright Chromium** for scheduled `fetch_strategy: chrome_scrape` sources. Browser Use / Chrome-style inspection is useful for manual debugging, but scheduled runs use the Playwright-backed `tools/browser_fetch.py` helper.
 - (Опционально) **Telegram bot** — если нужна доставка дайджестов: создать через `@BotFather`, добавить в нужный чат/форум, сохранить `bot_token`, `chat_id`, `message_thread_id`.
 
 ### B.2. Клонирование и зависимости
@@ -61,6 +61,7 @@ cd proptech-news-monitoring
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r tools/requirements.txt
+python3 -m playwright install chromium
 ```
 
 ### B.3. Секреты и окружение
@@ -76,10 +77,10 @@ LLM_MODEL=gpt-5-mini
 # Telegram delivery
 TELEGRAM_BOT_TOKEN=123456:ABC...
 TELEGRAM_CHAT_ID=-100XXXXXXXXXX
-TELEGRAM_MESSAGE_THREAD_ID=         # пусто, если чат не форум
+TELEGRAM_MESSAGE_THREAD_ID=''       # пусто, если чат не форум
 
 # Fetch
-HTTP_USER_AGENT=PropTechMonitor/1.0 (+contact@example.com)
+HTTP_USER_AGENT='PropTechMonitor/1.0 (+contact@example.com)'
 ```
 
 Минимальный рабочий комплект для первого прогона — `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `HTTP_USER_AGENT`. Остальное добавляется по мере подключения источников.
@@ -103,9 +104,14 @@ python3 tools/rss_fetch.py \
 
 # Telegram dry-run (ничего не отправляет)
 echo "Test message" | python3 tools/telegram_send.py --profile telegram_digest --dry-run
+
+# Scheduled wrapper self-test (ничего не отправляет)
+CODEX_RUN_SCHEDULE_SELF_TEST=1 ops/codex-cli/run_schedule.sh weekday_digest
 ```
 
-Оба должны завершиться exit code `0`. Коды `10` означают soft-fail → повод эмитить `change_request` (см. `cowork/shared/change_request_policy.md`).
+Эти проверки должны завершиться exit code `0`. Коды `10` означают soft-fail → повод эмитить `change_request` (см. `cowork/shared/change_request_policy.md`).
+Self-test wrapper должен напечатать paths для source prefetch, Stage A prompt,
+Stage B helper, Stage C prompt и Stage C materializer.
 
 ---
 
@@ -176,8 +182,12 @@ proptech-news-monitoring/
 │   └── regression_harness.yaml
 ├── tools/
 │   ├── rss_fetch.py                   ← I/O helper
+│   ├── source_discovery_prefetch.py    ← runner source prefetch before Codex
+│   ├── browser_fetch.py                ← Playwright browser helper
+│   ├── shortlist_article_prefetch.py   ← Stage B article prefetch
+│   ├── stage_c_finish.py               ← deterministic Stage C materializer
 │   ├── telegram_send.py               ← delivery helper
-│   ├── chrome_notes.md                ← операционка Claude in Chrome
+│   ├── chrome_notes.md                ← manual Chrome debug notes
 │   ├── requirements.txt
 │   └── README.md
 ├── benchmark/                         ← LLM benchmark suite (draft v1.0)
