@@ -1,0 +1,91 @@
+fixture_id: weekday_digest_mixed_status_operator_report
+mode_id: weekday_digest
+
+inputs:
+  run_manifests:
+    - run_id: monitor_sources__20260504T060000Z__daily_core
+      mode: monitor_sources
+      status: partial
+      outputs:
+        - ./.state/raw/2026-05-04/monitor_sources__20260504T060000Z__daily_core.json
+        - ./.state/shortlists/2026-05-04/monitor_sources__20260504T060000Z__daily_core.json
+      counts:
+        sources_configured: 12
+        sources_succeeded: 10
+        sources_soft_failed: 2
+      warnings:
+        - costar_homes timed out; configured source discovery is partial.
+      operator_report:
+        source_discovery:
+          status: partial
+          canonical_source_complete: false
+          sources_configured: 12
+          sources_succeeded: 10
+          sources_soft_failed: 2
+    - run_id: scrape_and_enrich__20260504T063000Z__daily_core
+      mode: scrape_and_enrich
+      status: partial
+      outputs:
+        - ./.state/enriched/2026-05-04/scrape_and_enrich__20260504T063000Z__daily_core.json
+      warnings:
+        - All enriched records used snippet_fallback evidence.
+      operator_report:
+        enrichment:
+          status: partial
+          evidence_completeness: all_snippet_fallback
+          downstream_digest_gate: partial_digest
+    - run_id: build_daily_digest__20260504T070000Z__telegram_digest
+      mode: build_daily_digest
+      status: completed
+      outputs:
+        - ./digests/2026-05-04-daily-digest.md
+        - ./.state/briefs/daily/2026-05-04__telegram_digest.json
+      warnings:
+        - Digest generated as partial_digest because upstream evidence was incomplete.
+      operator_report:
+        digest_generation:
+          status: generated
+          digest_status: partial_digest
+          canonical: false
+    - run_id: review_digest__20260504T071500Z__daily_digest
+      mode: review_digest
+      status: completed
+      outputs:
+        - ./.state/reviews/2026-05-04/review_digest__20260504T071500Z__daily_digest.json
+      operator_report:
+        qa_review:
+          status: validated
+          critical_findings_count: 0
+          warning_findings_count: 1
+  telegram_send_report:
+    delivery_status: not_configured
+    delivered: false
+    errors: []
+
+expected:
+  final_operator_report:
+    source_discovery:
+      status: partial
+      canonical_source_complete: false
+      sources_configured: 12
+      sources_succeeded: 10
+      sources_soft_failed: 2
+    enrichment:
+      status: partial
+      evidence_completeness: all_snippet_fallback
+      downstream_digest_gate: partial_digest
+    digest_generation:
+      status: generated
+      digest_status: partial_digest
+      canonical: false
+      markdown_path: ./digests/2026-05-04-daily-digest.md
+    qa_review:
+      status: validated
+      critical_findings_count: 0
+      warning_findings_count: 1
+    telegram_delivery:
+      status: not_configured
+      delivered: false
+    overall_readiness: partial
+    warnings:
+      - Digest was generated from partial upstream discovery/enrichment and is not production-clean.

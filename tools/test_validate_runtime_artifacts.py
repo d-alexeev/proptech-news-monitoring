@@ -462,6 +462,84 @@ def test_all_snippet_digest_gate_rejects_non_canonical_non_partial_statuses() ->
     assert any("partial_digest" in error for error in errors)
 
 
+def test_mixed_status_operator_report_requires_stage_fields_and_warning() -> None:
+    bad_fixture = {
+        "fixture_id": "weekday_digest_bad_mixed_status_operator_report",
+        "mode_id": "weekday_digest",
+        "inputs": {
+            "run_manifests": [
+                {"mode": "monitor_sources", "status": "partial"},
+                {"mode": "scrape_and_enrich", "status": "partial"},
+                {"mode": "build_daily_digest", "status": "completed"},
+            ]
+        },
+        "expected": {
+            "final_operator_report": {
+                "source_discovery": {"status": "partial"},
+                "enrichment": {"status": "partial"},
+                "digest_generation": {"status": "generated"},
+                "telegram_delivery": {"status": "not_configured"},
+                "warnings": [],
+            }
+        },
+    }
+    good_fixture = {
+        "fixture_id": "weekday_digest_mixed_status_operator_report",
+        "mode_id": "weekday_digest",
+        "inputs": {
+            "run_manifests": [
+                {"mode": "monitor_sources", "status": "partial"},
+                {"mode": "scrape_and_enrich", "status": "partial"},
+                {"mode": "build_daily_digest", "status": "completed"},
+                {"mode": "review_digest", "status": "completed"},
+            ]
+        },
+        "expected": {
+            "final_operator_report": {
+                "source_discovery": {
+                    "status": "partial",
+                    "canonical_source_complete": False,
+                },
+                "enrichment": {
+                    "status": "partial",
+                    "evidence_completeness": "all_snippet_fallback",
+                },
+                "digest_generation": {
+                    "status": "generated",
+                    "digest_status": "partial_digest",
+                    "canonical": False,
+                },
+                "qa_review": {
+                    "status": "validated",
+                    "critical_findings_count": 0,
+                    "warning_findings_count": 1,
+                },
+                "telegram_delivery": {
+                    "status": "not_configured",
+                    "delivered": False,
+                },
+                "overall_readiness": "partial",
+                "warnings": [
+                    "Digest was generated from partial upstream discovery/enrichment and is not production-clean."
+                ],
+            }
+        },
+    }
+
+    bad_errors = validator.validate_mixed_status_operator_report_fixture(
+        bad_fixture,
+        pathlib.Path("weekday_digest_bad_mixed_status_operator_report.yaml"),
+    )
+    good_errors = validator.validate_mixed_status_operator_report_fixture(
+        good_fixture,
+        pathlib.Path("weekday_digest_mixed_status_operator_report.yaml"),
+    )
+
+    assert any("qa_review" in error for error in bad_errors)
+    assert any("warnings" in error for error in bad_errors)
+    assert good_errors == []
+
+
 def main() -> None:
     tests = [
         test_adapter_validation_requires_configured_sources_to_resolve,
@@ -475,6 +553,7 @@ def main() -> None:
         test_runner_integration_validation_reports_missing_and_duplicate_sources,
         test_all_snippet_digest_gate_requires_partial_status_and_evidence_notes,
         test_all_snippet_digest_gate_rejects_non_canonical_non_partial_statuses,
+        test_mixed_status_operator_report_requires_stage_fields_and_warning,
     ]
     for test in tests:
         test()

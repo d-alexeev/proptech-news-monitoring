@@ -42,6 +42,13 @@ If all current-window enriched records available to selection have `body_status 
 Such a digest must not look production-clean: include compact evidence limitation notes and keep durable `url` and `canonical_url` values on each selected story card.
 Do not read full article bodies, `article_file`, or `./.state/articles/` to resolve an all-snippet condition.
 
+When emitting the build run manifest, keep `run_manifest.status = completed`
+only to mean the digest artifact was generated. If source discovery or
+enrichment inputs are partial, add `run_manifest.operator_report.digest_generation`
+with `status: generated`, `digest_status: partial_digest` or
+`non_canonical_digest`, and `canonical: false`. Also add a warning that the
+generated digest is not production-clean because upstream inputs were partial.
+
 ## Delivery constraints
 
 These rules apply to the digest body that is written to the canonical weekday digest
@@ -62,6 +69,7 @@ output path for new runs.
 **Operator metadata:**
 `.state/` path references and full `run_id` strings (e.g. `build_daily_digest__20260422T230500Z__daily_core`)
 belong in `run_manifest` only. Do not include them in the digest body.
+- Keep stage readiness metadata in `run_manifest.operator_report`, not in the digest body.
 - Operator notes (blockquotes referencing previous runs, internal paths) must not appear in the body.
 - The footer line may include the mode name and date but must not include the full timestamped run_id.
   Use the form: `mode: build_daily_digest | 22.04.2026` — not the full `run_id`.

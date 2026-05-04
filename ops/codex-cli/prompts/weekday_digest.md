@@ -76,7 +76,18 @@ Return a concise run report with:
 
 - run id or timestamp
 - artifacts written
-- delivery status
-- validation performed
+- source discovery status, including whether configured source discovery was canonical and complete
+- enrichment status, including evidence completeness and any downstream digest gate
+- digest generation status, including generated/blocked and canonical_digest/partial_digest/non_canonical_digest
+- QA/review status, including validated/skipped and warning/critical counts when available
+- Telegram delivery status, including delivered/dry_run/not_configured/classified failure
 - incomplete items or change requests
 
+Do not use a single "success" or "completed" label for the whole run when stages
+had mixed outcomes. Keep the stable mode-level `run_manifest.status` values, but
+build the final operator report from the stage fields in `run_manifest.operator_report`
+and any Telegram send report.
+
+If `build_daily_digest` completed after partial source discovery or partial
+enrichment, report the digest as generated but mark overall readiness as
+`partial` or `non_canonical`; include a warning that it is not production-clean.

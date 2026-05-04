@@ -62,6 +62,15 @@ CHANGE_REQUEST_SIGNAL_KEYS = {
     "change_request_output_path",
 }
 ALL_SNIPPET_DIGEST_STATUS = "partial_digest"
+MIXED_STATUS_OPERATOR_REPORT_FIXTURE_PART = "mixed_status_operator_report"
+OPERATOR_REPORT_STAGE_FIELDS = (
+    "source_discovery",
+    "enrichment",
+    "digest_generation",
+    "qa_review",
+    "telegram_delivery",
+)
+PARTIAL_UPSTREAM_STATUSES = {"partial", "failed"}
 EXPECTED_PRIMARY_TOOL_PATH_BY_STRATEGY = {
     "rss": "HTTP/RSS fetcher",
     "html_scrape": "HTTP/RSS fetcher",
@@ -267,6 +276,7 @@ def check_fixtures(root: pathlib.Path = ROOT) -> list[str]:
     )
     errors.extend(check_mode_fixture_change_requests(schema, root))
     errors.extend(check_all_snippet_digest_gate(root))
+    errors.extend(check_mixed_status_operator_reports(root))
     return errors
 
 
@@ -655,6 +665,100 @@ def validate_all_snippet_digest_fixture(
         if not isinstance(evidence_notes, list) or not evidence_notes:
             errors.append(f"{label}.evidence_notes must include compact evidence notes")
     return errors
+
+
+def check_mixed_status_operator_reports(root: pathlib.Path = ROOT) -> list[str]:
+    errors: list[str] = []
+    for path in sorted((root / MODE_FIXTURES).glob("*.yaml")):
+        data = load_yaml(path)
+        errors.extend(
+            validate_mixed_status_operator_report_fixture(data, path.relative_to(root))
+        )
+    return errors
+
+
+def validate_mixed_status_operator_report_fixture(
+    fixture: dict[str, Any],
+    path: pathlib.Path,
+) -> list[str]:
+    fixture_id = str(fixture.get("fixture_id", ""))
+    if MIXED_STATUS_OPERATOR_REPORT_FIXTURE_PART not in fixture_id:
+        return []
+
+    report = fixture.get("expected", {}).get("final_operator_report")
+    if not isinstance(report, dict):
+        return [f"{path}: expected.final_operator_report must be a map"]
+
+    errors: list[str] = []
+    for field in OPERATOR_REPORT_STAGE_FIELDS:
+        stage = report.get(field)
+        if not isinstance(stage, dict):
+            errors.append(f"{path}: final_operator_report.{field} must be a map")
+        elif not isinstance(stage.get("status"), str) or not stage.get("status"):
+            errors.append(f"{path}: final_operator_report.{field}.status must be string")
+
+    discovery = report.get("source_discovery", {})
+    if isinstance(discovery, dict) and not isinstance(
+        discovery.get("canonical_source_complete"),
+        bool,
+    ):
+        errors.append(
+            f"{path}: final_operator_report.source_discovery.canonical_source_complete "
+            "must be boolean"
+        )
+
+    digest = report.get("digest_generation", {})
+    if isinstance(digest, dict):
+        if digest.get("status") != "generated":
+            errors.append(
+                f"{path}: final_operator_report.digest_generation.status must be 'generated'"
+            )
+        if digest.get("digest_status") not in {
+            "canonical_digest",
+            "partial_digest",
+            "non_canonical_digest",
+        }:
+            errors.append(
+                f"{path}: final_operator_report.digest_generation.digest_status must be "
+                "canonical_digest, partial_digest, or non_canonical_digest"
+            )
+
+    if has_partial_upstream_input(fixture):
+        warnings = report.get("warnings")
+        if not isinstance(warnings, list) or not warnings:
+            errors.append(
+                f"{path}: final_operator_report.warnings must explain partial upstream inputs"
+            )
+        if isinstance(digest, dict) and digest.get("digest_status") == "canonical_digest":
+            errors.append(
+                f"{path}: completed downstream digest with partial upstream inputs must not "
+                "report digest_status canonical_digest"
+            )
+        if report.get("overall_readiness") not in {"partial", "non_canonical", "blocked"}:
+            errors.append(
+                f"{path}: final_operator_report.overall_readiness must be partial, "
+                "non_canonical, or blocked when upstream inputs are partial"
+            )
+
+    delivery = report.get("telegram_delivery", {})
+    if isinstance(delivery, dict) and not isinstance(delivery.get("delivered"), bool):
+        errors.append(f"{path}: final_operator_report.telegram_delivery.delivered must be boolean")
+
+    return errors
+
+
+def has_partial_upstream_input(fixture: dict[str, Any]) -> bool:
+    manifests = fixture.get("inputs", {}).get("run_manifests", [])
+    if not isinstance(manifests, list):
+        return False
+    for manifest in manifests:
+        if not isinstance(manifest, dict):
+            continue
+        mode = manifest.get("mode")
+        status = manifest.get("status")
+        if mode in {"monitor_sources", "scrape_and_enrich"} and status in PARTIAL_UPSTREAM_STATUSES:
+            return True
+    return False
 
 
 def find_first_value(data: Any, key_name: str) -> Any:

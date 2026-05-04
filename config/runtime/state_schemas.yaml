@@ -340,6 +340,55 @@ artifacts:
         type: list[string]
       - name: errors
         type: list[string]
+      - name: operator_report
+        type: map
       - name: notes
         type: list[string]
+    status_compatibility:
+      decision: keep_existing_enum
+      enum_values: [pending, running, completed, failed, partial]
+      rationale: Existing consumers may key off run_manifest.status, so WLH-M6 keeps the enum stable and adds operator_report for stage-specific readiness semantics.
+      rule: run_manifest.status reports whether that mode finished its own work; operator_report reports whether the end-to-end weekday run is canonical, partial, blocked, validated, or delivered.
+    operator_report_contract:
+      final_weekday_report_fields:
+        - source_discovery
+        - enrichment
+        - digest_generation
+        - qa_review
+        - telegram_delivery
+      source_discovery:
+        required_semantics:
+          - status
+          - canonical_source_complete
+        status_values: [completed, partial, failed, skipped]
+      enrichment:
+        required_semantics:
+          - status
+          - evidence_completeness
+        status_values: [completed, partial, failed, skipped]
+      digest_generation:
+        required_semantics:
+          - status
+          - digest_status
+        status_values: [generated, blocked, failed, skipped]
+        digest_status_values: [canonical_digest, partial_digest, non_canonical_digest]
+      qa_review:
+        required_semantics:
+          - status
+        status_values: [validated, warnings, failed, skipped]
+      telegram_delivery:
+        required_semantics:
+          - status
+          - delivered
+        status_values:
+          - delivered
+          - dry_run
+          - not_configured
+          - delivery_failed_dns
+          - delivery_failed_http
+          - delivery_failed_api
+          - delivery_failed_unknown
+          - skipped
+      mixed_status_rule: A downstream build_daily_digest run may have status completed when it generated files, but if upstream discovery or enrichment is partial then digest_generation.digest_status must be partial_digest or non_canonical_digest, source_discovery.canonical_source_complete must be false, and final warnings must state that the run is not production-clean.
+      example_fixture: config/runtime/mode-fixtures/weekday_digest_mixed_status_operator_report.yaml
     legacy_dependencies: none
