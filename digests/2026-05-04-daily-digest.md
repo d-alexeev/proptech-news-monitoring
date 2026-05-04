@@ -1,67 +1,33 @@
-# PropTech Monitor | 04.05.2026
+# Проптех-дайджест — 4 мая 2026
 
-**Evidence note:** this is a non-canonical digest. Source discovery was partial, and several shortlisted articles were available only as snippets or paywall stubs. Treat those items as directional until the next clean run.
+## Главное
 
-## Top Signals
+1. [Scout24](https://aimgroup.com/2026/05/01/scout24-se-q1-2026-professional-segment-drives-double-digit-y-o-y-revenue-growth/) показал выручку 180 млн евро в первом квартале: рост 13,9% год к году и 8,4% квартал к кварталу. Главный сигнал для Авито — профессиональный сегмент остается самым понятным источником платной выручки у зрелых порталов.
 
-**1. CoStar claims a U.K. inventory shift for OnTheMarket**
+2. [Zillow Preview](https://zillow.mediaroom.com/2026-04-10-Brokerages-continue-joining-Zillow-Preview-as-agents-and-sellers-seek-broader-market-exposure) уже подключил почти 60 брокерских компаний и франчайзеров. Ранний публичный показ объектов превращается в продукт для продавца: можно собрать спрос, проверить цену и подготовить запуск до полноценного размещения.
 
-CoStar says OnTheMarket has overtaken Zoopla by residential inventory and now carries more new-home listings than Rightmove. If the claim holds, CoStar's post-acquisition playbook is starting to pressure the U.K. portal hierarchy through supply depth, not only brand spend.
+3. [Property Finder](https://aimgroup.com/2026/05/01/property-finder-launches-pf-agent-accelerator/) запустил программу для агентов, которая помогает выигрывать объекты, понимать рынок и лучше работать с клиентами. Это близкий для Авито сценарий: профессиональные инструменты должны быть связаны с качеством объявлений и заявок, а не только с продвижением.
 
-Avito lens: challenger pressure still starts with inventory. Track category-specific supply claims, broker acquisition, and listing freshness as separate competitive metrics.
+4. [Zillow](https://zillow.mediaroom.com/2026-04-14-Meet-the-dual-shopper-Nearly-1-in-13-for-sale-shoppers-also-engage-with-rentals) оценил, что около 8% пользователей, смотрящих покупку жилья, одновременно смотрят аренду. Такой пользователь сравнивает жизненный сценарий и бюджет, поэтому разделение на «арендатора» и «покупателя» может занижать реальный спрос.
 
-Source: [AIM Group](https://aimgroup.com/2026/04/30/costar-claims-onthemarket-has-overtaken-zoopla-and-now-carries-more-new-homes-listings-than-rightmove)
+## Стоит отслеживать
 
-**2. Scout24's professional segment keeps compounding**
+- [Keyz.ai покупает Buyverse.io](https://aimgroup.com/2026/05/01/keyz-acquires-ai-powered-aggregator-buyverse/): маркетплейсы начинают покупать ИИ-агрегаторы ради данных, нормализации объявлений и более умного поиска.
+- [Zillow Buzz Index](https://zillow.mediaroom.com/2026-04-16-The-Zillow-Buzz-Index-reveals-the-home-features-buyers-cant-resist-right-now): признаки объекта вроде балок, кирпичных стен и арочных проемов становятся измеримыми факторами интереса покупателей.
+- [Real Brokerage и RE/MAX](https://www.inman.com/2026/05/01/what-happens-if-the-real-remax-deal-doesnt-go-through/): сделка на 880 млн долларов показывает, что брокерские сети оцениваются через будущую платформенную выручку и монетизацию аудитории.
+- [Domain и Matterport](https://aimgroup.com/2026/04/30/inside-domains-matterport-roll-out-in-australia/): 3D-туры снова выглядят как практичный инструмент доверия и платного продвижения, особенно в конкуренции крупных порталов.
 
-Scout24 reported Q1 2026 revenue of EUR 180 million, up 13.9% year over year and 8.4% quarter over quarter, with professional customers driving growth. Mature portals continue to show that agent and broker monetization can expand even in slower housing markets.
+## Слабые сигналы
 
-Avito lens: professional tooling, data products, and paid visibility should be benchmarked as a portfolio, not as isolated upsells.
+- [Casavo](https://aimgroup.com/2026/05/04/ceo-tinacci-says-casavo-will-turn-ebitda-positive-this-year/) заявляет о первой положительной EBITDA в марте и ожидает прибыльность за 2026 год. Это разворот от роста любой ценой к экономике сделки.
+- [Compass, Anywhere, Real Brokerage и RE/MAX](https://www.inman.com/2026/05/04/what-anywheres-tech-onboarding-signals-for-remax-agents-intel/) показывают, что после консолидации агентов редко заставляют менять условия сразу, но постепенно подталкивают к единой технологической платформе.
+- [Her Market Lab](https://www.inman.com/2026/05/01/real-estate-has-an-ai-problem-this-startup-thinks-it-knows-why/) ставит проблему ИИ в недвижимости как проблему удобства: агенту нужна простая автоматизация рабочих процессов, а не сложная самостоятельная настройка.
+- [Stake](https://aimgroup.com/2026/05/01/stake-conducts-69b-of-property-deals-in-q1-2026/) и [Prypco](https://aimgroup.com/2026/05/01/prypco-makes-fractional-property-investment-in-dubai-available-to-iraqi-nationals/) продолжают расширять смежные инвестиционные сценарии вокруг недвижимости.
 
-Source: [AIM Group](https://aimgroup.com/2026/05/01/scout24-se-q1-2026-professional-segment-drives-double-digit-revenue-growth-y-o-y)
+## Вывод для Авито
 
-**3. Property Finder adds agent enablement around the portal**
+Фокус дня — профессиональная монетизация и управление предложением. Самые сильные сигналы идут не от новых витрин, а от продуктов, которые помогают продавцу, агенту или брокеру лучше подготовить объект, проверить спрос, получить более качественные обращения и измерить результат. Для Авито это аргумент развивать связку: ранняя проверка спроса, подсказки по карточке, инструменты профессионала, аналитика качества заявок и аккуратные финансовые сценарии вокруг недвижимости.
 
-Property Finder launched PF Agent Accelerator to help brokers win listings, read market trends, strengthen client relationships, and improve performance. The move pushes portal value closer to daily agent workflow rather than traffic delivery alone.
+## Качество доказательств
 
-Avito lens: agent productivity products should be judged by whether they improve listing quality, seller acquisition, and paid retention.
-
-Source: [AIM Group](https://aimgroup.com/2026/05/01/property-finder-launches-pf-agent-accelerator)
-
-**4. Keyz.ai buys Buyverse for aggregation and AI capability**
-
-Israel's Keyz.ai acquired AI-powered aggregator Buyverse.io after raising new funding. The deal suggests vertical marketplaces may buy coverage, deduplication, and AI discovery capability when supply is fragmented.
-
-Avito lens: aggregation is strategic when it improves coverage and matching quality without diluting trust in marketplace inventory.
-
-Source: [AIM Group](https://aimgroup.com/2026/05/01/keyz-acquires-ai-powered-aggregator-buyverse)
-
-**5. Domain leans on Matterport for richer Australian listings**
-
-Domain's Matterport rollout frames 3D tours as a competitive feature in Australia and a commercial-property anchor. Richer media is moving from nice-to-have content toward a portal battleground.
-
-Avito lens: immersive listing assets can become a premium quality signal if tied to conversion, seller outcomes, and professional upsell economics.
-
-Source: [AIM Group](https://aimgroup.com/2026/04/30/inside-domains-matterport-roll-out-in-australia)
-
-**6. Casavo says profitability is arriving**
-
-Casavo's CEO said the company posted its first positive EBITDA month in March and expects full-year profitability in 2026, with net profit targeted in 2027. The signal fits the broader shift from growth-at-any-cost proptech toward sustainable unit economics.
-
-Avito lens: adjacent proptech operators are being forced to prove durable economics; partnerships and product experiments should include clear monetization and payback gates.
-
-Source: [AIM Group](https://aimgroup.com/2026/05/04/ceo-tinacci-says-casavo-will-turn-ebitda-positive-this-year)
-
-## Worth Tracking
-
-- Pisos.com says listings volume grew 35% year over year after Immobiliare.it's acquisition. Supply growth after ownership change is a useful portal-health benchmark.
-- Stake reported AED 252 billion, about USD 68.6 billion, in Q1 property transactions across 60,303 deals. The figure is a scale signal for investor-oriented real estate products.
-- Redfin's snippet shows U.S. pending home sales up 2.7% year over year for the four weeks ending April 26, while listings and purchase applications improved.
-- The Real-RE/MAX deal still needs shareholder and regulatory approval, keeping brokerage consolidation risk in view.
-- Inman flagged an agent AI adoption gap, especially for complex tools that do not translate into daily workflow impact.
-- Realtracs is the second MLS in a week to announce expansion beyond its home region, a data-infrastructure signal for U.S. listings markets.
-- Prypco expanded fractional Dubai property investment access to Iraqi nationals, lowering the stated entry point to USD 137.
-- FazWaz formally started operations in the Philippines with a brokerage-led hybrid marketplace model.
-- William Raveis and Cloze launched Raveis365+, an AI-supported CRM, lead, and marketing workflow product.
-
-mode: build_daily_digest | 04.05.2026
+Из 16 материалов 11 имеют полный локальный текст, 5 основаны на кратком фрагменте или публично извлеченном частичном тексте. Критичных проблем при проверке нет, но выводы по материалам с ограниченным текстом следует считать менее сильными.
