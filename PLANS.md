@@ -20,6 +20,7 @@ they are not required runtime context for implementing RT-M2 through RT-M7.
 | Russian Telegram Digest | planned | `docs/superpowers/plans/2026-05-04-russian-telegram-digest.md` | Enforce Russian-only editorial prose for `telegram_digest` through prompt/contracts, Stage C materializer gate, and Telegram pre-send gate. |
 | Telegram Digest Template and Preview | planned | `docs/superpowers/plans/2026-05-04-telegram-digest-length-budget.md` | Add a stable compact one-message template for weekday `telegram_digest`, parse top-story lead image metadata, deliver via large Telegram link preview, enforce Stage C hard length/template/preview gates, and verify a regenerated digest with Telegram dry-run `parts_sent=1`. |
 | Runner Telegram Delivery Retry | completed through TDR-M1 | `## Addendum: Runner Telegram Delivery Retry` | Final weekday Telegram delivery retry now runs in the schedule wrapper after deterministic materialization, so DNS/network delivery failures can be retried without rerunning discovery, enrichment, or digest generation. |
+| Documentation Refresh After Runner Work | planned | `docs/superpowers/plans/2026-05-05-documentation-refresh.md` | Update root, operator, tool, onboarding, and benchmark docs after the last 100 commits introduced the staged Codex weekday runner, Playwright/browser prefetch, Stage B article prefetch, deterministic Stage C, Russian Telegram gates, compact template, and benchmark judge additions. |
 
 ## Archived and Inactive Plans
 
