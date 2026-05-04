@@ -130,11 +130,11 @@ Static review target: `config/runtime/source-groups/daily_core.yaml` and
 | `zillow_newsroom` | daily_core | `rss` | `tools/rss_fetch.py --kind rss` | Not allowed for blocked PerimeterX page; use RSS config. |
 | `costar_homes` | daily_core | `rss` | `tools/rss_fetch.py --kind rss` | Not allowed while RSS works. |
 | `redfin_news` | daily_core | `rss` | `tools/rss_fetch.py --kind rss` | Not allowed while RSS works. |
-| `rea_group_investor_centre` | daily_core | `blocked` + `manual_only_permanent` | No fetch; manual intake policy | Never browser fallback. |
+| `rea_group_media_releases` | daily_core | `html_scrape` | `tools/rss_fetch.py --kind http` | Adapter fallback only; static HTTP is primary. |
 | `rightmove_plc` | daily_core | `html_scrape` | `tools/rss_fetch.py --kind http` | Adapter fallback only; static HTTP is primary. |
 | `similarweb_global_real_estate` | daily_core | `chrome_scrape` | Browser fallback contract | Allowed for configured public overview pages. |
 | `property_portal_watch` | weekly_context | `chrome_scrape` | Browser fallback contract | Allowed for configured public listing page. |
-| `inman_tech_innovation` | weekly_context | `rss` | `tools/rss_fetch.py --kind rss` | Not allowed while RSS works. |
+| `inman_tech_innovation` | daily_core | `rss` | `tools/rss_fetch.py --kind rss` | Not allowed while RSS works. |
 | `similarweb_country_real_estate` | weekly_context | `chrome_scrape` | Browser fallback contract | Allowed for configured public overview pages. |
 | `zillow_ios` | weekly_context | `itunes_api` | `tools/rss_fetch.py --kind http` | Not allowed; use iTunes lookup JSON. |
 | `zillow_android` | weekly_context | `chrome_scrape` | Browser fallback contract | Allowed for configured public Google Play page. |

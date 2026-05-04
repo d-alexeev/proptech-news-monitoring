@@ -380,6 +380,8 @@ Tests/verification:
 - run digest body checks for `.state/`, full run IDs, and operator notes;
 - run Telegram dry-run;
 - run secret scan over new event log and tracked summary.
+- verify runtime source-strategy notes still match `daily_core` after the REA
+  media releases and Inman source-group corrections.
 
 Non-goals:
 
@@ -415,4 +417,3 @@ Non-goals:
   rotation/log-retention decision is explicit.
 - Do not modify source groups again unless a milestone-specific validation
   failure proves it is required.
-
