@@ -45,10 +45,10 @@ The wrapper:
 - uses a lock directory to prevent concurrent scheduled runs;
 - writes Codex JSONL events and the final message under `.state/codex-runs/`.
 
-Because `.env` is sourced by Bash, quote any value containing spaces,
-parentheses, `#`, `$`, or quotes. Malformed `.env` files fail before Codex is
-started, and the wrapper reports the offending file without printing secret
-values.
+The wrapper loads `.env` with a restricted parser, not shell `source`. Use simple
+`KEY=VALUE` lines only. Single-quote any value containing spaces, parentheses,
+`#`, `$`, or quotes. Malformed `.env` files fail before Codex is started, and
+the wrapper reports the offending file without printing secret values.
 
 Set `CODEX_BIN` to override the Codex executable:
 

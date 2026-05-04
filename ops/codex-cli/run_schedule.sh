@@ -38,18 +38,61 @@ fi
 
 validate_env_file() {
   local env_file="$1"
+  local line line_no key value
 
-  if ! bash -n "$env_file" >/dev/null 2>&1; then
-    printf 'Invalid environment file: %s\n' "$env_file" >&2
-    printf 'Check shell quoting before rerunning; values with spaces, parentheses, #, $, or quotes must be quoted.\n' >&2
-    exit 2
-  fi
+  line_no=0
+  while IFS= read -r line || [ -n "$line" ]; do
+    line_no=$((line_no + 1))
+    case "$line" in
+      ""|\#*) continue ;;
+      export\ *) line="${line#export }" ;;
+    esac
+    if [[ "$line" != *=* ]]; then
+      printf 'Invalid environment file: %s line %s\n' "$env_file" "$line_no" >&2
+      printf 'Use simple KEY=VALUE lines only; values with spaces, parentheses, #, $, or quotes must be single-quoted.\n' >&2
+      exit 2
+    fi
+    key="${line%%=*}"
+    value="${line#*=}"
+    if ! [[ "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
+      printf 'Invalid environment file: %s line %s\n' "$env_file" "$line_no" >&2
+      printf 'Environment variable names must match [A-Za-z_][A-Za-z0-9_]*.\n' >&2
+      exit 2
+    fi
+    case "$value" in
+      *'$('*|*'`'*)
+        printf 'Invalid environment file: %s line %s\n' "$env_file" "$line_no" >&2
+        printf 'Command substitution is not allowed in environment files.\n' >&2
+        exit 2
+        ;;
+    esac
+    if [[ "$value" =~ [[:space:]\#\$\"\'\(\)] ]]; then
+      if [[ ! "$value" =~ ^\'([^\'\\]|\\.)*\'$ ]]; then
+        printf 'Invalid environment file: %s line %s\n' "$env_file" "$line_no" >&2
+        printf 'Values with spaces, parentheses, #, $, or quotes must be single-quoted.\n' >&2
+        exit 2
+      fi
+    fi
+  done < "$env_file"
+}
 
-  if ! (set -a; . "$env_file") >/dev/null 2>&1; then
-    printf 'Invalid environment file: %s\n' "$env_file" >&2
-    printf 'Check shell quoting before rerunning; values with spaces, parentheses, #, $, or quotes must be quoted.\n' >&2
-    exit 2
-  fi
+load_env_file() {
+  local env_file="$1"
+  local line key value
+
+  while IFS= read -r line || [ -n "$line" ]; do
+    case "$line" in
+      ""|\#*) continue ;;
+      export\ *) line="${line#export }" ;;
+    esac
+    key="${line%%=*}"
+    value="${line#*=}"
+    if [[ "$value" =~ ^\'([^\'\\]|\\.)*\'$ ]]; then
+      value="${value:1:${#value}-2}"
+    fi
+    printf -v "$key" '%s' "$value"
+    export "$key"
+  done < "$env_file"
 }
 
 if [ -n "${CODEX_ENV_FILE:-}" ] && [ ! -f "$ENV_FILE" ]; then
@@ -59,10 +102,7 @@ fi
 
 if [ -f "$ENV_FILE" ]; then
   validate_env_file "$ENV_FILE"
-  set -a
-  # shellcheck disable=SC1091
-  . "$ENV_FILE"
-  set +a
+  load_env_file "$ENV_FILE"
 fi
 
 if [ "${CODEX_RUN_SCHEDULE_SELF_TEST:-}" = "1" ]; then

@@ -63,12 +63,13 @@ Create `.env` in the repository root. Do not commit it.
 TELEGRAM_BOT_TOKEN=...
 TELEGRAM_CHAT_ID=...
 TELEGRAM_MESSAGE_THREAD_ID=
-HTTP_USER_AGENT="PropTechMonitor/1.0 (+you@example.com)"
+HTTP_USER_AGENT='PropTechMonitor/1.0 (+you@example.com)'
 ```
 
-The wrapper sources `.env` with Bash. Quote values that contain spaces,
-parentheses, `#`, `$`, or quotes. If `.env` is malformed, launch fails before
-Codex starts and reports the offending file without printing secret values.
+The wrapper loads `.env` with a restricted parser, not shell `source`. Use simple
+`KEY=VALUE` lines only. Single-quote values that contain spaces, parentheses,
+`#`, `$`, or quotes. If `.env` is malformed, launch fails before Codex starts
+and reports the offending file without printing secret values.
 
 If `codex` is not on the service user's `PATH`, set `CODEX_BIN` when invoking
 the wrapper.

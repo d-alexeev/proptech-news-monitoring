@@ -76,7 +76,7 @@ def test_self_test_validates_wrapper_without_running_codex() -> None:
         script_path = make_wrapper_fixture(root)
         env_file = root / ".env.good"
         env_file.write_text(
-            'HTTP_USER_AGENT="PropTechNewsMonitor/1.0 (+team@example.com)"\n',
+            "HTTP_USER_AGENT='PropTechNewsMonitor/1.0 (+team@example.com)'\n",
             encoding="utf-8",
         )
 
@@ -84,6 +84,40 @@ def test_self_test_validates_wrapper_without_running_codex() -> None:
 
     assert result.returncode == 0
     assert "Wrapper self-test passed" in result.stdout
+
+
+def test_env_loader_rejects_command_substitution_before_self_test() -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        root = pathlib.Path(tmpdir)
+        script_path = make_wrapper_fixture(root)
+        marker = root / "side-effect"
+        env_file = root / ".env.unsafe"
+        env_file.write_text(
+            f"HTTP_USER_AGENT='safe value'\nMALICIOUS=$(touch {marker})\n",
+            encoding="utf-8",
+        )
+
+        result = run_wrapper(script_path, env_file)
+
+    assert result.returncode != 0
+    assert "Command substitution is not allowed" in result.stderr
+    assert not marker.exists()
+
+
+def test_env_loader_rejects_unquoted_special_values() -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        root = pathlib.Path(tmpdir)
+        script_path = make_wrapper_fixture(root)
+        env_file = root / ".env.unquoted"
+        env_file.write_text(
+            "HTTP_USER_AGENT=PropTechNewsMonitor/1.0 (+team@example.com)\n",
+            encoding="utf-8",
+        )
+
+        result = run_wrapper(script_path, env_file)
+
+    assert result.returncode != 0
+    assert "must be single-quoted" in result.stderr
 
 
 def test_wrapper_uses_supported_codex_exec_flags_and_quotes_user_agent_template() -> None:
@@ -95,13 +129,15 @@ def test_wrapper_uses_supported_codex_exec_flags_and_quotes_user_agent_template(
     assert "-s workspace-write" in wrapper_text
     assert "--json" in wrapper_text
     assert "--output-last-message \"$LAST_MESSAGE\"" in wrapper_text
-    assert 'HTTP_USER_AGENT="PropTechNewsMonitor/1.0 (+team@example.com)"' in env_text
+    assert "HTTP_USER_AGENT='PropTechNewsMonitor/1.0 (+team@example.com)'" in env_text
 
 
 def main() -> None:
     tests = [
         test_malformed_env_fails_with_operator_error_without_secret_values,
         test_self_test_validates_wrapper_without_running_codex,
+        test_env_loader_rejects_command_substitution_before_self_test,
+        test_env_loader_rejects_unquoted_special_values,
         test_wrapper_uses_supported_codex_exec_flags_and_quotes_user_agent_template,
     ]
     for test in tests:
