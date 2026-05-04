@@ -27,6 +27,7 @@ DEFAULT_TIMEOUT = (10, 35)
 DEFAULT_RETRIES = 1
 DEFAULT_MAX_CHARS = 12000
 DEFAULT_MIN_FULL_CHARS = 700
+DEFAULT_MIN_PUBLIC_PARTIAL_CHARS = 120
 PAYWALL_STUB_FAILS = {"blocked_or_paywall", "rate_limited", "anti_bot", "origin_blocked"}
 
 
@@ -122,6 +123,111 @@ def _classify_soft_fail(status: int | None, body_preview: str) -> tuple[str | No
     return None, None
 
 
+def _is_inman_source(result: dict[str, Any]) -> bool:
+    source_id = str(result.get("source_id") or "")
+    url = str(result.get("url") or result.get("canonical_url") or "")
+    return source_id == "inman_tech_innovation" or "://www.inman.com/" in url or "://inman.com/" in url
+
+
+def _can_use_public_partial_text(result: dict[str, Any], *, status: int, soft_fail: str, text: str) -> bool:
+    return (
+        _is_inman_source(result)
+        and status < 400
+        and soft_fail == "blocked_or_paywall"
+        and len(text) >= DEFAULT_MIN_PUBLIC_PARTIAL_CHARS
+    )
+
+
+def _trim_inman_public_partial_text(text: str) -> str:
+    trimmed = text or ""
+    for start, end in (
+        ("Inman Events", "She pointed"),
+        ("Trending", "“Not because"),
+    ):
+        start_idx = trimmed.find(start)
+        end_idx = trimmed.find(end, start_idx + len(start)) if start_idx >= 0 else -1
+        if start_idx >= 0 and end_idx > start_idx:
+            trimmed = trimmed[:start_idx] + trimmed[end_idx:]
+    for marker in (
+        "Show Comments",
+        "Sign up for Inman",
+        "Read Next",
+        "More in AI",
+        "Read next",
+    ):
+        idx = trimmed.find(marker)
+        if idx > 0:
+            trimmed = trimmed[:idx]
+    return _compact_text(trimmed)
+
+
+def _fetch_inman_public_partial_with_browser(url: str, *, max_chars: int) -> dict[str, Any] | None:
+    try:
+        from playwright.sync_api import Error as PlaywrightError
+        from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
+        from playwright.sync_api import sync_playwright
+    except Exception:  # noqa: BLE001
+        return None
+
+    started = time.monotonic()
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            page = browser.new_page(
+                user_agent=(
+                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/124.0.0.0 Safari/537.36"
+                )
+            )
+            response = page.goto(url, wait_until="domcontentloaded", timeout=30_000)
+            try:
+                page.wait_for_load_state("networkidle", timeout=10_000)
+            except PlaywrightTimeoutError:
+                pass
+            body = page.content()
+            final_url = page.url
+            status = response.status if response else None
+            content_type = response.headers.get("content-type") if response else None
+            browser.close()
+    except (PlaywrightError, PlaywrightTimeoutError):
+        return None
+
+    if status is None or status >= 400:
+        return None
+
+    text = _trim_inman_public_partial_text(_extract_article_text(body, max_chars=max_chars))
+    if len(text) < DEFAULT_MIN_PUBLIC_PARTIAL_CHARS:
+        return None
+
+    return {
+        "status": status,
+        "elapsed_ms": int((time.monotonic() - started) * 1000),
+        "content_type": content_type,
+        "final_url": final_url,
+        "text": text,
+    }
+
+
+def _apply_public_partial_text(
+    result: dict[str, Any],
+    *,
+    text: str,
+    http: dict[str, Any],
+    fetch_method: str,
+) -> dict[str, Any]:
+    result["body_status_hint"] = "snippet_fallback"
+    result["fetch_method"] = fetch_method
+    result["http"] = http
+    clean_text = _trim_inman_public_partial_text(text) if _is_inman_source(result) else text
+    result["text"] = clean_text
+    result["text_char_count"] = len(clean_text)
+    result["failure_class"] = "blocked_or_paywall"
+    result["soft_fail"] = "blocked_or_paywall"
+    result["soft_fail_detail"] = "public_partial_text_extracted"
+    return result
+
+
 def _do_request(url: str, *, timeout: tuple[int, int] = DEFAULT_TIMEOUT, retries: int = DEFAULT_RETRIES) -> requests.Response:
     headers = {
         "User-Agent": DEFAULT_USER_AGENT,
@@ -206,7 +312,30 @@ def fetch_source(
     }
 
     soft_fail, soft_fail_detail = _classify_soft_fail(status, body)
+    extracted = _extract_article_text(body, max_chars=max_chars) if status < 400 else ""
     if soft_fail:
+        if _can_use_public_partial_text(result, status=status, soft_fail=soft_fail, text=extracted):
+            return _apply_public_partial_text(
+                result,
+                text=extracted,
+                http=result["http"],
+                fetch_method="static_http",
+            )
+        if _is_inman_source(result) and soft_fail == "blocked_or_paywall":
+            observed = _fetch_inman_public_partial_with_browser(url, max_chars=max_chars)
+            if observed:
+                return _apply_public_partial_text(
+                    result,
+                    text=observed["text"],
+                    http={
+                        "status": observed["status"],
+                        "elapsed_ms": observed["elapsed_ms"],
+                        "content_type": observed["content_type"],
+                        "final_url": observed["final_url"],
+                        "source": "browser_observation",
+                    },
+                    fetch_method="browser_fallback",
+                )
         result["body_status_hint"] = "paywall_stub" if soft_fail in PAYWALL_STUB_FAILS else "snippet_fallback"
         result["failure_class"] = soft_fail
         result["soft_fail"] = soft_fail
@@ -218,7 +347,6 @@ def fetch_source(
         result["failure_class"] = "http_error"
         return result
 
-    extracted = _extract_article_text(body, max_chars=max_chars)
     result["text"] = extracted
     result["text_char_count"] = len(extracted)
     if len(extracted) >= min_full_chars:

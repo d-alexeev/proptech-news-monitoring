@@ -185,13 +185,13 @@ sources:
     primary_tool_path: HTTP/RSS fetcher
     invocation_kind: rss
     invocation_url_field: rss_feed
-    adapter: none
+    adapter: cowork/adapters/inman_public_partial_text.md
     optional_fallback: null
     manual_policy: null
     fixture_coverage:
       - config/runtime/mode-fixtures/runner_fetcher_contract_inman.yaml
       - tools/test_rss_fetch.py
-    live_residual_risk: Inman feed availability and downstream paywall/snippet limits remain live risks; RT-M6 only proves offline discovery contract.
+    live_residual_risk: Inman feed availability and downstream paywall limits remain live risks; Stage B may retain visible public article text as snippet fallback without bypass.
 
   - group_id: weekly_context
     source_id: similarweb_country_real_estate

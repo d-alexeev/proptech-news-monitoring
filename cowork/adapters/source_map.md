@@ -21,7 +21,7 @@ Resolution rules:
 | `rightmove_plc` | `cowork/adapters/rightmove_plc.md` | empty RSS; scrape investor page instead |
 | `similarweb_global_real_estate` | `cowork/adapters/similarweb_site_overview.md` | use site overview pages, not gated category rankings |
 | `property_portal_watch` | `cowork/adapters/onlinemarketplaces_family.md` | same publisher family and listing-style discovery |
-| `inman_tech_innovation` | `none` | baseline RSS with analysis-stage filtering |
+| `inman_tech_innovation` | `cowork/adapters/inman_public_partial_text.md` | baseline RSS discovery; Stage B may retain visible public article text as snippet fallback |
 | `similarweb_country_real_estate` | `cowork/adapters/similarweb_site_overview.md` | use site overview pages, not gated category rankings |
 | `zillow_ios` | `cowork/adapters/itunes_lookup_api.md` | Apple lookup API; customer review feed is unusable |
 | `zillow_android` | `cowork/adapters/google_play_app_page.md` | Google Play page scrape only |

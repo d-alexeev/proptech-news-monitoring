@@ -81,6 +81,24 @@ ARTICLE_HTML = """<!doctype html>
 </html>
 """
 
+INMAN_PAYWALL_VISIBLE_TEXT_HTML = """<!doctype html>
+<html>
+  <body>
+    <article>
+      <h1>Real estate has an AI problem. This startup thinks it knows why</h1>
+      <p>AI adoption in real estate is rising, but many agents are being left behind as complex tools limit real-world impact.</p>
+      <p>When a real estate agent burned out, it was not because she lacked leads. It was because she had too many and no system to handle them.</p>
+      <p>The experience became the foundation for a new entrant in the wave of all-in-one real estate super apps.</p>
+      <p>The platform focuses on building business infrastructure first, then layering automation on top.</p>
+    </article>
+    <section class="subscribe-wall">
+      <p>Subscribe to continue reading Inman Select.</p>
+      <p>Log in or join Select to access exclusive industry content.</p>
+    </section>
+  </body>
+</html>
+"""
+
 
 def article_spec(**overrides: object) -> dict:
     spec = {
@@ -151,6 +169,73 @@ def test_fetch_source_classifies_blocked_and_rate_limited_responses() -> None:
         assert result["soft_fail"] == expected
         assert result["failure_class"] == expected
         assert result["text"] == ""
+
+
+def test_fetch_source_keeps_visible_inman_paywall_text_as_snippet_fallback() -> None:
+    with fake_request(FakeResponse(text=INMAN_PAYWALL_VISIBLE_TEXT_HTML, url="https://www.inman.com/2026/05/01/example/")):
+        result = article_fetch.fetch_source(
+            article_spec(
+                source_id="inman_tech_innovation",
+                url="https://www.inman.com/2026/05/01/example/",
+                canonical_url="https://www.inman.com/2026/05/01/example",
+                title="Real estate has an AI problem. This startup thinks it knows why",
+            ),
+            min_full_chars=120,
+        )
+
+    assert result["body_status_hint"] == "snippet_fallback"
+    assert result["soft_fail"] == "blocked_or_paywall"
+    assert result["failure_class"] == "blocked_or_paywall"
+    assert result["soft_fail_detail"] == "public_partial_text_extracted"
+    assert "AI adoption in real estate is rising" in result["text"]
+    assert "Subscribe to continue" not in result["text"]
+    assert result["text_char_count"] == len(result["text"])
+
+
+def test_fetch_source_uses_public_browser_fallback_for_inman_static_403() -> None:
+    original_browser = article_fetch._fetch_inman_public_partial_with_browser
+
+    def fake_browser(url: str, *, max_chars: int) -> dict | None:
+        assert url == "https://www.inman.com/2026/05/01/example/"
+        assert max_chars == article_fetch.DEFAULT_MAX_CHARS
+        return {
+            "status": 200,
+            "elapsed_ms": 1200,
+            "content_type": "text/html; charset=UTF-8",
+            "final_url": "https://www.inman.com/2026/05/01/example/",
+            "text": (
+                "Browser-visible Inman article body with enough public text to analyze the story without login. "
+                "Inman Events Promo block that should be removed. She pointed to a recent survey about AI adoption. "
+                "Trending Related story block that should be removed. “Not because they’re unwilling,” she said. "
+                "Show Comments Hide Comments Sign up for Inman newsletters Read Next Related story noise."
+            ),
+        }
+
+    article_fetch._fetch_inman_public_partial_with_browser = fake_browser
+    try:
+        with fake_request(FakeResponse(status_code=403, text="Forbidden", url="https://www.inman.com/2026/05/01/example/")):
+            result = article_fetch.fetch_source(
+                article_spec(
+                    source_id="inman_tech_innovation",
+                    url="https://www.inman.com/2026/05/01/example/",
+                    canonical_url="https://www.inman.com/2026/05/01/example",
+                )
+            )
+    finally:
+        article_fetch._fetch_inman_public_partial_with_browser = original_browser
+
+    assert result["body_status_hint"] == "snippet_fallback"
+    assert result["fetch_method"] == "browser_fallback"
+    assert result["http"]["source"] == "browser_observation"
+    assert result["soft_fail"] == "blocked_or_paywall"
+    assert result["failure_class"] == "blocked_or_paywall"
+    assert result["soft_fail_detail"] == "public_partial_text_extracted"
+    assert "Browser-visible Inman article body" in result["text"]
+    assert "She pointed to a recent survey" in result["text"]
+    assert "Not because they" in result["text"]
+    assert "Inman Events" not in result["text"]
+    assert "Trending" not in result["text"]
+    assert "Read Next" not in result["text"]
 
 
 def test_fetch_source_classifies_timeout_as_snippet_fallback() -> None:
@@ -224,6 +309,8 @@ def main() -> None:
         test_fetch_source_caps_extracted_text,
         test_fetch_source_uses_snippet_fallback_for_short_body,
         test_fetch_source_classifies_blocked_and_rate_limited_responses,
+        test_fetch_source_keeps_visible_inman_paywall_text_as_snippet_fallback,
+        test_fetch_source_uses_public_browser_fallback_for_inman_static_403,
         test_fetch_source_classifies_timeout_as_snippet_fallback,
         test_fetch_batch_reports_mixed_status_counts,
         test_cli_stdin_emits_one_json_document,

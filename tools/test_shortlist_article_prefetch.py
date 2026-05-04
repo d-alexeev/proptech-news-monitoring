@@ -177,6 +177,41 @@ def test_slug_collision_appends_suffix_for_same_date_and_title() -> None:
         assert (repo_root / entries[1]["article_file"]).exists()
 
 
+def test_inman_snippet_fallback_with_visible_text_writes_article_file() -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        repo_root = pathlib.Path(tmpdir)
+        result = {
+            "source_id": "inman_tech_innovation",
+            "url": "https://www.inman.com/2026/05/01/example/",
+            "canonical_url": "https://www.inman.com/2026/05/01/example",
+            "title": "Real estate has an AI problem",
+            "published": "2026-05-01",
+            "body_status_hint": "snippet_fallback",
+            "text": "Public Inman article text visible before the subscription prompt.",
+            "text_char_count": 62,
+            "error": None,
+            "failure_class": "blocked_or_paywall",
+            "soft_fail": "blocked_or_paywall",
+            "soft_fail_detail": "public_partial_text_extracted",
+            "fetch_method": "static_http",
+            "http": {"status": 200},
+        }
+
+        entries = shortlist_article_prefetch.write_article_artifacts(
+            results=[result],
+            repo_root=repo_root,
+            fetched_at="2026-05-04T12:10:00Z",
+        )
+
+        assert entries[0]["body_status_hint"] == "snippet_fallback"
+        assert entries[0]["article_file"] == ".state/articles/2026-05/2026-05-01_real-estate-has-an-ai-problem.md"
+        article_path = repo_root / entries[0]["article_file"]
+        assert article_path.exists()
+        article_text = article_path.read_text(encoding="utf-8")
+        assert "body_status_hint: snippet_fallback" in article_text
+        assert "Public Inman article text visible" in article_text
+
+
 def test_cli_requires_explicit_shortlist_path() -> None:
     stderr = io.StringIO()
     try:
@@ -230,6 +265,7 @@ def main() -> None:
     tests = [
         test_prefetch_fetches_only_shortlisted_items_and_writes_outputs,
         test_slug_collision_appends_suffix_for_same_date_and_title,
+        test_inman_snippet_fallback_with_visible_text_writes_article_file,
         test_cli_requires_explicit_shortlist_path,
         test_cli_writes_summary_json_to_stdout,
     ]

@@ -134,7 +134,7 @@ Static review target: `config/runtime/source-groups/daily_core.yaml` and
 | `rightmove_plc` | daily_core | `html_scrape` | `tools/rss_fetch.py --kind http` | Adapter fallback only; static HTTP is primary. |
 | `similarweb_global_real_estate` | daily_core | `chrome_scrape` | Browser fallback contract | Allowed for configured public overview pages. |
 | `property_portal_watch` | weekly_context | `chrome_scrape` | Browser fallback contract | Allowed for configured public listing page. |
-| `inman_tech_innovation` | daily_core | `rss` | `tools/rss_fetch.py --kind rss` | Not allowed while RSS works. |
+| `inman_tech_innovation` | daily_core | `rss` | `tools/rss_fetch.py --kind rss`; Stage B uses `tools/article_fetch.py` | Discovery browser use is not allowed while RSS works; Stage B may use public browser fallback only to retain visible article text after static article fetch is blocked. |
 | `similarweb_country_real_estate` | weekly_context | `chrome_scrape` | Browser fallback contract | Allowed for configured public overview pages. |
 | `zillow_ios` | weekly_context | `itunes_api` | `tools/rss_fetch.py --kind http` | Not allowed; use iTunes lookup JSON. |
 | `zillow_android` | weekly_context | `chrome_scrape` | Browser fallback contract | Allowed for configured public Google Play page. |

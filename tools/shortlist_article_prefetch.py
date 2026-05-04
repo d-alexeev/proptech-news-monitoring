@@ -124,6 +124,18 @@ def _article_markdown(result: dict, *, fetched_at: str) -> str:
     return "\n".join(lines)
 
 
+def _should_write_article_file(result: dict) -> bool:
+    if not result.get("text"):
+        return False
+    if result.get("body_status_hint") == "full":
+        return True
+    return (
+        result.get("source_id") == "inman_tech_innovation"
+        and result.get("body_status_hint") == "snippet_fallback"
+        and result.get("soft_fail_detail") == "public_partial_text_extracted"
+    )
+
+
 def _manifest_entry(result: dict, article_file: str | None) -> dict:
     return {
         "source_id": result.get("source_id") or "",
@@ -153,7 +165,7 @@ def write_article_artifacts(
     used_paths: set[Path] = set()
     for result in results:
         article_file = None
-        if result.get("body_status_hint") == "full" and result.get("text"):
+        if _should_write_article_file(result):
             path = _article_file_path(result, repo_root, fetched_at, used_paths)
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(_article_markdown(result, fetched_at=fetched_at), encoding="utf-8")

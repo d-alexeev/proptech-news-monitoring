@@ -16,6 +16,7 @@ they are not required runtime context for implementing RT-M2 through RT-M7.
 | Shortlist Full-Text Enrichment Runner | active; completed through SFE-M5; SFE-M6 optional | `docs/plans/shortlist-fulltext-enrichment-runner.md` | Article fetch helper, direct shortlist article prefetch, and `scrape_and_enrich` manifest contracts are implemented. The staged wrapper uses direct Stage B rather than a separate elevated Codex runner. |
 | Victory Digest Production Readiness | completed through VD-M7; latest rerun is `production_candidate_95` | `docs/plans/victory-digest-production-readiness.md` | Staged weekday wrapper, direct Stage B, synthetic fallback, offline gate, and current-run finish-artifact guard are implemented. Live run `20260504T142209Z` completed with deterministic Stage C materialization and passed the 95% gate, with residual source-discovery and live Telegram caveats. |
 | Deterministic Stage C Finish | completed; live rerun passed 95% production-ready gate | `docs/superpowers/plans/2026-05-04-deterministic-stage-c-finish.md` | Stage C emits a strict compact draft; `tools/stage_c_finish.py` materializes current-run enrichment/digest artifacts and finish summary. Live rerun `20260504T142209Z` passed artifact validation, article prefetch gate, QA gate, digest safety scans, and Telegram dry-run. |
+| Inman Visible Paywall Text | completed; live Inman check passed | `## Addendum: Inman Visible Paywall Text` | Preserves publicly visible article text on Inman paywall pages as `snippet_fallback` evidence through source-scoped public browser fallback, without login, CAPTCHA, subscription, or paywall bypass. |
 
 ## Archived and Inactive Plans
 
@@ -34,6 +35,52 @@ they are not required runtime context for implementing RT-M2 through RT-M7.
   `Claude Cowork` runtime dependencies.
 - Historical requirement traceability is preserved in the archive files by keeping
   the moved plan bodies intact with their original headings and tables.
+
+## Addendum: Inman Visible Paywall Text
+
+### Goal
+
+Preserve the public article text that is visible on Inman article pages even
+when the same page also contains subscription or login UI.
+
+### Scope
+
+Likely files/artifacts to change:
+
+- `tools/article_fetch.py`
+- `tools/shortlist_article_prefetch.py`
+- `tools/test_article_fetch.py`
+- `tools/test_shortlist_article_prefetch.py`
+- `cowork/adapters/source_map.md`
+- `cowork/adapters/inman_public_partial_text.md`
+- `PLANS.md`
+
+### Milestones
+
+| Milestone | Goal | Acceptance criteria | Verification |
+| --- | --- | --- | --- |
+| IPT-M1 | Add failing tests for visible Inman paywall text | Inman HTML with article text plus subscription marker is expected to produce `snippet_fallback` with text; shortlist prefetch is expected to persist a snippet article artifact. | `python3 tools/test_article_fetch.py` and `python3 tools/test_shortlist_article_prefetch.py` fail before implementation. |
+| IPT-M2 | Implement source-scoped extraction, public browser fallback, and persistence | Inman public text is retained as `snippet_fallback`; static 403 may use public Playwright observation; empty/blocked paywall pages remain `paywall_stub`; no login, CAPTCHA, subscription, proxy, or paywall bypass is introduced. | Article fetch and shortlist prefetch tests pass; one live Inman browser observation confirms public text availability. |
+| IPT-M3 | Document adapter behavior | Source map resolves Inman to a compact adapter note describing RSS discovery and public partial text handling. | Runtime validator and relevant tests pass. |
+
+### Coverage Matrix
+
+| Requirement | Milestone |
+| --- | --- |
+| Retain visible Inman article text from paywall pages | IPT-M1, IPT-M2 |
+| Do not treat partial visible text as full article access | IPT-M1, IPT-M2 |
+| Do not bypass login, CAPTCHA, subscription, or paywall controls | IPT-M2, IPT-M3 |
+| Persist usable partial text for Stage C handoff | IPT-M1, IPT-M2 |
+| Keep source-specific behavior documented in adapter files | IPT-M3 |
+| Use browser fallback only when static Inman fetch cannot see public text | IPT-M2, IPT-M3 |
+
+### Non-Goals
+
+- No new `body_status_hint` enum.
+- No interactive or credentialed browser automation for Inman article pages.
+- No browser login, CAPTCHA solving, subscription flow, cookie seeding, or proxy rotation.
+- No credentialed Inman access.
+- No changes to historical run artifacts.
 
 ## Addendum: Source Group Corrections After Live Test
 
