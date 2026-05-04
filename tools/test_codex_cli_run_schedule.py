@@ -169,6 +169,10 @@ def test_staged_prompt_files_exist_and_have_stage_boundaries() -> None:
     assert "Do not run scrape_and_enrich" in discovery_text
     assert "Stage B article prefetch manifest" in finish_text
     assert "Do not read .state/articles/ from digest or review modes" in finish_text
+    assert "Finish draft path" in finish_text
+    assert "schema_version" in finish_text
+    assert "digest_markdown" in finish_text
+    assert "Do not write final .state/enriched" in finish_text
     assert "scrape_and_enrich" in finish_text
     assert "build_daily_digest" in finish_text
     assert "review_digest" in finish_text
