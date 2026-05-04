@@ -140,6 +140,26 @@ selection_stage_outputs:
   evidence_limitation_notes:
     description: compact operator-facing notes required when digest_status is partial_digest because evidence is all snippet_fallback
 
+language_policy:
+  profiles:
+    - telegram_digest
+    - telegram_weekly_digest
+  required_language: Russian
+  applies_to_visible_digest_prose:
+    - headings
+    - labels
+    - story_summaries
+    - why_it_matters
+    - avito_implication
+    - evidence_notes
+    - selection_notes
+  allowed_original_language_fragments:
+    - source article titles
+    - company names
+    - product names
+    - source names
+    - URLs
+
 non_goals:
   - no markdown rendering
   - no daily_brief emission

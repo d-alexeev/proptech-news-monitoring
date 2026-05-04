@@ -59,6 +59,13 @@ These rules apply to the digest body that is written to the canonical weekday di
 markdown path `./digests/{digest_date}-daily-digest.md` and subsequently sent to
 Telegram via `tools/telegram_send.py`.
 
+**Language:**
+For `telegram_digest`, the digest body must be Russian-only editorial prose.
+Translate or summarize English source evidence into Russian. Keep source names,
+company names, product names, article titles in links, and URLs in their
+original language when needed, but do not render English section headings,
+labels, summaries, or Avito implications.
+
 **File write rule:**
 Always write the digest file using a full overwrite (`Write`), never a partial edit (`Edit`).
 Reason: `Edit` leaves content from prior runs in the file tail, causing mixed-run output.

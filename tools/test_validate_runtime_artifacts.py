@@ -597,6 +597,18 @@ def test_state_schema_keeps_discovery_completeness_separate_from_enrichment_part
     )
 
 
+def test_russian_language_contracts_are_declared() -> None:
+    root = pathlib.Path(__file__).resolve().parents[1]
+    scrape = (root / "config/runtime/mode-contracts/scrape_and_enrich_output.yaml").read_text(encoding="utf-8")
+    digest = (root / "config/runtime/mode-contracts/build_daily_digest_selection.yaml").read_text(encoding="utf-8")
+    assert "language_policy" in scrape
+    assert "telegram_digest" in scrape
+    assert "Russian" in scrape or "русск" in scrape.lower()
+    assert "language_policy" in digest
+    assert "telegram_digest" in digest
+    assert "Russian" in digest or "русск" in digest.lower()
+
+
 def main() -> None:
     tests = [
         test_adapter_validation_requires_configured_sources_to_resolve,
@@ -613,6 +625,7 @@ def main() -> None:
         test_mixed_status_operator_report_requires_stage_fields_and_warning,
         test_enrichment_partiality_does_not_force_source_discovery_incomplete,
         test_state_schema_keeps_discovery_completeness_separate_from_enrichment_partiality,
+        test_russian_language_contracts_are_declared,
     ]
     for test in tests:
         test()

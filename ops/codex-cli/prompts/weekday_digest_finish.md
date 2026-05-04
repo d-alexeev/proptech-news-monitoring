@@ -21,6 +21,29 @@ finish draft contract below. Do not reuse prior `.state/enriched/`,
 `.state/runs/`, `.state/briefs/`, or digest artifacts as evidence that this
 stage completed.
 
+## Language Requirement
+
+For `delivery_profile = telegram_digest`, all final human-facing digest prose
+must be in Russian.
+
+Translate or summarize English source material into Russian before writing:
+
+- `enriched_items[].analyst_summary`
+- `enriched_items[].why_it_matters`
+- `enriched_items[].avito_implication`
+- `enriched_items[].evidence_points`
+- `daily_brief.selection_notes`
+- `daily_brief.story_cards[].analyst_summary`
+- `daily_brief.story_cards[].why_it_matters`
+- `daily_brief.story_cards[].avito_implication`
+- `daily_brief.story_cards[].evidence_notes`
+- `digest_markdown`
+
+Do not emit an English-only `telegram_digest`. Source titles, company names,
+product names, URLs, and short source names may remain in their original
+language, but headings, labels, summaries, implications, and evidence notes must
+be Russian.
+
 ## Required Finish Draft
 
 Write exactly one compact JSON draft to the generated prompt's `Finish draft path`.

@@ -172,6 +172,9 @@ def test_staged_prompt_files_exist_and_have_stage_boundaries() -> None:
     assert "Finish draft path" in finish_text
     assert "schema_version" in finish_text
     assert "digest_markdown" in finish_text
+    assert "Russian" in finish_text or "русск" in finish_text.lower()
+    assert "telegram_digest" in finish_text
+    assert "English-only" in finish_text or "англ" in finish_text.lower()
     assert "Do not write final .state/enriched" in finish_text
     assert "scrape_and_enrich" in finish_text
     assert "build_daily_digest" in finish_text

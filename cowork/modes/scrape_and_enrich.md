@@ -50,6 +50,10 @@ Capture 2-4 `evidence_points` for `full`, 1-2 for `snippet_fallback`, and none f
 If every enriched record emitted for a digest window has `body_status = snippet_fallback`, mark the enrichment shard/run manifest with `evidence_completeness = all_snippet_fallback` and `downstream_digest_gate = partial_digest`.
 This is a compact evidence warning only; do not fetch bodies for non-shortlisted items to improve the label.
 Emit downstream-ready `analyst_summary`, `why_it_matters`, `avito_implication`, `story_id`, and `source_quality`.
+For `telegram_digest` and `telegram_weekly_digest` downstream profiles, emit
+editorial prose fields in Russian: `analyst_summary`, `why_it_matters`,
+`avito_implication`, and digest-visible `evidence_points`. Source titles,
+company names, product names, and URLs may remain in the original language.
 Do not preload the whole adapter directory; resolve `source_id -> adapter` first.
 Do not assemble daily, weekly, or stakeholder digests here.
 If fetch or normalization fails beyond contract-allowed fallback, or an adapter gap is discovered, emit `change_request` and never edit prompts, config, or adapters on disk.

@@ -139,6 +139,23 @@ downstream_required_enriched_fields:
   - evidence_points
   - source_quality
 
+language_policy:
+  profiles:
+    - telegram_digest
+    - telegram_weekly_digest
+  required_language: Russian
+  applies_to_fields:
+    - analyst_summary
+    - why_it_matters
+    - avito_implication
+    - evidence_points
+  allowed_original_language_fields:
+    - title
+    - companies
+    - source_id
+    - url
+    - canonical_url
+
 output_contract:
   enriched_shard:
     schema: enriched_item[]
