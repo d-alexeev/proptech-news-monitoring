@@ -281,6 +281,13 @@ run_weekday_staged_schedule() {
     --output-last-message "$FINISH_LAST_MESSAGE" \
     - < "$FINISH_PROMPT" > "$FINISH_EVENT_LOG"
 
+  python3 "$ARTIFACT_HELPER" validate-finish-artifacts \
+    --repo-root "$REPO_ROOT" \
+    --run-id "$RUN_ID" \
+    --run-date "$RUN_DATE" \
+    --source-group daily_core \
+    --delivery-profile telegram_digest
+
   printf 'Discovery events: %s\n' "$DISCOVERY_EVENT_LOG"
   printf 'Discovery final message: %s\n' "$DISCOVERY_LAST_MESSAGE"
   printf 'Article prefetch summary: %s\n' "$ARTICLE_PREFETCH_SUMMARY"

@@ -27,7 +27,7 @@ Victory Digest is ready for a production-like test run when all of these are tru
 - `docs/run-reviews/2026-05-04-weekday-digest.md` records production-readiness status, source-level blockers, article prefetch counts, digest status, QA status, and Telegram status without secrets or full article bodies.
 - A completion audit compares original requirements against implemented behavior and open follow-ups.
 
-## Current Baseline
+## Initial Baseline
 
 Already implemented:
 
@@ -38,7 +38,7 @@ Already implemented:
 - `scrape_and_enrich` contracts for consuming runner article prefetch manifests
 - fixture `config/runtime/mode-fixtures/scrape_and_enrich_runner_article_prefetch.yaml`
 
-Not implemented:
+Initially not implemented:
 
 - staged `weekday_digest` wrapper execution;
 - Stage A/Stage C prompt split;
@@ -46,6 +46,27 @@ Not implemented:
 - direct Stage B full-text collection helper wiring;
 - synthetic article prefetch fallback;
 - final live Victory Digest run and completion audit.
+
+## Execution Status
+
+Updated 2026-05-04:
+
+- VD-M1 through VD-M6 are implemented and pass offline validation.
+- The weekday wrapper now performs Stage A discovery, direct Stage B article
+  prefetch, Stage C finish, and post-Stage-C current-run artifact validation.
+- Live run `20260504T131334Z-weekday_digest` reached Stage A and Stage B:
+  source discovery produced 59 raw candidates and 14 shortlisted items; article
+  prefetch produced 8 `full`, 4 `paywall_stub`, and 2 `snippet_fallback`
+  outcomes.
+- VD-M7 is not complete as a clean production-like pass. Stage C did not create
+  current-run `scrape_and_enrich` or `build_daily_digest` manifests for
+  timestamp `20260504T131334Z`, no finish last-message was written, and the
+  inner `codex exec` was stopped after repeated loader/plugin warnings. The
+  wrapper now has a deterministic guard that would fail this condition instead
+  of allowing a false success.
+- VD-M8 audit is recorded in
+  `docs/run-reviews/2026-05-04-victory-digest-completion-audit.md` with open
+  follow-ups.
 
 ## Files And Responsibilities
 

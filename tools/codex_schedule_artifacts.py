@@ -156,6 +156,38 @@ def parse_before_json(raw: str) -> set[str]:
     return {str(item) for item in value}
 
 
+def run_timestamp(run_id: str) -> str:
+    return run_id.split("-", 1)[0]
+
+
+def validate_finish_artifacts(
+    *,
+    repo_root: pathlib.Path,
+    run_id: str,
+    run_date: str,
+    source_group: str,
+    delivery_profile: str,
+) -> dict:
+    repo_root = repo_root.resolve()
+    timestamp = run_timestamp(run_id)
+    required_paths = [
+        repo_root / ".state" / "enriched" / run_date / f"scrape_and_enrich__{timestamp}__{source_group}.json",
+        repo_root / ".state" / "runs" / run_date / f"scrape_and_enrich__{timestamp}__{source_group}.json",
+        repo_root / ".state" / "runs" / run_date / f"build_daily_digest__{timestamp}__{delivery_profile}.json",
+        repo_root / ".state" / "briefs" / "daily" / f"{run_date}__{delivery_profile}.json",
+    ]
+    missing = [path for path in required_paths if not path.exists()]
+    if missing:
+        missing_text = ", ".join(rel(path, repo_root) for path in missing)
+        raise FileNotFoundError(f"missing current-run finish artifacts: {missing_text}")
+    return {
+        "status": "ok",
+        "run_id": run_id,
+        "run_timestamp": timestamp,
+        "required_paths": [rel(path, repo_root) for path in required_paths],
+    }
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Codex schedule artifact helpers")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -181,6 +213,13 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     synthetic.add_argument("--shortlist-path", required=True)
     synthetic.add_argument("--reason", required=True)
     synthetic.add_argument("--fetched-at")
+
+    validate_finish = subparsers.add_parser("validate-finish-artifacts", help="Validate Stage C current-run artifacts")
+    validate_finish.add_argument("--repo-root", required=True)
+    validate_finish.add_argument("--run-id", required=True)
+    validate_finish.add_argument("--run-date", required=True)
+    validate_finish.add_argument("--source-group", required=True)
+    validate_finish.add_argument("--delivery-profile", required=True)
     return parser.parse_args(argv)
 
 
@@ -217,6 +256,15 @@ def main(argv: list[str] | None = None) -> None:
                 fetched_at=args.fetched_at,
             )
             print(json.dumps(doc["summary"], ensure_ascii=False))
+        elif args.command == "validate-finish-artifacts":
+            validation = validate_finish_artifacts(
+                repo_root=repo_root,
+                run_id=args.run_id,
+                run_date=args.run_date,
+                source_group=args.source_group,
+                delivery_profile=args.delivery_profile,
+            )
+            print(json.dumps(validation, ensure_ascii=False))
         else:
             raise ValueError(f"unknown command: {args.command}")
     except Exception as exc:  # noqa: BLE001

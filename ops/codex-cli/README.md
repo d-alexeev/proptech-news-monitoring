@@ -72,6 +72,11 @@ If Stage B fails or does not write article prefetch manifests, the wrapper write
 a synthetic article prefetch fallback so Stage C can continue with
 `snippet_fallback` evidence rather than failing the whole digest.
 
+After Stage C returns, the wrapper validates that current-run
+`scrape_and_enrich` and `build_daily_digest` manifests exist for the schedule run
+timestamp. A date-level digest file alone is not enough to mark Victory Digest
+complete.
+
 ## Runner Dependencies
 
 Install Python dependencies in the same environment used by scheduled jobs:

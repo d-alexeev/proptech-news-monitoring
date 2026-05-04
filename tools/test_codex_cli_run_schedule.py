@@ -213,6 +213,16 @@ def test_wrapper_validates_article_prefetch_manifest_presence() -> None:
     assert "[ ! -f \"$ARTICLE_PREFETCH_SUMMARY\" ]" in wrapper_text
 
 
+def test_wrapper_validates_current_run_finish_artifacts() -> None:
+    wrapper_text = WRAPPER.read_text(encoding="utf-8")
+    finish_prompt = (REPO_ROOT / "ops/codex-cli/prompts/weekday_digest_finish.md").read_text(encoding="utf-8")
+
+    assert "validate-finish-artifacts" in wrapper_text
+    assert "--delivery-profile telegram_digest" in wrapper_text
+    assert "current-run finish artifacts" in finish_prompt
+    assert "scrape_and_enrich__<run timestamp>__daily_core" in finish_prompt
+
+
 def test_readme_documents_staged_victory_digest_runbook() -> None:
     readme = (REPO_ROOT / "ops/codex-cli/README.md").read_text(encoding="utf-8")
 
@@ -236,6 +246,7 @@ def main() -> None:
         test_weekday_self_test_reports_direct_article_prefetch_wiring,
         test_wrapper_invokes_article_prefetch_helper_directly,
         test_wrapper_validates_article_prefetch_manifest_presence,
+        test_wrapper_validates_current_run_finish_artifacts,
         test_readme_documents_staged_victory_digest_runbook,
     ]
     for test in tests:

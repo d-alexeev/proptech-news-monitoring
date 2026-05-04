@@ -106,11 +106,60 @@ def test_write_synthetic_article_prefetch_fallback() -> None:
         assert (root / doc["summary"]["summary_path"]).exists()
 
 
+def test_validate_finish_artifacts_requires_current_run_manifests() -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        root = pathlib.Path(tmpdir)
+        run_id = "20260504T121000Z-weekday_digest"
+
+        try:
+            codex_schedule_artifacts.validate_finish_artifacts(
+                repo_root=root,
+                run_id=run_id,
+                run_date="2026-05-04",
+                source_group="daily_core",
+                delivery_profile="telegram_digest",
+            )
+        except FileNotFoundError as exc:
+            assert "missing current-run finish artifacts" in str(exc)
+            assert "scrape_and_enrich__20260504T121000Z__daily_core.json" in str(exc)
+        else:
+            raise AssertionError("missing current-run artifacts should fail validation")
+
+        write_json(
+            root / ".state/enriched/2026-05-04/scrape_and_enrich__20260504T121000Z__daily_core.json",
+            [],
+        )
+        write_json(
+            root / ".state/runs/2026-05-04/scrape_and_enrich__20260504T121000Z__daily_core.json",
+            {"run_id": "scrape_and_enrich__20260504T121000Z__daily_core"},
+        )
+        write_json(
+            root / ".state/runs/2026-05-04/build_daily_digest__20260504T121000Z__telegram_digest.json",
+            {"run_id": "build_daily_digest__20260504T121000Z__telegram_digest"},
+        )
+        write_json(
+            root / ".state/briefs/daily/2026-05-04__telegram_digest.json",
+            {"brief_id": "2026-05-04__telegram_digest"},
+        )
+
+        validation = codex_schedule_artifacts.validate_finish_artifacts(
+            repo_root=root,
+            run_id=run_id,
+            run_date="2026-05-04",
+            source_group="daily_core",
+            delivery_profile="telegram_digest",
+        )
+
+        assert validation["status"] == "ok"
+        assert validation["run_timestamp"] == "20260504T121000Z"
+
+
 def main() -> None:
     tests = [
         test_find_latest_shortlist_for_source_group,
         test_find_new_shortlist_rejects_stale_shards,
         test_write_synthetic_article_prefetch_fallback,
+        test_validate_finish_artifacts_requires_current_run_manifests,
     ]
     for test in tests:
         test()
