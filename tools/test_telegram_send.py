@@ -39,6 +39,7 @@ from telegram_send import (
     sanitize_delivery_error,
     strip_operator_content,
     strip_run_id_from_footer,
+    validate_delivery_language,
     validate_html_output,
     write_presend_cr,
 )
@@ -403,6 +404,31 @@ def test_telegram_delivery_error_redacts_relative_bot_path() -> None:
     print("PASS  test_telegram_delivery_error_redacts_relative_bot_path")
 
 
+def test_telegram_digest_language_gate_rejects_english_body() -> None:
+    try:
+        validate_delivery_language(
+            "# PropTech Monitor\n\n## Top Signals\n\nAvito lens: challenger pressure starts with inventory.",
+            profile_name="telegram_digest",
+            allow_non_russian=False,
+        )
+    except ValueError as exc:
+        assert "Russian language gate failed" in str(exc)
+    else:
+        raise AssertionError("English telegram_digest body should be rejected")
+
+    print("PASS  test_telegram_digest_language_gate_rejects_english_body")
+
+
+def test_telegram_digest_language_gate_accepts_russian_body() -> None:
+    validate_delivery_language(
+        "# PropTech Monitor\n\n## Главное\n\nСигнал: CoStar заявил о росте предложения. Для Avito это повод сравнить глубину инвентаря.",
+        profile_name="telegram_digest",
+        allow_non_russian=False,
+    )
+
+    print("PASS  test_telegram_digest_language_gate_accepts_russian_body")
+
+
 def test_telegram_retry_exhausted_http_status_classification() -> None:
     """Retry-exhausted HTTP statuses must keep status context for classification."""
 
@@ -477,7 +503,10 @@ def test_telegram_main_redacts_send_exception() -> None:
             "--date",
             "2026-05-04",
         ]
-        sys.stdin = io.StringIO("Plain digest body\n")
+        sys.stdin = io.StringIO(
+            "# PropTech Monitor\n\n## Главное\n\n"
+            "Сигнал: CoStar заявил о росте предложения. Для Avito это повод сравнить глубину инвентаря.\n"
+        )
         capture = io.StringIO()
         os.environ["TELEGRAM_BOT_TOKEN"] = "999999:FAKE-TOKEN"
         os.environ["TELEGRAM_CHAT_ID"] = "-100123456"
@@ -527,6 +556,8 @@ def _run_all() -> None:
         test_write_presend_cr,
         test_telegram_delivery_error_redaction,
         test_telegram_delivery_error_redacts_relative_bot_path,
+        test_telegram_digest_language_gate_rejects_english_body,
+        test_telegram_digest_language_gate_accepts_russian_body,
         test_telegram_retry_exhausted_http_status_classification,
         test_telegram_main_redacts_send_exception,
     ]:

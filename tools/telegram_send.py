@@ -70,8 +70,11 @@ from pathlib import Path
 
 import requests
 
+import russian_text_gate
+
 
 TELEGRAM_API_BASE = "https://api.telegram.org"
+RUSSIAN_DELIVERY_PROFILES = {"telegram_digest", "telegram_weekly_digest"}
 
 BUILT_IN_PROFILES: dict[str, dict] = {
     "telegram_digest": {
@@ -197,6 +200,12 @@ def delivery_error_record(part_index: int, exc: BaseException) -> dict[str, obje
         "classification": classification,
         "message": f"part {part_index}: {sanitize_delivery_error(exc)}",
     }
+
+
+def validate_delivery_language(body: str, *, profile_name: str, allow_non_russian: bool) -> None:
+    if allow_non_russian or profile_name not in RUSSIAN_DELIVERY_PROFILES:
+        return
+    russian_text_gate.require_russian_text(body, field_path=f"{profile_name}.body")
 
 # ---------------------------------------------------------------------------
 # HTML conversion helpers (for parse_mode=HTML profiles)
@@ -597,6 +606,11 @@ def _parse_cli() -> argparse.Namespace:
         action="store_true",
         help="send even if pre-send validation finds issues (CR is still written)",
     )
+    p.add_argument(
+        "--allow-non-russian",
+        action="store_true",
+        help="operator override for non-Russian digest bodies",
+    )
     return p.parse_args()
 
 
@@ -615,6 +629,7 @@ def main() -> None:
     if not body.strip():
         print("stdin is empty", file=sys.stderr)
         sys.exit(2)
+    validate_delivery_language(body, profile_name=args.profile, allow_non_russian=args.allow_non_russian)
 
     date_str = args.date or datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
