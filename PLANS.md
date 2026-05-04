@@ -11,6 +11,7 @@ they are not required runtime context for implementing RT-M2 through RT-M7.
 | Minimal Codex Runner Scraping Tooling | completed through RT-M7; RT-M8 also completed | `## Addendum: Minimal Codex Runner Scraping Tooling` | Current runner scraping tooling plan and live scrape test are complete. |
 | Source Group Corrections After Live Test | completed | `## Addendum: Source Group Corrections After Live Test` | Corrected REA Group to media releases and promoted Inman into `daily_core`. |
 | Weekday Digest Launch Hardening | completed through WLH-M8; externally blocked in recovery run | `docs/plans/weekday-digest-launch-hardening.md` | Follow-up plan for launch wrapper, env parsing, Telegram redaction, digest path/status semantics, and recovery dry-run. WLH-M8 reached the agent through the canonical wrapper and recorded the run as externally blocked by runner DNS plus missing non-interactive browser support. |
+| Source Discovery Runner Prefetch | active; planned | `docs/plans/source-discovery-runner-prefetch.md` | Follow-up plan to move static source network I/O into a deterministic runner prefetch step before the inner `codex exec`, keeping the inner agent sandboxed by default. |
 
 ## Archived and Inactive Plans
 
