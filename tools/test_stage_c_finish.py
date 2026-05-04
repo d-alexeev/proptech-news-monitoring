@@ -94,15 +94,15 @@ def finish_draft(url: str) -> dict:
                 "event_type": "product_signal",
                 "priority_score": 72,
                 "confidence": 0.82,
-                "analyst_summary": "ExampleCo expanded a portal feature with direct marketplace implications.",
-                "why_it_matters": "The change shows how portals are competing on inventory quality and agent workflow.",
-                "avito_implication": "Avito should compare the feature against its professional seller tooling roadmap.",
+                "analyst_summary": "ExampleCo расширила портал функцией, которая влияет на качество инвентаря.",
+                "why_it_matters": "Порталы конкурируют не только трафиком, но и рабочими инструментами для профессиональных продавцов.",
+                "avito_implication": "Avito стоит сравнить этот подход со своей дорожной картой инструментов для профессионалов.",
                 "story_id": "story_example_full_20260504",
                 "body_status": "full",
                 "article_file": ".state/articles/2026-05/2026-05-04_full-article.md",
                 "evidence_points": [
-                    "The article says ExampleCo expanded the portal feature.",
-                    "The article links the feature to professional seller workflow.",
+                    "Статья сообщает, что ExampleCo расширила портальную функцию.",
+                    "Статья связывает функцию с рабочим процессом профессиональных продавцов.",
                 ],
                 "source_quality": "trade_media",
             }
@@ -111,7 +111,7 @@ def finish_draft(url: str) -> dict:
             "section_order": ["top_stories", "weak_signals"],
             "top_story_ids": ["story_example_full_20260504"],
             "weak_signal_ids": [],
-            "selection_notes": ["Mixed full and fallback evidence."],
+            "selection_notes": ["В подборке смешаны полные тексты и fallback-доказательства."],
             "story_cards": [
                 {
                     "story_id": "story_example_full_20260504",
@@ -121,11 +121,11 @@ def finish_draft(url: str) -> dict:
                     "canonical_url": canonical,
                     "priority_score": 72,
                     "confidence": 0.82,
-                    "analyst_summary": "ExampleCo expanded a portal feature with direct marketplace implications.",
-                    "why_it_matters": "The change shows how portals are competing on inventory quality and agent workflow.",
-                    "avito_implication": "Avito should compare the feature against its professional seller tooling roadmap.",
+                    "analyst_summary": "ExampleCo расширила портал функцией, которая влияет на качество инвентаря.",
+                    "why_it_matters": "Порталы конкурируют не только трафиком, но и рабочими инструментами для профессиональных продавцов.",
+                    "avito_implication": "Avito стоит сравнить этот подход со своей дорожной картой инструментов для профессионалов.",
                     "context_refs": [],
-                    "evidence_notes": ["The article says ExampleCo expanded the portal feature."],
+                    "evidence_notes": ["Статья сообщает, что ExampleCo расширила портальную функцию."],
                 }
             ],
             "render_metadata": {
@@ -133,12 +133,12 @@ def finish_draft(url: str) -> dict:
                 "evidence_completeness": "mixed_or_full_evidence",
             },
         },
-        "digest_markdown": "# PropTech Monitor | 04.05.2026\n\n## Главное\n\n1. **[Full Article](https://example.test/full)**\n   - Сигнал: ExampleCo expanded a portal feature with direct marketplace implications.\n   - Почему важно: The change shows how portals are competing on inventory quality and agent workflow.\n   - Для Avito: Avito should compare the feature against its professional seller tooling roadmap.\n   - Доказательство: The article says ExampleCo expanded the portal feature.\n\nmode: build_daily_digest | 04.05.2026\n",
+        "digest_markdown": "# PropTech Monitor | 04.05.2026\n\n## Главное\n\n1. **[Full Article](https://example.test/full)**\n   - Сигнал: ExampleCo расширила портал функцией для качества инвентаря.\n   - Почему важно: порталы конкурируют рабочими инструментами для профессиональных продавцов.\n   - Для Avito: стоит сравнить подход со своей дорожной картой.\n   - Доказательство: статья описывает запуск функции для профессионального workflow.\n\nmode: build_daily_digest | 04.05.2026\n",
         "qa_review": {
             "status": "warnings",
             "critical_findings_count": 0,
             "warning_findings_count": 1,
-            "summary": "QA review found no critical issues and one source-coverage caveat.",
+            "summary": "QA-проверка не нашла критических проблем и отметила одно ограничение покрытия источников.",
         },
         "telegram_delivery": {
             "status": "not_configured",
@@ -236,11 +236,42 @@ def test_rejects_digest_body_runtime_path_leakage() -> None:
             raise AssertionError("runtime path leakage should be rejected")
 
 
+def test_rejects_english_telegram_digest_markdown() -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        root = pathlib.Path(tmpdir)
+        url = "https://example.test/full"
+        shortlist_path = root / ".state/shortlists/2026-05-04/monitor_sources__20260504T120000Z__daily_core.json"
+        article_result_path = root / ".state/codex-runs/20260504T121000Z-weekday_digest-article-prefetch-result.json"
+        draft_path = root / ".state/codex-runs/20260504T121000Z-weekday_digest-finish-draft.json"
+        draft = finish_draft(url)
+        draft["digest_markdown"] = "# PropTech Monitor | 04.05.2026\n\n## Top Signals\n\nAvito lens: challenger pressure starts with inventory.\n"
+        write_json(shortlist_path, [shortlist_item(url)])
+        write_json(article_result_path, article_prefetch_doc(url))
+        write_json(draft_path, draft)
+
+        try:
+            stage_c_finish.materialize_finish(
+                repo_root=root,
+                run_id="20260504T121000Z-weekday_digest",
+                run_date="2026-05-04",
+                source_group="daily_core",
+                delivery_profile="telegram_digest",
+                shortlist_path=shortlist_path,
+                article_prefetch_result_path=article_result_path,
+                draft_path=draft_path,
+            )
+        except ValueError as exc:
+            assert "Russian language gate failed" in str(exc)
+        else:
+            raise AssertionError("English telegram_digest markdown should be rejected")
+
+
 def main() -> None:
     tests = [
         test_materialize_finish_draft_writes_current_run_artifacts,
         test_rejects_non_shortlisted_draft_url,
         test_rejects_digest_body_runtime_path_leakage,
+        test_rejects_english_telegram_digest_markdown,
     ]
     for test in tests:
         test()

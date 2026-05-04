@@ -8,6 +8,8 @@ import sys
 from datetime import datetime, timezone
 from typing import Any
 
+import russian_text_gate
+
 
 BODY_STATUS_VALUES = {"full", "snippet_fallback", "paywall_stub"}
 SOURCE_QUALITY_VALUES = {
@@ -27,6 +29,7 @@ FORBIDDEN_DIGEST_MARKERS = [
     "operator notes",
     "run id",
 ]
+RUSSIAN_DELIVERY_PROFILES = {"telegram_digest", "telegram_weekly_digest"}
 
 
 def now_iso() -> str:
@@ -108,6 +111,34 @@ def validate_digest_markdown(markdown: str) -> None:
     for marker in FORBIDDEN_DIGEST_MARKERS:
         if marker.lower() in lowered:
             raise ValueError(f"digest markdown contains forbidden runtime marker: {marker}")
+
+
+def validate_russian_delivery_text(draft: dict, delivery_profile: str) -> None:
+    if delivery_profile not in RUSSIAN_DELIVERY_PROFILES:
+        return
+    russian_text_gate.require_russian_text(str(draft.get("digest_markdown", "")), field_path="digest_markdown")
+    for index, item in enumerate(draft.get("enriched_items", [])):
+        for key in ("analyst_summary", "why_it_matters", "avito_implication"):
+            russian_text_gate.require_russian_text(str(item.get(key, "")), field_path=f"enriched_items[{index}].{key}")
+        for evidence_index, evidence in enumerate(item.get("evidence_points", [])):
+            russian_text_gate.require_russian_text(
+                str(evidence),
+                field_path=f"enriched_items[{index}].evidence_points[{evidence_index}]",
+            )
+    daily = draft.get("daily_brief", {})
+    for index, note in enumerate(daily.get("selection_notes", [])):
+        russian_text_gate.require_russian_text(str(note), field_path=f"daily_brief.selection_notes[{index}]")
+    for index, card in enumerate(daily.get("story_cards", [])):
+        for key in ("analyst_summary", "why_it_matters", "avito_implication"):
+            russian_text_gate.require_russian_text(str(card.get(key, "")), field_path=f"daily_brief.story_cards[{index}].{key}")
+        for evidence_index, evidence in enumerate(card.get("evidence_notes", [])):
+            russian_text_gate.require_russian_text(
+                str(evidence),
+                field_path=f"daily_brief.story_cards[{index}].evidence_notes[{evidence_index}]",
+            )
+    qa_review = draft.get("qa_review", {})
+    if isinstance(qa_review, dict) and qa_review.get("summary"):
+        russian_text_gate.require_russian_text(str(qa_review.get("summary", "")), field_path="qa_review.summary")
 
 
 def validate_enriched_items(enriched_items: list[dict], shortlisted_urls: set[str], prefetch_by_url: dict[str, dict]) -> None:
@@ -198,6 +229,7 @@ def validate_draft(
     if not isinstance(draft["daily_brief"], dict):
         raise ValueError("finish draft daily_brief must be an object")
     validate_digest_markdown(str(draft["digest_markdown"]))
+    validate_russian_delivery_text(draft, delivery_profile)
     qa_review = draft["qa_review"]
     if not isinstance(qa_review, dict):
         raise ValueError("finish draft qa_review must be an object")
