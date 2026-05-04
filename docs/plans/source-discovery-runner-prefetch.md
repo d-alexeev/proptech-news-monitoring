@@ -176,7 +176,25 @@ Non-goals:
 | Large listing HTML must not become full prompt context | SD-M1, SD-M3 |
 | Run evidence must remain reviewable and secret-safe | SD-M4 |
 
-## Current Recommendation
+## Implementation Status
 
-Implement SD-M1 through SD-M3 before re-running full `weekday_digest`.
+Completed through SD-M4 on 2026-05-04.
+
+- SD-M1 added `tools/source_discovery_prefetch.py` and offline tests.
+- SD-M2 wired the prefetch helper into `ops/codex-cli/run_schedule.sh` while
+  keeping the inner agent sandbox at `workspace-write`.
+- SD-M3 updated `weekday_digest` and `monitor_sources` contracts to consume
+  prefetch artifacts as static source evidence without dumping large HTTP
+  bodies into prompt/runtime context.
+- SD-M4 recovery run `20260504T104232Z-weekday_digest` generated
+  `digests/2026-05-04-daily-digest.md` as `partial_digest`.
+
+Remaining follow-ups:
+
+- implement or explicitly defer a non-interactive browser runner for
+  `chrome_scrape` sources;
+- retry or remediate `rightmove_plc` DNS resolution;
+- monitor `costar_homes` timeout behavior;
+- configure Telegram env before expecting live delivery.
+
 Do not use `danger-full-access` as the default scheduled runner fix.

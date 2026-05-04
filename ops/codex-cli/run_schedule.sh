@@ -154,9 +154,9 @@ python3 "$PREFETCH_HELPER" \
   printf 'Use these local JSON artifacts as canonical static source evidence for `monitor_sources`.\n'
   printf 'Do not re-run static network fetches for sources already represented in the prefetch artifacts from inside this sandbox.\n'
   printf 'Configured browser sources remain `not_attempted` unless a separate browser artifact is present.\n\n'
-  printf '- Prefetch summary: `%s`\n' "$PREFETCH_SUMMARY"
-  printf '- Prefetch stdout copy: `%s`\n' "$PREFETCH_STDOUT"
-  printf '- Schedule run id: `%s`\n\n' "$RUN_ID"
+  printf '%s\n' "- Prefetch summary: \`$PREFETCH_SUMMARY\`"
+  printf '%s\n' "- Prefetch stdout copy: \`$PREFETCH_STDOUT\`"
+  printf '%s\n\n' "- Schedule run id: \`$RUN_ID\`"
   cat "$PROMPT_FILE"
 } > "$GENERATED_PROMPT"
 

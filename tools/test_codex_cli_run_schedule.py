@@ -132,6 +132,7 @@ def test_wrapper_uses_supported_codex_exec_flags_and_quotes_user_agent_template(
     assert "--output-last-message \"$LAST_MESSAGE\"" in wrapper_text
     assert "source_discovery_prefetch.py" in wrapper_text
     assert "$GENERATED_PROMPT" in wrapper_text
+    assert "printf '- Prefetch" not in wrapper_text
     assert "HTTP_USER_AGENT='PropTechNewsMonitor/1.0 (+team@example.com)'" in env_text
 
 

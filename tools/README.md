@@ -21,9 +21,11 @@
   `3-9` зарезервированы.
 - **Env vars:** читаются из process env. Ни один скрипт не пишет секреты в
   stdout и не логирует их в stderr.
-- **No state writes:** скрипты сами не пишут в `./.state/`. Это задача
-  вызывающего runtime-слоя, который оформляет результат под контракт
-  артефактов из `config/runtime/state_layout.yaml`.
+- **State writes:** low-level data helpers such as `rss_fetch.py` and
+  `pdf_extract.py` do not write `./.state/`. Runner orchestration helpers may
+  write narrowly documented evidence artifacts when they own that runtime step;
+  today this exception is `source_discovery_prefetch.py`, which writes only
+  `.state/codex-runs/` prefetch evidence for the scheduled agent to consume.
 
 ## Состав
 
