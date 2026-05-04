@@ -62,6 +62,13 @@ last-message before the inner `codex exec` was stopped.
   on the schedule run id timestamp.
 - Updated run review and plan status to mark VD-M7 as partial/blocked, not done.
 
+## Deterministic Stage C Plan
+
+Follow-up work is tracked in
+`docs/superpowers/plans/2026-05-04-deterministic-stage-c-finish.md`.
+The intended fix is to keep Codex responsible for compact analysis, but move
+artifact writes to `tools/stage_c_finish.py`.
+
 ## Follow-Ups
 
 1. Convert Stage C enrichment/digest artifact creation from freeform agent work

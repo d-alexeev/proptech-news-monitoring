@@ -77,6 +77,13 @@ After Stage C returns, the wrapper validates that current-run
 timestamp. A date-level digest file alone is not enough to mark Victory Digest
 complete.
 
+Stage C has a strict IO boundary. The inner Codex agent writes one compact
+finish draft under `.state/codex-runs/*-finish-draft.json`; the wrapper then
+runs `tools/stage_c_finish.py` to materialize `.state/enriched`,
+`.state/runs`, `.state/briefs`, and `digests/{date}-daily-digest.md`.
+If the draft is missing, stale, invalid, or leaks runtime paths into the digest
+body, the wrapper fails before delivery.
+
 ## Runner Dependencies
 
 Install Python dependencies in the same environment used by scheduled jobs:
