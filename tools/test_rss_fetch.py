@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import os
 import pathlib
+import socket
 import tempfile
 import warnings
 from contextlib import contextmanager
@@ -17,6 +18,7 @@ from typing import Iterator
 warnings.filterwarnings("ignore", message="urllib3 v2 only supports OpenSSL.*")
 
 import requests
+from urllib3.exceptions import NameResolutionError
 
 import rss_fetch
 
@@ -186,6 +188,115 @@ def test_soft_fail_labels_are_explicit() -> None:
         assert result["error"] is None
 
 
+def test_batch_all_name_resolution_errors_classifies_environment_failure() -> None:
+    """All fetchable sources failing DNS is a runner environment failure."""
+    dns_error = requests.ConnectionError(
+        NameResolutionError(
+            "example.test",
+            None,  # type: ignore[arg-type]
+            socket.gaierror(-2, "Name or service not known"),
+        )
+    )
+    specs = [
+        {"source_id": "redfin_news", "url": "https://redfin.example/feed", "kind": "rss"},
+        {"source_id": "costar_homes", "url": "https://costar.example/feed", "kind": "rss"},
+    ]
+
+    with fake_request(dns_error):
+        doc = rss_fetch.fetch_batch(specs, fetched_at="2026-05-04T06:00:00Z")
+
+    assert doc["batch_status"] == "environment_failure"
+    assert doc["failure_class"] == "global_dns_resolution_failure"
+    assert doc["run_failure"]["failure_type"] == "dns_resolution"
+    assert doc["run_failure"]["affected_source_count"] == 2
+    assert doc["run_failure"]["fetchable_source_count"] == 2
+    assert [result["source_id"] for result in doc["results"]] == ["redfin_news", "costar_homes"]
+    assert all(result["failure_class"] == "dns_resolution" for result in doc["results"])
+    assert all(result["soft_fail"] is None for result in doc["results"])
+
+
+def test_batch_single_timeout_remains_source_level_soft_fail() -> None:
+    """One source timeout remains a source outcome, including costar_homes."""
+    responses = {
+        "https://costar.example/feed": requests.ReadTimeout("read timed out"),
+        "https://redfin.example/feed": FakeResponse(
+            text=INMAN_RSS,
+            url="https://redfin.example/feed",
+            headers={"Content-Type": "application/rss+xml"},
+        ),
+    }
+    original = rss_fetch._do_request
+
+    def _fake_do_request(url, *args, **kwargs):  # noqa: ANN001, ANN002, ANN003, ANN202
+        response_or_exc = responses[url]
+        if isinstance(response_or_exc, Exception):
+            raise response_or_exc
+        return response_or_exc
+
+    rss_fetch._do_request = _fake_do_request
+    try:
+        doc = rss_fetch.fetch_batch(
+            [
+                {"source_id": "costar_homes", "url": "https://costar.example/feed", "kind": "rss"},
+                {"source_id": "redfin_news", "url": "https://redfin.example/feed", "kind": "rss"},
+            ],
+            fetched_at="2026-05-04T06:00:00Z",
+        )
+    finally:
+        rss_fetch._do_request = original
+
+    assert doc["batch_status"] == "partial_success"
+    assert doc["failure_class"] is None
+    assert doc["run_failure"] is None
+    by_source = {result["source_id"]: result for result in doc["results"]}
+    assert by_source["costar_homes"]["soft_fail"] == "timeout"
+    assert by_source["costar_homes"]["failure_class"] == "timeout"
+    assert by_source["redfin_news"]["soft_fail"] is None
+    assert by_source["redfin_news"]["error"] is None
+
+
+def test_batch_costar_timeout_does_not_mask_other_sources_dns_failure() -> None:
+    """Known Costar timeout does not hide a resolver failure for the rest of the batch."""
+    dns_error = requests.ConnectionError(
+        NameResolutionError(
+            "example.test",
+            None,  # type: ignore[arg-type]
+            socket.gaierror(-2, "Name or service not known"),
+        )
+    )
+    responses = {
+        "https://costar.example/feed": requests.ReadTimeout("read timed out"),
+        "https://redfin.example/feed": dns_error,
+        "https://zillow.example/feed": dns_error,
+    }
+    original = rss_fetch._do_request
+
+    def _fake_do_request(url, *args, **kwargs):  # noqa: ANN001, ANN002, ANN003, ANN202
+        response_or_exc = responses[url]
+        if isinstance(response_or_exc, Exception):
+            raise response_or_exc
+        return response_or_exc
+
+    rss_fetch._do_request = _fake_do_request
+    try:
+        doc = rss_fetch.fetch_batch(
+            [
+                {"source_id": "costar_homes", "url": "https://costar.example/feed", "kind": "rss"},
+                {"source_id": "redfin_news", "url": "https://redfin.example/feed", "kind": "rss"},
+                {"source_id": "zillow_newsroom", "url": "https://zillow.example/feed", "kind": "rss"},
+            ],
+            fetched_at="2026-05-04T06:00:00Z",
+        )
+    finally:
+        rss_fetch._do_request = original
+
+    assert doc["batch_status"] == "environment_failure"
+    assert doc["failure_class"] == "global_dns_resolution_failure"
+    assert doc["run_failure"]["failure_type"] == "dns_resolution"
+    assert doc["run_failure"]["affected_source_count"] == 2
+    assert doc["run_failure"]["soft_failed_source_ids"] == ["costar_homes"]
+
+
 def test_fetcher_does_not_write_state() -> None:
     """The fetcher returns JSON-ready data and leaves .state ownership to runtime."""
     response = FakeResponse(text="<html>ok</html>", headers={"Content-Type": "text/html"})
@@ -213,6 +324,9 @@ def main() -> None:
         test_http_static_html_returns_raw_body_and_metadata,
         test_itunes_api_uses_http_path_without_separate_client,
         test_soft_fail_labels_are_explicit,
+        test_batch_all_name_resolution_errors_classifies_environment_failure,
+        test_batch_single_timeout_remains_source_level_soft_fail,
+        test_batch_costar_timeout_does_not_mask_other_sources_dns_failure,
         test_fetcher_does_not_write_state,
     ]
     for test in tests:

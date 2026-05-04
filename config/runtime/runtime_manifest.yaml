@@ -64,6 +64,7 @@ files:
   mode_fixtures:
     monitor_sources_shortlist: ./config/runtime/mode-fixtures/monitor_sources_shortlist.yaml
     monitor_sources_duplicate_story: ./config/runtime/mode-fixtures/monitor_sources_duplicate_story.yaml
+    monitor_sources_global_dns_environment_failure: ./config/runtime/mode-fixtures/monitor_sources_global_dns_environment_failure.yaml
     scrape_and_enrich_non_shortlisted_guard: ./config/runtime/mode-fixtures/scrape_and_enrich_non_shortlisted_guard.yaml
     scrape_and_enrich_adapter_resolution: ./config/runtime/mode-fixtures/scrape_and_enrich_adapter_resolution.yaml
     scrape_and_enrich_full_body: ./config/runtime/mode-fixtures/scrape_and_enrich_full_body.yaml

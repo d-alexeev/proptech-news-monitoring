@@ -42,9 +42,13 @@ Output (stdout, one JSON document):
         ],
         "body": null,                # only for kind=http: raw text
         "error": null,
+        "failure_class": null,       # dns_resolution | timeout | ...
         "soft_fail": null            # blocked_or_paywall | rate_limited | anti_bot | timeout | ...
       }
-    ]
+    ],
+    "batch_status": "success",       # success | partial_success | soft_failed | environment_failure | failed
+    "failure_class": null,           # global_dns_resolution_failure | ...
+    "run_failure": null              # populated for environment/run failures
   }
 
 Exit codes:
@@ -122,6 +126,17 @@ def _classify_soft_fail(status: int, body_preview: str) -> str | None:
     low = body_preview.lower()[:2048]
     if "captcha" in low or "access denied" in low or "are you a human" in low:
         return "anti_bot"
+    return None
+
+
+def _classify_exception_failure(exc: Exception) -> str | None:
+    detail = f"{exc.__class__.__name__}: {exc}"
+    if (
+        "NameResolutionError" in detail
+        or "Temporary failure in name resolution" in detail
+        or "Failed to resolve" in detail
+    ):
+        return "dns_resolution"
     return None
 
 
@@ -212,6 +227,7 @@ def fetch_source(spec: dict) -> dict:
             "items": [],
             "body": None,
             "error": "missing url",
+            "failure_class": "invalid_source_spec",
             "soft_fail": None,
         }
     if kind not in ("rss", "http"):
@@ -223,6 +239,7 @@ def fetch_source(spec: dict) -> dict:
             "items": [],
             "body": None,
             "error": f"unsupported kind: {kind}",
+            "failure_class": "invalid_source_spec",
             "soft_fail": None,
         }
 
@@ -252,10 +269,12 @@ def fetch_source(spec: dict) -> dict:
             "items": [],
             "body": None,
             "error": None,
+            "failure_class": "timeout",
             "soft_fail": "timeout",
             "soft_fail_detail": f"{exc.__class__.__name__}: {exc}",
         }
     except Exception as exc:  # noqa: BLE001 — surface as error string
+        failure_class = _classify_exception_failure(exc)
         return {
             "source_id": source_id,
             "url": url,
@@ -264,6 +283,7 @@ def fetch_source(spec: dict) -> dict:
             "items": [],
             "body": None,
             "error": f"network_error: {exc.__class__.__name__}: {exc}",
+            "failure_class": failure_class or "network_error",
             "soft_fail": None,
         }
     elapsed_ms = int((time.monotonic() - started) * 1000)
@@ -287,6 +307,7 @@ def fetch_source(spec: dict) -> dict:
             "items": [],
             "body": None,
             "error": None,
+            "failure_class": None,
             "soft_fail": None,
             "not_modified": True,
         }
@@ -303,6 +324,7 @@ def fetch_source(spec: dict) -> dict:
             "items": [],
             "body": body_text[:2000] if kind == "http" else None,
             "error": None,
+            "failure_class": soft,
             "soft_fail": soft,
         }
 
@@ -315,6 +337,7 @@ def fetch_source(spec: dict) -> dict:
             "items": [],
             "body": None,
             "error": f"http_error: {status}",
+            "failure_class": "http_error",
             "soft_fail": None,
         }
 
@@ -327,6 +350,7 @@ def fetch_source(spec: dict) -> dict:
             "items": [],
             "body": body_text,
             "error": None,
+            "failure_class": None,
             "soft_fail": None,
         }
 
@@ -376,13 +400,61 @@ def fetch_source(spec: dict) -> dict:
         "items": items,
         "body": None,
         "error": None,
+        "failure_class": None,
         "soft_fail": None,
     }
     if bozo and not items:
         result["error"] = f"feed_parse_error: {bozo_exc}"
+        result["failure_class"] = "feed_parse_error"
     elif bozo:
         result["warning"] = f"feed_parse_warning: {bozo_exc}"
     return result
+
+
+def _is_fetchable_spec(spec: dict) -> bool:
+    return bool(spec.get("url")) and (spec.get("kind") or "rss").lower() in ("rss", "http")
+
+
+def _batch_status(specs: list[dict], results: list[dict]) -> tuple[str, str | None, dict | None]:
+    fetchable_count = sum(1 for spec in specs if _is_fetchable_spec(spec))
+    dns_results = [r for r in results if r.get("failure_class") == "dns_resolution"]
+    ignored_soft_fails = [
+        r
+        for r in results
+        if r.get("source_id") == "costar_homes" and r.get("soft_fail") == "timeout"
+    ]
+    if fetchable_count and dns_results and len(dns_results) + len(ignored_soft_fails) == fetchable_count:
+        return (
+            "environment_failure",
+            "global_dns_resolution_failure",
+            {
+                "failure_type": "dns_resolution",
+                "message": "Configured source discovery failed during DNS resolution; treat as runner/network failure.",
+                "affected_source_count": len(dns_results),
+                "fetchable_source_count": fetchable_count,
+                "source_ids": [r.get("source_id") for r in dns_results],
+                "soft_failed_source_ids": [r.get("source_id") for r in ignored_soft_fails],
+            },
+        )
+    if any(r.get("error") and not r.get("soft_fail") for r in results):
+        return "failed", None, None
+    if results and all(r.get("soft_fail") for r in results):
+        return "soft_failed", None, None
+    if any(r.get("soft_fail") for r in results):
+        return "partial_success", None, None
+    return "success", None, None
+
+
+def fetch_batch(specs: list[dict], *, fetched_at: str | None = None) -> dict:
+    results = [fetch_source(spec) for spec in specs]
+    status, failure_class, run_failure = _batch_status(specs, results)
+    return {
+        "fetched_at": fetched_at or _now_iso(),
+        "results": results,
+        "batch_status": status,
+        "failure_class": failure_class,
+        "run_failure": run_failure,
+    }
 
 
 def _parse_cli() -> argparse.Namespace:
@@ -419,17 +491,15 @@ def _iter_specs(args: argparse.Namespace) -> Iterable[dict]:
 def main() -> None:
     args = _parse_cli()
     specs = list(_iter_specs(args))
-    results = [fetch_source(spec) for spec in specs]
-
-    doc = {
-        "fetched_at": _now_iso(),
-        "results": results,
-    }
+    doc = fetch_batch(specs)
+    results = doc["results"]
 
     indent = 2 if args.pretty else None
     sys.stdout.write(json.dumps(doc, ensure_ascii=False, indent=indent))
     sys.stdout.write("\n")
 
+    if doc.get("batch_status") == "environment_failure":
+        sys.exit(1)
     if results and all(r.get("soft_fail") for r in results):
         sys.exit(10)
     if any(r.get("error") and not r.get("soft_fail") for r in results) and len(results) == 1:

@@ -1,0 +1,58 @@
+fixture_id: monitor_sources_global_dns_environment_failure
+mode_id: monitor_sources
+
+inputs:
+  run_id: monitor_sources__20260504T060000Z__daily_core
+  run_date: 2026-05-04
+  group_id: daily_core
+  source_group_config: ./config/runtime/source-groups/daily_core.yaml
+  source_runner_output:
+    fetched_at: 2026-05-04T06:00:04Z
+    batch_status: environment_failure
+    failure_class: global_dns_resolution_failure
+    run_failure:
+      failure_type: dns_resolution
+      affected_source_count: 2
+      fetchable_source_count: 2
+      source_ids:
+        - redfin_news
+        - costar_homes
+      soft_failed_source_ids: []
+      message: Configured source discovery failed during DNS resolution; treat as runner/network failure.
+    results:
+      - source_id: redfin_news
+        url: https://www.redfin.com/news/feed/
+        kind: rss
+        http: null
+        items: []
+        body: null
+        error: "network_error: ConnectionError: Failed to resolve redfin.example"
+        failure_class: dns_resolution
+        soft_fail: null
+      - source_id: costar_homes
+        url: https://investors.costargroup.com/rss/news-releases.xml
+        kind: rss
+        http: null
+        items: []
+        body: null
+        error: "network_error: ConnectionError: Failed to resolve investors.costargroup.com"
+        failure_class: dns_resolution
+        soft_fail: null
+
+expected:
+  action: emit_failed_run_manifest_without_canonical_empty_shards
+  run_manifest_status: failed
+  failure_type: runner_environment_failure
+  failure_class: global_dns_resolution_failure
+  canonical_source_discovery: false
+  raw_shard_written: false
+  shortlist_shard_written: false
+  web_fallback_allowed_as_canonical: false
+  required_manifest_fields:
+    - run_id
+    - mode
+    - status
+    - failure_type
+    - failure_class
+    - source_runner_summary
+    - output_artifacts

@@ -44,3 +44,20 @@ Use checkpoints and the recent story index only for duplicate linkage and contin
 Do not do final digest selection here.
 If a source requires blocked/manual access or another persistent repo change, emit `change_request`.
 Do not edit prompts, config, or adapters to work around the issue.
+
+Source runner failure handling:
+
+- Treat `tools/rss_fetch.py` output `batch_status=environment_failure` with
+  `failure_class=global_dns_resolution_failure` as a runner/network failure,
+  not as a canonical empty source result.
+- When the source runner reports global DNS failure across all fetchable sources,
+  or across all fetchable sources except a known `costar_homes` timeout, emit a
+  run manifest with failure status and enough diagnostic detail for operator
+  follow-up; do not emit clean empty raw/shortlist shards as if source discovery
+  succeeded.
+- Preserve source-level outcomes in each result. A single source `soft_fail`,
+  including `costar_homes` `soft_fail=timeout`, remains a source-level soft
+  failure unless the batch also reports a global resolver failure.
+- Do not use web search or ad hoc web fallback as a canonical replacement for
+  configured source discovery. If fallback evidence is operator-supplied, mark
+  it non-canonical or partial in the run manifest.

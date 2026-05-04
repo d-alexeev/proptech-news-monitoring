@@ -72,6 +72,48 @@ processing_stages:
   - name: shortlist_emission
     output: shortlisted_item[]
 
+source_runner_contract:
+  primary_static_tool: ./tools/rss_fetch.py
+  batch_summary_fields:
+    - fetched_at
+    - batch_status
+    - failure_class
+    - run_failure
+    - results
+  batch_status_values:
+    - success
+    - partial_success
+    - soft_failed
+    - failed
+    - environment_failure
+  environment_failure_classes:
+    - global_dns_resolution_failure
+  source_failure_classes:
+    - timeout
+    - blocked_or_paywall
+    - rate_limited
+    - anti_bot
+    - origin_blocked
+    - selector_miss
+    - stale_source
+    - http_error
+    - feed_parse_error
+    - dns_resolution
+    - network_error
+  handling_rules:
+    - condition: "batch_status == 'environment_failure' and failure_class == 'global_dns_resolution_failure'"
+      action: emit_failed_run_manifest_without_canonical_empty_shards
+      note: DNS failure across all fetchable configured sources, or all except a known costar_homes timeout, is a runner/network failure, not a no-news source result.
+    - condition: "one or more results have soft_fail and batch_status != 'environment_failure'"
+      action: preserve_source_level_outcome_and_continue_when_other_sources_succeeded
+      note: Individual timeouts, blocking, selector misses, and rate limits remain source-level outcomes.
+    - condition: "source_id == 'costar_homes' and soft_fail == 'timeout' and batch_status != 'environment_failure'"
+      action: treat_as_transient_source_soft_fail
+      note: Do not escalate the known transient Costar timeout unless resolver failures affect the batch globally.
+    - condition: "operator fallback evidence exists after source runner failure"
+      action: mark_manifest_partial_or_non_canonical
+      note: Web fallback must not be represented as canonical configured-source discovery.
+
 output_contract:
   raw_shard:
     schema: raw_candidate[]
@@ -96,9 +138,11 @@ change_request_escalation:
   policy_ref: ./cowork/shared/change_request_policy.md
   allowed_failure_types:
     - blocked_or_manual_source
+    - runner_environment_failure
   trigger_conditions:
     - configured source resolves to a blocked/manual access adapter or equivalent runtime limitation
     - declared discovery path cannot proceed without manual or out-of-band access
+    - global runner/network failure prevents configured source discovery and requires operator remediation
   suppression:
     # Sources declared with blocked_mode=manual_only_permanent (see
     # cowork/adapters/blocked_manual_access.md) do not emit a change_request
