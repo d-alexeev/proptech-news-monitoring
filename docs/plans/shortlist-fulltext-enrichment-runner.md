@@ -10,6 +10,23 @@
 
 ---
 
+## Implementation Status
+
+Status as of 2026-05-04:
+
+- SFE-M1 complete: `tools/article_fetch.py` and offline contract tests are implemented.
+- SFE-M2 complete: `tools/shortlist_article_prefetch.py` writes shortlist-scoped article artifacts plus compact result/summary manifests.
+- SFE-M3 complete: `scrape_and_enrich` mode contracts and fixtures now allow runner article prefetch artifacts only after current-run shortlist matching.
+- SFE-M4 remains the next checkpoint: staged Codex I/O wrapper design and elevated article prefetch prompt/wiring are not implemented yet.
+
+Validation completed for the implemented milestones:
+
+- `python3 tools/test_article_fetch.py`
+- `python3 tools/test_shortlist_article_prefetch.py`
+- `PYTHONPYCACHEPREFIX=.pycache-local python3 -m py_compile tools/shortlist_article_prefetch.py tools/article_fetch.py`
+- `python3 tools/test_validate_runtime_artifacts.py`
+- `python3 tools/validate_runtime_artifacts.py --check all`
+
 ## Requirements
 
 - Fetch full text only for items present in the current run's shortlist shard.
