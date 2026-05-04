@@ -18,6 +18,7 @@ they are not required runtime context for implementing RT-M2 through RT-M7.
 | Deterministic Stage C Finish | completed; live rerun passed 95% production-ready gate | `docs/superpowers/plans/2026-05-04-deterministic-stage-c-finish.md` | Stage C emits a strict compact draft; `tools/stage_c_finish.py` materializes current-run enrichment/digest artifacts and finish summary. Live rerun `20260504T142209Z` passed artifact validation, article prefetch gate, QA gate, digest safety scans, and Telegram dry-run. |
 | Inman Visible Paywall Text | completed; live Inman check passed | `## Addendum: Inman Visible Paywall Text` | Preserves publicly visible article text on Inman paywall pages as `snippet_fallback` evidence through source-scoped public browser fallback, without login, CAPTCHA, subscription, or paywall bypass. |
 | Russian Telegram Digest | planned | `docs/superpowers/plans/2026-05-04-russian-telegram-digest.md` | Enforce Russian-only editorial prose for `telegram_digest` through prompt/contracts, Stage C materializer gate, and Telegram pre-send gate. |
+| Telegram Digest Template and Preview | planned | `docs/superpowers/plans/2026-05-04-telegram-digest-length-budget.md` | Add a stable compact one-message template for weekday `telegram_digest`, parse top-story lead image metadata, deliver via large Telegram link preview, enforce Stage C hard length/template/preview gates, and verify a regenerated digest with Telegram dry-run `parts_sent=1`. |
 
 ## Archived and Inactive Plans
 
