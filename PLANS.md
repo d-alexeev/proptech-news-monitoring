@@ -10,6 +10,7 @@ they are not required runtime context for implementing RT-M2 through RT-M7.
 | --- | --- | --- | --- |
 | Minimal Codex Runner Scraping Tooling | completed through RT-M7; RT-M8 also completed | `## Addendum: Minimal Codex Runner Scraping Tooling` | Current runner scraping tooling plan and live scrape test are complete. |
 | Source Group Corrections After Live Test | completed | `## Addendum: Source Group Corrections After Live Test` | Corrected REA Group to media releases and promoted Inman into `daily_core`. |
+| Weekday Digest Launch Hardening | active/planned | `docs/plans/weekday-digest-launch-hardening.md` | Follow-up plan for launch wrapper, env parsing, Telegram redaction, digest path/status semantics, and recovery dry-run. |
 
 ## Archived and Inactive Plans
 
