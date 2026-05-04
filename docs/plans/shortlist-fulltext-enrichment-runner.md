@@ -17,7 +17,8 @@ Status as of 2026-05-04:
 - SFE-M1 complete: `tools/article_fetch.py` and offline contract tests are implemented.
 - SFE-M2 complete: `tools/shortlist_article_prefetch.py` writes shortlist-scoped article artifacts plus compact result/summary manifests.
 - SFE-M3 complete: `scrape_and_enrich` mode contracts and fixtures now allow runner article prefetch artifacts only after current-run shortlist matching.
-- SFE-M4 remains the next checkpoint: staged Codex I/O wrapper design and elevated article prefetch prompt/wiring are not implemented yet.
+- SFE-M4/SFE-M5 adapted and complete: the weekday wrapper now uses Stage A sandboxed discovery, direct Stage B full-text collection through `tools/shortlist_article_prefetch.py`, and Stage C sandboxed enrichment/digest/review instead of a separate elevated Codex I/O article-prefetch agent.
+- SFE-M6 remains optional: browser article fallback is still deferred unless a later source-level run review proves it is needed.
 
 Validation completed for the implemented milestones:
 
@@ -26,6 +27,9 @@ Validation completed for the implemented milestones:
 - `PYTHONPYCACHEPREFIX=.pycache-local python3 -m py_compile tools/shortlist_article_prefetch.py tools/article_fetch.py`
 - `python3 tools/test_validate_runtime_artifacts.py`
 - `python3 tools/validate_runtime_artifacts.py --check all`
+- `python3 tools/test_codex_schedule_artifacts.py`
+- `python3 tools/test_codex_cli_run_schedule.py`
+- `bash -n ops/codex-cli/run_schedule.sh`
 
 ## Requirements
 

@@ -48,6 +48,30 @@ The wrapper:
 - uses a lock directory to prevent concurrent scheduled runs;
 - writes Codex JSONL events and the final message under `.state/codex-runs/`.
 
+## Victory Digest Production-Like Run
+
+Victory Digest is the operator label for a production-like `weekday_digest`
+test run through the canonical wrapper:
+
+```bash
+ops/codex-cli/run_schedule.sh weekday_digest
+```
+
+For `weekday_digest`, the wrapper runs:
+
+- Stage A: sandboxed source discovery and shortlist emission.
+- Stage B: direct full-text collection for the current shortlist through
+  `tools/shortlist_article_prefetch.py`.
+- Stage C: sandboxed enrichment, digest generation, review, and delivery.
+
+Stage A and Stage C run through `codex exec` with `workspace-write`. Stage B is
+not a separate Codex agent; it is a deterministic helper call from the wrapper.
+It may fetch full text only for URLs present in the current-run shortlist shard.
+
+If Stage B fails or does not write article prefetch manifests, the wrapper writes
+a synthetic article prefetch fallback so Stage C can continue with
+`snippet_fallback` evidence rather than failing the whole digest.
+
 ## Runner Dependencies
 
 Install Python dependencies in the same environment used by scheduled jobs:

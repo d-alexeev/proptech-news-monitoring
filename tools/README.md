@@ -34,6 +34,7 @@
 | `rss_fetch.py` | Единый минимальный fetcher для `fetch_strategy: rss`, `html_scrape` и простых JSON/API источников вроде `itunes_api`. |
 | `browser_fetch.py` | Headless Playwright fetcher for configured `fetch_strategy: chrome_scrape` sources. |
 | `source_discovery_prefetch.py` | Runner-side static source prefetch for scheduled runs before the inner Codex agent starts. |
+| `codex_schedule_artifacts.py` | Wrapper helper for locating current-run shortlist shards and writing synthetic article prefetch fallback manifests. |
 | `pdf_extract.py` | Enrichment-only PDF-to-text helper for shortlisted public PDFs such as Rightmove RNS documents. |
 | `validate_runtime_artifacts.py` | Offline validator for source adapter resolution, compact state fixtures, change-request fixtures, full-text boundaries, and runner integration dry-run maps. |
 | `telegram_send.py` | Доставка markdown в Telegram по `delivery_profile` из `schedule_bindings.yaml`. |

@@ -213,6 +213,17 @@ def test_wrapper_validates_article_prefetch_manifest_presence() -> None:
     assert "[ ! -f \"$ARTICLE_PREFETCH_SUMMARY\" ]" in wrapper_text
 
 
+def test_readme_documents_staged_victory_digest_runbook() -> None:
+    readme = (REPO_ROOT / "ops/codex-cli/README.md").read_text(encoding="utf-8")
+
+    assert "Victory Digest" in readme
+    assert "Stage A" in readme
+    assert "Stage B" in readme
+    assert "Stage C" in readme
+    assert "tools/shortlist_article_prefetch.py" in readme
+    assert "synthetic article prefetch fallback" in readme
+
+
 def main() -> None:
     tests = [
         test_malformed_env_fails_with_operator_error_without_secret_values,
@@ -225,6 +236,7 @@ def main() -> None:
         test_weekday_self_test_reports_direct_article_prefetch_wiring,
         test_wrapper_invokes_article_prefetch_helper_directly,
         test_wrapper_validates_article_prefetch_manifest_presence,
+        test_readme_documents_staged_victory_digest_runbook,
     ]
     for test in tests:
         test()
