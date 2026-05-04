@@ -4,6 +4,8 @@ owner: regression_harness
 recent_daily_window:
   digest_date: 2026-04-03
   reference_digest_markdown: ./digests/2026-04-03-daily.md
+  reference_digest_markdown_status: legacy_archive_reference
+  canonical_markdown_output_path: ./digests/2026-04-03-daily-digest.md
   fixture_refs:
     - ./config/runtime/mode-fixtures/build_daily_digest_parity_window.yaml
     - ./config/runtime/legacy-export-fixtures/daily_window.yaml
@@ -18,6 +20,7 @@ recent_daily_window:
     weak_signal_overlap_min: 0.5
     unexpected_story_count_max: 1
     markdown_path_must_match: true
+    legacy_reference_is_not_output_contract: true
 
 recent_weekly_window:
   week_id: 2026-W14

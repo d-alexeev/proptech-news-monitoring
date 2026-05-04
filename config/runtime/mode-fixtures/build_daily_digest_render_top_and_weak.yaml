@@ -45,12 +45,13 @@ inputs:
 
 expected:
   markdown_output:
-    path: ./digests/2026-04-08-daily.md
+    path: ./digests/2026-04-08-daily-digest.md
     required_sections:
       - top_stories
       - weak_signals
   daily_brief:
     path: ./.state/briefs/daily/2026-04-08__telegram_digest.json
+    markdown_path: ./digests/2026-04-08-daily-digest.md
     top_story_ids:
       - story_zillow_ai_feature
       - story_dubizzle_transactions_2026

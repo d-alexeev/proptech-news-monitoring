@@ -28,7 +28,7 @@ Required env:
   TELEGRAM_MESSAGE_THREAD_ID   (optional — forum topic id; empty is unset)
 
 Usage:
-  cat digests/2026-04-21-daily.md | \
+  cat digests/2026-04-21-daily-digest.md | \
     python3 tools/telegram_send.py \
       --profile telegram_digest \
       --date 2026-04-21 \

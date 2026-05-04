@@ -41,13 +41,20 @@ Do not perform downstream personalization here.
 
 ## Delivery constraints
 
-These rules apply to the digest body that is written to `digests/YYYY-MM-DD-daily-digest.md`
-and subsequently sent to Telegram via `tools/telegram_send.py`.
+These rules apply to the digest body that is written to the canonical weekday digest
+markdown path `./digests/{digest_date}-daily-digest.md` and subsequently sent to
+Telegram via `tools/telegram_send.py`.
 
 **File write rule:**
 Always write the digest file using a full overwrite (`Write`), never a partial edit (`Edit`).
 Reason: `Edit` leaves content from prior runs in the file tail, causing mixed-run output.
 If a digest file for the current date already exists, it must be replaced entirely.
+
+**Path contract:**
+For new weekday digest runs, `daily_brief.markdown_path` must equal the canonical
+markdown path `./digests/{digest_date}-daily-digest.md`. Older `*-daily.md` archive
+paths are legacy compatibility references only and must not be used as the current
+output path for new runs.
 
 **Operator metadata:**
 `.state/` path references and full `run_id` strings (e.g. `build_daily_digest__20260422T230500Z__daily_core`)

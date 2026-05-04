@@ -82,7 +82,7 @@ artifacts:
         why_it_matters: This changes search UX and can alter user intent capture.
         avito_implication: Avito should watch conversational and intent-led discovery patterns.
         context_refs: []
-    markdown_path: ./digests/2026-04-08-daily.md
+    markdown_path: ./digests/2026-04-08-daily-digest.md
 
   weekly_brief:
     brief_id: weekly__2026-W15__telegram_weekly_digest
@@ -121,7 +121,7 @@ artifacts:
     review_kind: daily_digest
     review_date: 2026-04-08
     generated_at: 2026-04-08T09:20:00Z
-    target_digest_path: ./digests/2026-04-08-daily.md
+    target_digest_path: ./digests/2026-04-08-daily-digest.md
     target_brief_id: daily__2026-04-08__telegram_digest
     missed_signals: []
     duplication_risk: []

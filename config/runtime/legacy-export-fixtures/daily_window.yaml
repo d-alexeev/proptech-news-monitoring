@@ -7,6 +7,7 @@ inputs:
   story_lookup_root: ./.state/stories/
   enriched_lookup_root: ./.state/enriched/2026-04-03/
   reference_digest_markdown: ./digests/2026-04-03-daily.md
+  reference_digest_markdown_status: legacy_archive_reference
 
 expected_legacy_exports:
   dedupe_store:
@@ -56,6 +57,7 @@ expected_legacy_exports:
       - articles
     expected_schedule: weekday_digest
     expected_digest_file: ./digests/2026-04-03-daily.md
+    expected_digest_file_status: legacy_export_compatibility_path
 
 parity_conditions:
   - exported delivery_log articles come from daily_brief.story_ids resolved through story_brief canonical_url

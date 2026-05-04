@@ -44,7 +44,8 @@ rendering_stages:
       - run_manifest
 
 markdown_output_contract:
-  path_template: ./digests/{digest_date}-daily.md
+  path_template: ./digests/{digest_date}-daily-digest.md
+  canonical_for_new_runs: true
   required_sections:
     - top_stories
     - weak_signals
@@ -56,6 +57,8 @@ markdown_output_contract:
 
 daily_brief_contract:
   path_template: ./.state/briefs/daily/{digest_date}__{delivery_profile}.json
+  markdown_path_template: ./digests/{digest_date}-daily-digest.md
+  markdown_path_rule: daily_brief.markdown_path must equal markdown_output_contract.path_template for new weekday digest runs
   required_fields:
     - brief_id
     - run_id

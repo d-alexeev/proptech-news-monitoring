@@ -5,7 +5,7 @@ inputs:
   review_date: 2026-04-08
   parent_run_id: build_daily_digest__20260408T090000Z__telegram_digest
   review_kind: daily_digest
-  digest_path: ./digests/2026-04-08-daily.md
+  digest_path: ./digests/2026-04-08-daily-digest.md
   digest_markdown_excerpt: |
     ## Главные события
 
@@ -17,6 +17,7 @@ inputs:
     - Zillow extends rollout of its AI-led discovery feature
   daily_brief:
     brief_id: daily__2026-04-08__telegram_digest
+    markdown_path: ./digests/2026-04-08-daily-digest.md
     story_ids:
       - story_zillow_ai_feature
     top_story_ids:
