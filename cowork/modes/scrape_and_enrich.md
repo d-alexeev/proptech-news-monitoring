@@ -41,6 +41,8 @@ Begin the fetch queue only from `shortlisted_item` entries with `triage_decision
 Candidates dropped or never emitted into the shortlist shard must never trigger body fetch.
 Normalize every fetch outcome into `body_status = full | snippet_fallback | paywall_stub`.
 Capture 2-4 `evidence_points` for `full`, 1-2 for `snippet_fallback`, and none for `paywall_stub`.
+If every enriched record emitted for a digest window has `body_status = snippet_fallback`, mark the enrichment shard/run manifest with `evidence_completeness = all_snippet_fallback` and `downstream_digest_gate = partial_digest`.
+This is a compact evidence warning only; do not fetch bodies for non-shortlisted items to improve the label.
 Emit downstream-ready `analyst_summary`, `why_it_matters`, `avito_implication`, `story_id`, and `source_quality`.
 Do not preload the whole adapter directory; resolve `source_id -> adapter` first.
 Do not assemble daily, weekly, or stakeholder digests here.

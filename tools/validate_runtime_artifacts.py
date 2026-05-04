@@ -61,6 +61,11 @@ CHANGE_REQUEST_SIGNAL_KEYS = {
     "change_request",
     "change_request_output_path",
 }
+ALL_SNIPPET_DIGEST_STATUSES = {
+    "blocked_before_digest",
+    "partial_digest",
+    "non_canonical_digest",
+}
 EXPECTED_PRIMARY_TOOL_PATH_BY_STRATEGY = {
     "rss": "HTTP/RSS fetcher",
     "html_scrape": "HTTP/RSS fetcher",
@@ -265,6 +270,7 @@ def check_fixtures(root: pathlib.Path = ROOT) -> list[str]:
         )
     )
     errors.extend(check_mode_fixture_change_requests(schema, root))
+    errors.extend(check_all_snippet_digest_gate(root))
     return errors
 
 
@@ -596,6 +602,63 @@ def has_reviewable_change_request_followup(fixture: dict[str, Any]) -> bool:
             if {"suggested_target_files", "tests_to_add"}.issubset(names):
                 return True
     return False
+
+
+def check_all_snippet_digest_gate(root: pathlib.Path = ROOT) -> list[str]:
+    errors: list[str] = []
+    for path in sorted((root / MODE_FIXTURES).glob("*.yaml")):
+        data = load_yaml(path)
+        errors.extend(validate_all_snippet_digest_fixture(data, path.relative_to(root)))
+    return errors
+
+
+def validate_all_snippet_digest_fixture(
+    fixture: dict[str, Any],
+    path: pathlib.Path,
+) -> list[str]:
+    if fixture.get("mode_id") != "build_daily_digest":
+        return []
+    enriched_items = fixture.get("inputs", {}).get("enriched_items")
+    if not isinstance(enriched_items, list) or not enriched_items:
+        return []
+    if not all(isinstance(item, dict) for item in enriched_items):
+        return []
+    if not all(item.get("body_status") == "snippet_fallback" for item in enriched_items):
+        return []
+
+    expected = fixture.get("expected", {})
+    selection_outputs = expected.get("selection_outputs", {})
+    digest_status = selection_outputs.get("digest_status")
+    errors: list[str] = []
+    if digest_status not in ALL_SNIPPET_DIGEST_STATUSES:
+        errors.append(
+            f"{path}: all-snippet build_daily_digest fixture must expect one of "
+            f"{sorted(ALL_SNIPPET_DIGEST_STATUSES)}, got {digest_status!r}"
+        )
+
+    render_status = expected.get("daily_brief", {}).get("render_metadata", {}).get("digest_status")
+    if render_status != digest_status:
+        errors.append(
+            f"{path}: daily_brief.render_metadata.digest_status must match "
+            f"selection_outputs.digest_status for all-snippet fixture"
+        )
+
+    story_cards = expected.get("daily_brief", {}).get("story_cards", [])
+    if not isinstance(story_cards, list) or not story_cards:
+        errors.append(f"{path}: all-snippet fixture must include expected daily_brief.story_cards")
+        return errors
+    for index, card in enumerate(story_cards):
+        label = f"{path}: daily_brief.story_cards[{index}]"
+        if not isinstance(card, dict):
+            errors.append(f"{label} must be a map")
+            continue
+        for field in ("url", "canonical_url"):
+            if not isinstance(card.get(field), str) or not card.get(field):
+                errors.append(f"{label}.{field} must preserve a durable source URL")
+        evidence_notes = card.get("evidence_notes")
+        if not isinstance(evidence_notes, list) or not evidence_notes:
+            errors.append(f"{label}.evidence_notes must include compact evidence notes")
+    return errors
 
 
 def find_first_value(data: Any, key_name: str) -> Any:

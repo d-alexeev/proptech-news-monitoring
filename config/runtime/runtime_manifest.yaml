@@ -77,6 +77,7 @@ files:
     build_daily_digest_contextual_continuation: ./config/runtime/mode-fixtures/build_daily_digest_contextual_continuation.yaml
     build_daily_digest_render_top_and_weak: ./config/runtime/mode-fixtures/build_daily_digest_render_top_and_weak.yaml
     build_daily_digest_parity_window: ./config/runtime/mode-fixtures/build_daily_digest_parity_window.yaml
+    build_daily_digest_all_snippet_partial: ./config/runtime/mode-fixtures/build_daily_digest_all_snippet_partial.yaml
     review_digest_seeded_omission: ./config/runtime/mode-fixtures/review_digest_seeded_omission.yaml
     review_digest_seeded_duplication: ./config/runtime/mode-fixtures/review_digest_seeded_duplication.yaml
     review_digest_clean_case: ./config/runtime/mode-fixtures/review_digest_clean_case.yaml

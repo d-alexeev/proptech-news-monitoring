@@ -38,6 +38,9 @@ Use `recent daily_brief` for anti-repeat decisions and `story_brief.last_digest_
 Render markdown and `daily_brief` from selected compact records only.
 Do not read past markdown digests or `./.state/articles/` in this mode.
 Do not perform downstream personalization here.
+If all current-window enriched records available to selection have `body_status = snippet_fallback`, the run may still render, but it must be labeled `partial_digest` in `daily_brief.render_metadata.digest_status` and in selection notes.
+Such a digest must not look production-clean: include compact evidence limitation notes and keep durable `url` and `canonical_url` values on each selected story card.
+Do not read full article bodies, `article_file`, or `./.state/articles/` to resolve an all-snippet condition.
 
 ## Delivery constraints
 

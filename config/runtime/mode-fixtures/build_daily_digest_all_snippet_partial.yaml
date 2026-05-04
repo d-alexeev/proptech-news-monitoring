@@ -1,0 +1,85 @@
+fixture_id: build_daily_digest_all_snippet_partial
+mode_id: build_daily_digest
+
+inputs:
+  run_id: build_daily_digest__20260504T090000Z__telegram_digest
+  digest_date: 2026-05-04
+  delivery_profile: telegram_digest
+  enriched_items:
+    - run_id: scrape_and_enrich__20260504T083000Z__daily_core
+      source_id: inman
+      url: https://www.inman.com/2026/05/04/portal-search-behavior-shifts/
+      canonical_url: https://www.inman.com/2026/05/04/portal-search-behavior-shifts/
+      title: Portal search behavior shifts toward saved-search alerts
+      published: 2026-05-04
+      companies:
+        - Zillow
+      topic_tags:
+        - consumer_search
+        - alerts
+      event_type: product_signal
+      priority_score: 72
+      confidence: 0.61
+      analyst_summary: Portal operators are emphasizing saved-search alert loops.
+      why_it_matters: Alert-driven search can increase repeat visits without full funnel ownership.
+      avito_implication: Avito should compare alert-loop depth against marketplace retention goals.
+      story_id: story_portal_saved_search_alerts_20260504
+      body_status: snippet_fallback
+      evidence_points:
+        - Snippet describes saved-search alerts as the emphasized product surface.
+      source_quality: trade_media
+    - run_id: scrape_and_enrich__20260504T083000Z__daily_core
+      source_id: costar_homes
+      url: https://www.costar.com/article/20260504/rental-platform-lead-routing
+      canonical_url: https://www.costar.com/article/20260504/rental-platform-lead-routing
+      title: Rental platforms test lead-routing refinements
+      published: 2026-05-04
+      companies:
+        - CoStar
+      topic_tags:
+        - rentals
+        - lead_routing
+      event_type: product_signal
+      priority_score: 58
+      confidence: 0.55
+      analyst_summary: Rental platforms are testing routing changes for higher-intent leads.
+      why_it_matters: Lead quality remains a monetization lever for classifieds marketplaces.
+      avito_implication: Avito should watch whether routing rules become visible differentiation.
+      story_id: story_rental_lead_routing_20260504
+      body_status: snippet_fallback
+      evidence_points:
+        - Snippet indicates lead-routing refinements are being tested.
+      source_quality: industry_analysis
+
+expected:
+  selection_outputs:
+    digest_status: partial_digest
+    selected_story_ids:
+      - story_portal_saved_search_alerts_20260504
+      - story_rental_lead_routing_20260504
+    top_story_ids:
+      - story_portal_saved_search_alerts_20260504
+    weak_signal_ids:
+      - story_rental_lead_routing_20260504
+    evidence_limitation_notes:
+      - All current-window enriched records are snippet_fallback; digest is partial and not production-clean.
+  daily_brief:
+    markdown_path: ./digests/2026-05-04-daily-digest.md
+    render_metadata:
+      digest_status: partial_digest
+      evidence_completeness: all_snippet_fallback
+    selection_notes:
+      - Rendered as partial_digest because no current-window enriched item has full article evidence.
+    story_cards:
+      - story_id: story_portal_saved_search_alerts_20260504
+        section: top_stories
+        url: https://www.inman.com/2026/05/04/portal-search-behavior-shifts/
+        canonical_url: https://www.inman.com/2026/05/04/portal-search-behavior-shifts/
+        evidence_notes:
+          - Snippet describes saved-search alerts as the emphasized product surface.
+      - story_id: story_rental_lead_routing_20260504
+        section: weak_signals
+        url: https://www.costar.com/article/20260504/rental-platform-lead-routing
+        canonical_url: https://www.costar.com/article/20260504/rental-platform-lead-routing
+        evidence_notes:
+          - Snippet indicates lead-routing refinements are being tested.

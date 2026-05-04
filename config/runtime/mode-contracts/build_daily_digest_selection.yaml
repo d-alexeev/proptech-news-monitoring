@@ -22,6 +22,7 @@ runtime_state_inputs:
     allowed_fields:
       - run_id
       - source_id
+      - url
       - canonical_url
       - title
       - published
@@ -85,6 +86,12 @@ selection_policy:
     - why_it_matters
   required_story_identity: story_id
   compact_artifact_only: true
+  selected_item_durability:
+    required_fields:
+      - url
+      - canonical_url
+      - evidence_points
+    compact_evidence_note_rule: each selected story card must carry 1-2 compact evidence notes derived from evidence_points, not article bodies
 
 anti_repeat_policy:
   exact_story_repeat:
@@ -112,6 +119,14 @@ contextualization_policy:
   article_body_access: forbidden
 
 selection_stage_outputs:
+  digest_status:
+    allowed_values:
+      - canonical_digest
+      - partial_digest
+      - blocked_before_digest
+      - non_canonical_digest
+    all_snippet_fallback_rule: if all current-window enriched_items available to selection have body_status = snippet_fallback, digest_status must be partial_digest
+    daily_brief_location: render_metadata.digest_status
   selected_story_ids:
     description: all stories kept for same-run rendering
   top_story_ids:
@@ -122,6 +137,8 @@ selection_stage_outputs:
     description: compact archive references attached to continuation stories
   selection_notes:
     description: justification notes for anti-repeat and contextualization decisions
+  evidence_limitation_notes:
+    description: compact operator-facing notes required when digest_status is partial_digest because evidence is all snippet_fallback
 
 non_goals:
   - no markdown rendering

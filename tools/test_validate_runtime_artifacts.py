@@ -356,6 +356,75 @@ def test_runner_integration_validation_reports_missing_and_duplicate_sources() -
     assert any("missing source daily_core/redfin_news" in error for error in errors)
 
 
+def test_all_snippet_digest_gate_requires_partial_status_and_evidence_notes() -> None:
+    bad_fixture = {
+        "fixture_id": "bad_all_snippet",
+        "mode_id": "build_daily_digest",
+        "inputs": {
+            "enriched_items": [
+                {
+                    "story_id": "story_1",
+                    "body_status": "snippet_fallback",
+                    "evidence_points": ["Snippet evidence."],
+                }
+            ]
+        },
+        "expected": {
+            "selection_outputs": {"digest_status": "canonical_digest"},
+            "daily_brief": {
+                "render_metadata": {"digest_status": "canonical_digest"},
+                "story_cards": [
+                    {
+                        "story_id": "story_1",
+                        "url": "https://example.test/story-1",
+                        "canonical_url": "https://example.test/story-1",
+                    }
+                ],
+            },
+        },
+    }
+    good_fixture = {
+        "fixture_id": "good_all_snippet",
+        "mode_id": "build_daily_digest",
+        "inputs": {
+            "enriched_items": [
+                {
+                    "story_id": "story_1",
+                    "body_status": "snippet_fallback",
+                    "evidence_points": ["Snippet evidence."],
+                }
+            ]
+        },
+        "expected": {
+            "selection_outputs": {"digest_status": "partial_digest"},
+            "daily_brief": {
+                "render_metadata": {"digest_status": "partial_digest"},
+                "story_cards": [
+                    {
+                        "story_id": "story_1",
+                        "url": "https://example.test/story-1",
+                        "canonical_url": "https://example.test/story-1",
+                        "evidence_notes": ["Snippet evidence."],
+                    }
+                ],
+            },
+        },
+    }
+
+    bad_errors = validator.validate_all_snippet_digest_fixture(
+        bad_fixture,
+        pathlib.Path("bad_all_snippet.yaml"),
+    )
+    good_errors = validator.validate_all_snippet_digest_fixture(
+        good_fixture,
+        pathlib.Path("good_all_snippet.yaml"),
+    )
+
+    assert any("all-snippet" in error and "canonical_digest" in error for error in bad_errors)
+    assert any("evidence_notes" in error for error in bad_errors)
+    assert good_errors == []
+
+
 def main() -> None:
     tests = [
         test_adapter_validation_requires_configured_sources_to_resolve,
@@ -367,6 +436,7 @@ def main() -> None:
         test_runner_integration_validation_requires_complete_strategy_map,
         test_runner_integration_validation_rejects_empty_fixture_coverage,
         test_runner_integration_validation_reports_missing_and_duplicate_sources,
+        test_all_snippet_digest_gate_requires_partial_status_and_evidence_notes,
     ]
     for test in tests:
         test()

@@ -66,6 +66,20 @@ body_status_policy:
     evidence_points_rule: zero_required
     article_file_rule: nullable
 
+evidence_completeness_policy:
+  all_snippet_fallback:
+    trigger: every enriched_item emitted for the digest window has body_status = snippet_fallback
+    required_enrichment_manifest_fields:
+      evidence_completeness: all_snippet_fallback
+      downstream_digest_gate: partial_digest
+    downstream_rule: build_daily_digest may render only as partial_digest and must preserve compact evidence notes plus durable source URLs
+    non_goals:
+      - do not fetch bodies for non-shortlisted items to improve evidence completeness
+      - do not pass full article text to downstream digest modes
+  mixed_or_full_evidence:
+    trigger: at least one enriched_item emitted for the digest window has body_status = full
+    downstream_rule: normal selection rules apply, subject to item-level confidence and evidence quality
+
 downstream_required_enriched_fields:
   - run_id
   - source_id
