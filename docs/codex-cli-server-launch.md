@@ -66,6 +66,10 @@ TELEGRAM_MESSAGE_THREAD_ID=
 HTTP_USER_AGENT="PropTechMonitor/1.0 (+you@example.com)"
 ```
 
+The wrapper sources `.env` with Bash. Quote values that contain spaces,
+parentheses, `#`, `$`, or quotes. If `.env` is malformed, launch fails before
+Codex starts and reports the offending file without printing secret values.
+
 If `codex` is not on the service user's `PATH`, set `CODEX_BIN` when invoking
 the wrapper.
 
@@ -86,6 +90,13 @@ The wrapper writes:
 
 The wrapper uses a lock directory per schedule under `.state/codex-runs/` to
 avoid overlapping runs.
+
+For a no-network wrapper check that validates prompt lookup and `.env` parsing
+without starting Codex:
+
+```bash
+CODEX_RUN_SCHEDULE_SELF_TEST=1 ops/codex-cli/run_schedule.sh weekday_digest
+```
 
 ## systemd Example
 

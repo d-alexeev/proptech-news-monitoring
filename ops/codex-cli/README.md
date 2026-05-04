@@ -39,16 +39,27 @@ ops/codex-cli/run_schedule.sh breaking_alert
 
 The wrapper:
 
-- loads `.env` if present;
+- validates and loads `.env` if present;
 - activates `.venv` if present;
 - creates `.state/codex-runs/`;
 - uses a lock directory to prevent concurrent scheduled runs;
 - writes Codex JSONL events and the final message under `.state/codex-runs/`.
 
+Because `.env` is sourced by Bash, quote any value containing spaces,
+parentheses, `#`, `$`, or quotes. Malformed `.env` files fail before Codex is
+started, and the wrapper reports the offending file without printing secret
+values.
+
 Set `CODEX_BIN` to override the Codex executable:
 
 ```bash
 CODEX_BIN=/usr/local/bin/codex ops/codex-cli/run_schedule.sh weekday_digest
+```
+
+Run a local wrapper smoke check without starting Codex:
+
+```bash
+CODEX_RUN_SCHEDULE_SELF_TEST=1 ops/codex-cli/run_schedule.sh weekday_digest
 ```
 
 ## Runtime Guardrails
@@ -60,4 +71,3 @@ Scheduled runs must not edit source-of-truth files such as `cowork/`,
 `config/runtime/`, `docs/`, `tools/`, `prompts/`, `benchmark/`, `README.md`,
 `AGENTS.md`, or `PLANS.md`. If a persistent fix is needed, the run should emit a
 `change_request` according to `cowork/shared/change_request_policy.md`.
-
