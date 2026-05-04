@@ -31,7 +31,8 @@ directory.
 | `../../tools/source_discovery_prefetch.py` | Stage A source evidence prefetch before inner Codex starts. |
 | `../../tools/shortlist_article_prefetch.py` | Stage B article/full-text prefetch for shortlisted URLs only. |
 | `../../tools/stage_c_finish.py` | Deterministic Stage C materializer for current-run artifacts and digest markdown. |
-| `../../tools/telegram_send.py` | Telegram delivery and dry-run helper for the materialized digest. |
+| `../../tools/codex_schedule_delivery.py` | Wrapper-level delivery retry/finalization helper that invokes `telegram_send.py` and records delivery evidence. |
+| `../../tools/telegram_send.py` | Low-level Telegram send and dry-run helper for the materialized digest. |
 
 ## Server Usage
 
@@ -89,6 +90,10 @@ runs `tools/stage_c_finish.py` to materialize `.state/enriched`,
 `.state/runs`, `.state/briefs`, and `digests/{date}-daily-digest.md`.
 If the draft is missing, stale, invalid, or leaks runtime paths into the digest
 body, the wrapper fails before delivery.
+
+Delivery is a wrapper-owned finalization step. `tools/codex_schedule_delivery.py`
+invokes `tools/telegram_send.py`, handles retry/finalization policy, and records
+delivery evidence for the scheduled run.
 
 Post-run checks:
 

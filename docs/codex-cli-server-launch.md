@@ -31,7 +31,8 @@ systemd timer or cron
       -> codex exec Stage C: finish draft
       -> stage_c_finish.py deterministic materializer
       -> validate-finish-artifacts
-      -> telegram_send.py when delivery env is configured
+      -> codex_schedule_delivery.py wrapper retry/finalization
+          -> telegram_send.py when delivery env is configured
 ```
 
 Supported schedule IDs:

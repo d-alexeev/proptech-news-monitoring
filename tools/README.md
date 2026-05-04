@@ -22,10 +22,15 @@
 - **Env vars:** читаются из process env. Ни один скрипт не пишет секреты в
   stdout и не логирует их в stderr.
 - **State writes:** low-level data helpers such as `rss_fetch.py` and
-  `pdf_extract.py` do not write `./.state/`. Runner orchestration helpers may
-  write narrowly documented evidence artifacts when they own that runtime step;
-  today this exception is `source_discovery_prefetch.py`, which writes only
-  `.state/codex-runs/` prefetch evidence for the scheduled agent to consume.
+  `browser_fetch.py`, `article_fetch.py`, and `pdf_extract.py` do not write
+  `./.state/`. Wrapper orchestration and materialization helpers may write
+  narrowly documented runtime artifacts when they own that scheduled step:
+  `source_discovery_prefetch.py` writes source prefetch evidence,
+  `shortlist_article_prefetch.py` writes article prefetch evidence,
+  `codex_schedule_artifacts.py` writes synthetic fallback and validation
+  artifacts, `stage_c_finish.py` materializes current-run state/digest
+  artifacts, and `codex_schedule_delivery.py` writes delivery finalization
+  evidence.
 
 ## Состав
 
@@ -36,6 +41,7 @@
 | `source_discovery_prefetch.py` | Runner-side static source prefetch for scheduled runs before the inner Codex agent starts. |
 | `shortlist_article_prefetch.py` | Deterministic Stage B article/full-text prefetch for shortlisted URLs only. |
 | `codex_schedule_artifacts.py` | Wrapper helper for locating current-run shortlist shards, writing synthetic article prefetch fallback manifests, and validating current-run Stage C finish artifacts. |
+| `codex_schedule_delivery.py` | Wrapper-level Telegram delivery retry/finalization helper that invokes `telegram_send.py` and records delivery evidence. |
 | `stage_c_finish.py` | Deterministic Stage C materializer that validates compact finish drafts and writes current-run enrichment, daily brief, digest markdown, and run manifests. |
 | `pdf_extract.py` | Enrichment-only PDF-to-text helper for shortlisted public PDFs such as Rightmove RNS documents. |
 | `validate_runtime_artifacts.py` | Offline validator for source adapter resolution, compact state fixtures, change-request fixtures, full-text boundaries, and runner integration dry-run maps. |
@@ -277,6 +283,8 @@ Telegram send validation.
 
 `telegram_send.py` renders and sends markdown through the configured Telegram
 delivery profile, or validates the request path in `--dry-run` mode.
+Scheduled wrapper delivery is coordinated by `codex_schedule_delivery.py`, which
+invokes `telegram_send.py` and owns retry/finalization evidence.
 
 For `telegram_digest`, the sender keeps the digest as one text message when
 possible and uses Telegram `link_preview_options` from the first markdown source
