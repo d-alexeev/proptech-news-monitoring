@@ -265,6 +265,14 @@ run_weekday_staged_schedule() {
       --reason article_prefetch_stage_failed > "$ARTICLE_PREFETCH_STDOUT"
   fi
 
+  if [ ! -f "$ARTICLE_PREFETCH_RESULT" ] || [ ! -f "$ARTICLE_PREFETCH_SUMMARY" ]; then
+    python3 "$ARTIFACT_HELPER" synthetic-article-prefetch \
+      --repo-root "$REPO_ROOT" \
+      --run-id "$RUN_ID" \
+      --shortlist-path "$SHORTLIST_PATH" \
+      --reason article_prefetch_manifest_missing > "$ARTICLE_PREFETCH_STDOUT"
+  fi
+
   build_finish_prompt "$SHORTLIST_PATH"
   "$CODEX_BIN" exec \
     -C "$REPO_ROOT" \

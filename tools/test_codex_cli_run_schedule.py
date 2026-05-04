@@ -205,6 +205,14 @@ def test_wrapper_invokes_article_prefetch_helper_directly() -> None:
     assert "danger-full-access" not in wrapper_text
 
 
+def test_wrapper_validates_article_prefetch_manifest_presence() -> None:
+    wrapper_text = WRAPPER.read_text(encoding="utf-8")
+
+    assert "article_prefetch_manifest_missing" in wrapper_text
+    assert "[ ! -f \"$ARTICLE_PREFETCH_RESULT\" ]" in wrapper_text
+    assert "[ ! -f \"$ARTICLE_PREFETCH_SUMMARY\" ]" in wrapper_text
+
+
 def main() -> None:
     tests = [
         test_malformed_env_fails_with_operator_error_without_secret_values,
@@ -216,6 +224,7 @@ def main() -> None:
         test_staged_prompt_files_exist_and_have_stage_boundaries,
         test_weekday_self_test_reports_direct_article_prefetch_wiring,
         test_wrapper_invokes_article_prefetch_helper_directly,
+        test_wrapper_validates_article_prefetch_manifest_presence,
     ]
     for test in tests:
         test()
