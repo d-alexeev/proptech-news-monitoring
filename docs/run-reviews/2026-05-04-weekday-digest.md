@@ -29,10 +29,10 @@
 | --- | --- | --- | --- |
 | `daily_core` static prefetch | `partial` | local codex-run source prefetch summary for run `20260504T142209Z` | 6 successful static sources; no global environment failure. |
 | `daily_core` browser prefetch | `partial_success` | local browser prefetch result for run `20260504T142209Z` | Playwright runner executed configured browser sources. |
-| `onlinemarketplaces` | `fetched_empty` | local browser prefetch result for run `20260504T142209Z` | page loaded with status-like 200 but produced no article listing items; change request emitted. |
-| `similarweb_global_real_estate` | `blocked_or_paywall` | local browser prefetch result for run `20260504T142209Z` | browser runner observed 403 blocked/paywall; change request emitted. |
+| `onlinemarketplaces` | `fetched_empty` | local browser prefetch result for run `20260504T142209Z` | page loaded with status-like 200 but produced no article listing items. |
+| `similarweb_global_real_estate` | `blocked_or_paywall` | local browser prefetch result for run `20260504T142209Z` | browser runner observed 403 blocked/paywall. |
 | `costar_homes` | `timeout` | local static prefetch result for run `20260504T142209Z` | source-level timeout. |
-| `rightmove_plc` | `dns_resolution` | local static prefetch result for run `20260504T142209Z` | source-level DNS failure; change request emitted. |
+| `rightmove_plc` | `dns_resolution` | local static prefetch result for run `20260504T142209Z` | source-level DNS failure. |
 
 ## Victory Run: 20260504T142209Z
 
@@ -60,7 +60,7 @@
 - `Status note`: Playwright browser prefetch, direct article prefetch, strict Stage C finish draft, deterministic materialization, and post-run validation all executed.
 - `Evidence note`: latest Victory wrapper run id was `20260504T142209Z-weekday_digest`; monitor run status was `partial`; article prefetch status was `partial_success`; finish stage status is `materialized_current_run`.
 - `95% note`: this is a `production_candidate_95`, not a fully production-clean run, because source discovery remains partial and live Telegram send was not attempted.
-- `Follow-up`: latest run emitted source-level change requests for Rightmove DNS, OnlineMarketplaces listing extraction, and Similarweb blocked/paywall behavior.
+- `Follow-up`: source-level issues remain recorded as run outcomes only.
 - `Previous partial run`: `20260504T104232Z` remains local evidence for the pre-browser-runner partial digest.
 - `Previous blocked run`: `20260504T101043Z` remains local evidence for the original inner-sandbox DNS failure.
 - `Wrapper note`: Codex plugin/analytics sync emitted external `403` warnings, but they did not stop the run.
