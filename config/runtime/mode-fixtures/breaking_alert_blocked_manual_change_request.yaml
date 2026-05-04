@@ -4,8 +4,8 @@ mode_id: breaking_alert
 inputs:
   run_id: breaking_alert__20260408T110000Z__weekly_context
   run_date: 2026-04-08
-  source_id: rea_group_investor_centre
-  url: https://www.rea-group.com/investor-centre/example-announcement
+  source_id: blocked_manual_source_example
+  url: https://example.com/manual-only-source/example-announcement
   stage: alert_decision
   candidate_priority_score: 92
   source_quality: manual_blocked
@@ -15,7 +15,7 @@ inputs:
 expected:
   action: emit_change_request
   failure_type: blocked_or_manual_source
-  change_request_output_path: ./.state/change-requests/2026-04-08/change_request__20260408T110100Z__rea_group_alert_blocked.json
+  change_request_output_path: ./.state/change-requests/2026-04-08/change_request__20260408T110100Z__blocked_manual_alert_blocked.json
   required_fields:
     - run_id
     - mode

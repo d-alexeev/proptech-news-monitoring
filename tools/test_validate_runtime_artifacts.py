@@ -204,10 +204,10 @@ def test_runner_integration_validation_requires_complete_strategy_map() -> None:
                         "rss_feed": "https://feeds.feedburner.com/inmannews",
                     },
                     {
-                        "id": "rea_group_investor_centre",
+                        "id": "blocked_manual_source_example",
                         "fetch_strategy": "blocked",
                         "blocked_mode": "manual_only_permanent",
-                        "landing_urls": ["https://example.test/rea"],
+                        "landing_urls": ["https://example.test/manual-only"],
                     },
                 ],
             },
@@ -235,7 +235,7 @@ def test_runner_integration_validation_requires_complete_strategy_map() -> None:
                     },
                     {
                         "group_id": "daily_core",
-                        "source_id": "rea_group_investor_centre",
+                        "source_id": "blocked_manual_source_example",
                         "fetch_strategy": "blocked",
                         "primary_tool_path": "No fetch / manual intake policy",
                         "invocation_kind": "browser",
@@ -253,7 +253,7 @@ def test_runner_integration_validation_requires_complete_strategy_map() -> None:
         errors = validator.check_runner_integration(root)
 
     assert any("inman_tech_innovation" in error and "HTTP/RSS fetcher" in error for error in errors)
-    assert any("rea_group_investor_centre" in error and "must not define fetch invocation" in error for error in errors)
+    assert any("blocked_manual_source_example" in error and "must not define fetch invocation" in error for error in errors)
 
 
 def test_runner_integration_validation_rejects_empty_fixture_coverage() -> None:

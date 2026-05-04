@@ -12,7 +12,7 @@ validation_contract:
   no_secrets_required: true
   no_captcha_or_proxy_required: true
   primary_tool_path_policy: exactly_one_per_source
-  blocked_manual_policy: represented_explicitly_and_not_fetched
+  blocked_manual_policy: represented_explicitly_and_not_fetched_when_configured
 
 strategy_family_coverage:
   rss:
@@ -126,17 +126,17 @@ sources:
     live_residual_risk: Feed availability, item metadata drift, or origin rate limits can still affect live discovery.
 
   - group_id: daily_core
-    source_id: rea_group_investor_centre
-    fetch_strategy: blocked
-    primary_tool_path: No fetch / manual intake policy
-    invocation_kind: null
-    invocation_url_field: null
-    adapter: cowork/adapters/blocked_manual_access.md
+    source_id: rea_group_media_releases
+    fetch_strategy: html_scrape
+    primary_tool_path: HTTP/RSS fetcher
+    invocation_kind: http
+    invocation_url_field: landing_urls
+    adapter: none
     optional_fallback: null
-    manual_policy: manual_only_permanent
+    manual_policy: null
     fixture_coverage:
-      - config/runtime/mode-fixtures/monitor_sources_blocked_manual_change_request.yaml
-    live_residual_risk: Source remains manual-only; runner must not fetch it and should rely on manual intake reminders.
+      - tools/test_rss_fetch.py
+    live_residual_risk: REA media release listing HTML can change structure or availability; runner should soft-fail and propose an adapter change if discovery cues disappear.
 
   - group_id: daily_core
     source_id: rightmove_plc
@@ -179,7 +179,7 @@ sources:
       - config/runtime/mode-fixtures/runner_browser_fallback_similarweb.yaml
     live_residual_risk: Publisher family listing pages may change layout or require human checks; no bypass is allowed.
 
-  - group_id: weekly_context
+  - group_id: daily_core
     source_id: inman_tech_innovation
     fetch_strategy: rss
     primary_tool_path: HTTP/RSS fetcher

@@ -7,7 +7,7 @@ purpose: >
 
 source:
   id: inman_tech_innovation
-  source_group_config: ./config/runtime/source-groups/weekly_context.yaml
+  source_group_config: ./config/runtime/source-groups/daily_core.yaml
   fetch_strategy: rss
   rss_feed: https://feeds.feedburner.com/inmannews
   cadence_hint: twice_weekly

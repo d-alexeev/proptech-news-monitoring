@@ -9,6 +9,7 @@ they are not required runtime context for implementing RT-M2 through RT-M7.
 | Title | Status | Stable heading | Notes |
 | --- | --- | --- | --- |
 | Minimal Codex Runner Scraping Tooling | completed through RT-M7; RT-M8 also completed | `## Addendum: Minimal Codex Runner Scraping Tooling` | Current runner scraping tooling plan and live scrape test are complete. |
+| Source Group Corrections After Live Test | completed | `## Addendum: Source Group Corrections After Live Test` | Corrected REA Group to media releases and promoted Inman into `daily_core`. |
 
 ## Archived and Inactive Plans
 
@@ -27,6 +28,58 @@ they are not required runtime context for implementing RT-M2 through RT-M7.
   `Claude Cowork` runtime dependencies.
 - Historical requirement traceability is preserved in the archive files by keeping
   the moved plan bodies intact with their original headings and tables.
+
+## Addendum: Source Group Corrections After Live Test
+
+### Summary
+
+This addendum covers two post-RT-M7 source-group corrections:
+
+- replace the REA Group manual-only investor-centre source with the public
+  media releases page at
+  `https://www.rea-group.com/about-us/news-and-insights/media-releases/`;
+- move `inman_tech_innovation` from `weekly_context` into `daily_core`.
+
+### Scope
+
+Likely files/artifacts to change:
+
+- `config/runtime/source-groups/daily_core.yaml`
+- `config/runtime/source-groups/weekly_context.yaml`
+- `config/runtime/mode-fixtures/runner_integration_map.yaml`
+- `config/runtime/mode-fixtures/runner_fetcher_contract_inman.yaml`
+- `cowork/adapters/source_map.md`
+- `cowork/adapters/blocked_manual_access.md`
+- `monitor-list.json`
+- `COMPLETION_AUDIT.md`
+- `docs/runner-live-scrape-test-report.md`
+- `tools/test_validate_runtime_artifacts.py`
+
+Explicit non-goals:
+
+- do not edit historical digest outputs;
+- do not add a new scraper path beyond existing HTTP/RSS fetcher behavior;
+- do not introduce browser, CAPTCHA, login, proxy, or full-body expansion.
+
+### Acceptance Criteria
+
+- `daily_core` includes `inman_tech_innovation`.
+- `weekly_context` no longer includes `inman_tech_innovation`.
+- `daily_core` includes a REA Group media releases source using
+  `fetch_strategy: html_scrape` and the requested media releases URL.
+- The old REA investor-centre manual-only source is not listed as an active
+  runner source.
+- Runner integration validation maps every configured source exactly once.
+- Documentation/audit artifacts no longer describe the old REA manual-only
+  source as the current runtime behavior.
+- Validation passes:
+  `python3 tools/validate_runtime_artifacts.py --check all`,
+  `python3 tools/test_validate_runtime_artifacts.py`,
+  and relevant Python compile checks.
+
+### Status
+
+Completed on 2026-05-04.
 
 ## Addendum: Minimal Codex Runner Scraping Tooling
 

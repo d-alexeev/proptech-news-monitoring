@@ -2,6 +2,12 @@
 
 Run date: 2026-05-04 Europe/Moscow
 
+Post-report correction: after this live test, the active source groups were
+updated so `inman_tech_innovation` is in `daily_core`, and the old
+`rea_group_investor_centre` manual-only source was replaced with
+`rea_group_media_releases` at
+`https://www.rea-group.com/about-us/news-and-insights/media-releases/`.
+
 Scope: bounded live discovery/metadata checks for all configured `daily_core`
 and `weekly_context` sources after RT-M2 through RT-M6 passed offline validation.
 
@@ -18,7 +24,8 @@ Non-goals observed:
 2. Ran the static/RSS/API sources through `tools/rss_fetch.py`.
 3. Ran configured `chrome_scrape` sources through the Codex in-app browser
    surface using the RT-M3 browser contract.
-4. Kept `rea_group_investor_centre` as blocked/manual and did not fetch it.
+4. Kept `rea_group_investor_centre` as blocked/manual and did not fetch it
+   because that was the active configuration at the time of the live test.
 5. Did not run enrichment/full-text checks. No PDF or article body extraction
    was performed in RT-M7.
 
@@ -54,8 +61,9 @@ it was an environment constraint, not a source response.
   full article text was fetched during the live test.
 - Browser checks used public page navigation only. No clicks, forms, login,
   CAPTCHA solving, paywall interaction, or proxy behavior were attempted.
-- `rea_group_investor_centre` was not fetched and remains covered by manual
-  intake policy.
+- `rea_group_investor_centre` was not fetched during this run because it was
+  then covered by manual intake policy. This is historical for the RT-M7 run;
+  current REA Group monitoring uses `rea_group_media_releases`.
 - No `.state/` artifacts were written in this milestone.
 
 ## Transient vs Persistent Findings

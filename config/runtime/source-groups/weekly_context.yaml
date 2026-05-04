@@ -13,16 +13,6 @@ sources:
     landing_urls:
       - https://www.onlinemarketplaces.com/topic/videos-vodcasts-interviews/conference/
 
-  - id: inman_tech_innovation
-    source_name: "Inman - Technology & Innovation"
-    source_type: trade_media
-    priority: 3
-    cadence_hint: twice_weekly
-    fetch_strategy: rss
-    rss_feed: https://feeds.feedburner.com/inmannews
-    landing_urls:
-      - https://www.inman.com/access-channel/technology-and-innovation/
-
   - id: similarweb_country_real_estate
     source_name: "Similarweb - Country Real Estate Rankings"
     source_type: behavioral_signal_source

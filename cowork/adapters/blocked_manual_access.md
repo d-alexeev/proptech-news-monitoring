@@ -2,8 +2,7 @@
 
 Applies to:
 
-- `rea_group_investor_centre` (permanent manual-only)
-- any future source declared with `fetch_strategy: blocked`
+- sources declared with `fetch_strategy: blocked`
 
 Use this adapter when the source requires manual, out-of-band, or
 authenticated access that is not available inside the Claude Cowork runtime.
@@ -21,10 +20,9 @@ records a single `manual_intake_reminder` entry at the declared cadence.
 
 Current members:
 
-- `rea_group_investor_centre` — investor centre explicitly forbids automated
-  fetching in `config/runtime/source-groups/daily_core.yaml`; ratified as
-  permanent manual-only on 2026-04-22 after the fourth consecutive
-  per-run change_request. Cadence for manual intake: **monthly**.
+- none. REA Group monitoring now uses the public media releases page in
+  `config/runtime/source-groups/daily_core.yaml` instead of the old manual-only
+  investor-centre source.
 
 Runner behavior:
 

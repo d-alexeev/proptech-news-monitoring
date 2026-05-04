@@ -17,7 +17,7 @@ Resolution rules:
 | `zillow_newsroom` | `cowork/adapters/zillow_newsroom_html.md` | HTML scrape with non-browser user agent rules |
 | `costar_homes` | `none` | baseline RSS |
 | `redfin_news` | `none` | baseline RSS |
-| `rea_group_investor_centre` | `cowork/adapters/blocked_manual_access.md` | sandbox-blocked source |
+| `rea_group_media_releases` | `none` | baseline static HTML media releases page |
 | `rightmove_plc` | `cowork/adapters/rightmove_plc.md` | empty RSS; scrape investor page instead |
 | `similarweb_global_real_estate` | `cowork/adapters/similarweb_site_overview.md` | use site overview pages, not gated category rankings |
 | `property_portal_watch` | `cowork/adapters/onlinemarketplaces_family.md` | same publisher family and listing-style discovery |

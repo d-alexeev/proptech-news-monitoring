@@ -15,14 +15,14 @@
       "Mike DelPrete",
       "Zillow Newsroom",
       "CoStar Group / Homes.com",
-      "REA Group Investor Centre",
+      "REA Group - Media Releases",
+      "Inman - Technology & Innovation",
       "Rightmove PLC",
       "Redfin News",
       "Similarweb - Global Real Estate Rankings"
     ],
     "weekly_context_sources": [
       "Property Portal Watch",
-      "Inman - Technology & Innovation",
       "Similarweb - Country Real Estate Rankings",
       "Zillow - Apple App Store",
       "Zillow - Google Play",
@@ -305,7 +305,7 @@
       }
     },
     {
-      "source_name": "REA Group Investor Centre",
+      "source_name": "REA Group - Media Releases",
       "source_type": "company_primary_source",
       "region": [
         "Australia",
@@ -318,7 +318,7 @@
         "data products",
         "developer tools"
       ],
-      "check_frequency": "weekly_and_on_results",
+      "check_frequency": "weekly_and_on_news",
       "monitoring_focus": [
         "actual investment priorities",
         "developer and agent monetization",
@@ -328,7 +328,7 @@
       ],
       "priority": 1,
       "urls": {
-        "investor_centre": "https://www.rea-group.com/investor-centre/"
+        "media_releases": "https://www.rea-group.com/about-us/news-and-insights/media-releases/"
       }
     },
     {
@@ -584,14 +584,14 @@
         "MLS and agent workflow trends",
         "AI tool launches"
       ],
-      "check_frequency": "twice_weekly",
+      "check_frequency": "daily",
       "monitoring_focus": [
         "broker and agent workflow disruption",
         "AI tooling adjacent to portals",
         "new startup signals",
         "US market-specific innovation"
       ],
-      "priority": 3,
+      "priority": 2,
       "urls": {
         "technology_channel": "https://www.inman.com/access-channel/technology-and-innovation/"
       }

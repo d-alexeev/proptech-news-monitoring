@@ -68,20 +68,24 @@ sources:
       - https://www.redfin.com/news/
       - https://investors.redfin.com/news-events/press-releases/default.aspx
 
-  - id: rea_group_investor_centre
-    source_name: "REA Group Investor Centre"
+  - id: rea_group_media_releases
+    source_name: "REA Group - Media Releases"
     source_type: company_primary_source
     priority: 1
-    cadence_hint: weekly_and_on_results
-    fetch_strategy: blocked
-    blocked_mode: manual_only_permanent
-    manual_intake_cadence_days: 30
-    manual_intake_last_checked: null  # populate on first human intake
+    cadence_hint: weekly_and_on_news
+    fetch_strategy: html_scrape
     landing_urls:
-      - https://www.rea-group.com/investor-centre/
-    # Suppresses per-run change_requests; runner emits manual_intake_reminder
-    # only when now >= last_checked + cadence. See
-    # cowork/adapters/blocked_manual_access.md § manual_only_permanent.
+      - https://www.rea-group.com/about-us/news-and-insights/media-releases/
+
+  - id: inman_tech_innovation
+    source_name: "Inman - Technology & Innovation"
+    source_type: trade_media
+    priority: 2
+    cadence_hint: twice_weekly
+    fetch_strategy: rss
+    rss_feed: https://feeds.feedburner.com/inmannews
+    landing_urls:
+      - https://www.inman.com/access-channel/technology-and-innovation/
 
   - id: rightmove_plc
     source_name: "Rightmove PLC"
