@@ -30,6 +30,7 @@
 | Файл | Назначение |
 |---|---|
 | `rss_fetch.py` | Единый минимальный fetcher для `fetch_strategy: rss`, `html_scrape` и простых JSON/API источников вроде `itunes_api`. |
+| `source_discovery_prefetch.py` | Runner-side static source prefetch for scheduled runs before the inner Codex agent starts. |
 | `pdf_extract.py` | Enrichment-only PDF-to-text helper for shortlisted public PDFs such as Rightmove RNS documents. |
 | `validate_runtime_artifacts.py` | Offline validator for source adapter resolution, compact state fixtures, change-request fixtures, full-text boundaries, and runner integration dry-run maps. |
 | `telegram_send.py` | Доставка markdown в Telegram по `delivery_profile` из `schedule_bindings.yaml`. |
@@ -93,6 +94,36 @@ Soft-fail labels are explicit and stable for runner handling:
 
 Offline contract coverage lives in `tools/test_rss_fetch.py`, including the
 regular `inman_tech_innovation` RSS path and iTunes API via `kind=http`.
+
+## `source_discovery_prefetch.py`
+
+`source_discovery_prefetch.py` runs before scheduled `codex exec` jobs. It reads
+`schedule_bindings.yaml`, resolves configured source groups, fetches only static
+sources through `rss_fetch.py`, and writes local evidence artifacts under
+`.state/codex-runs/`.
+
+It intentionally does not create `.state/raw/` or `.state/shortlists/` shards.
+The scheduled agent remains responsible for interpreting the evidence under
+`monitor_sources` contracts. Configured `chrome_scrape` sources are reported as
+`not_attempted` until a non-interactive browser runner exists.
+
+Example:
+
+```bash
+python3 tools/source_discovery_prefetch.py \
+  --schedule-id weekday_digest \
+  --run-id 20260504T100000Z-weekday_digest \
+  --repo-root . \
+  --pretty
+```
+
+Output is a compact JSON summary with artifact paths:
+
+- `*-source-prefetch-fetch-result.json`
+- `*-source-prefetch-dns-check.json`
+- `*-source-prefetch-summary.json`
+
+Offline contract coverage lives in `tools/test_source_discovery_prefetch.py`.
 
 ## `pdf_extract.py`
 
