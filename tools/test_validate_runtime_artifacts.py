@@ -540,6 +540,63 @@ def test_mixed_status_operator_report_requires_stage_fields_and_warning() -> Non
     assert good_errors == []
 
 
+def test_enrichment_partiality_does_not_force_source_discovery_incomplete() -> None:
+    fixture = {
+        "fixture_id": "weekday_digest_mixed_status_operator_report",
+        "mode_id": "weekday_digest",
+        "inputs": {
+            "run_manifests": [
+                {"mode": "monitor_sources", "status": "completed"},
+                {"mode": "scrape_and_enrich", "status": "partial"},
+                {"mode": "build_daily_digest", "status": "completed"},
+                {"mode": "review_digest", "status": "completed"},
+            ]
+        },
+        "expected": {
+            "final_operator_report": {
+                "source_discovery": {
+                    "status": "completed",
+                    "canonical_source_complete": True,
+                },
+                "enrichment": {
+                    "status": "partial",
+                    "evidence_completeness": "partial_body_fallback",
+                },
+                "digest_generation": {
+                    "status": "generated",
+                    "digest_status": "partial_digest",
+                    "canonical": False,
+                },
+                "qa_review": {"status": "warnings"},
+                "telegram_delivery": {"status": "not_configured", "delivered": False},
+                "overall_readiness": "partial",
+                "warnings": [
+                    "Digest was generated from partial enrichment and is not production-clean."
+                ],
+            }
+        },
+    }
+
+    errors = validator.validate_mixed_status_operator_report_fixture(
+        fixture,
+        pathlib.Path("weekday_digest_enrichment_partial_operator_report.yaml"),
+    )
+
+    assert errors == []
+
+
+def test_state_schema_keeps_discovery_completeness_separate_from_enrichment_partiality() -> None:
+    schemas = validator.load_yaml(validator.ROOT / "config/runtime/state_schemas.yaml")
+    run_manifest = schemas.get("artifacts", {}).get("run_manifest", {})
+    contract = run_manifest.get("operator_report_contract", {})
+    mixed_status_rule = contract.get("mixed_status_rule", "")
+
+    assert (
+        "enrichment partiality does not force canonical_source_complete false"
+        in mixed_status_rule
+    )
+
+
 def main() -> None:
     tests = [
         test_adapter_validation_requires_configured_sources_to_resolve,
@@ -554,6 +611,8 @@ def main() -> None:
         test_all_snippet_digest_gate_requires_partial_status_and_evidence_notes,
         test_all_snippet_digest_gate_rejects_non_canonical_non_partial_statuses,
         test_mixed_status_operator_report_requires_stage_fields_and_warning,
+        test_enrichment_partiality_does_not_force_source_discovery_incomplete,
+        test_state_schema_keeps_discovery_completeness_separate_from_enrichment_partiality,
     ]
     for test in tests:
         test()

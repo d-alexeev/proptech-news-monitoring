@@ -43,11 +43,15 @@ Such a digest must not look production-clean: include compact evidence limitatio
 Do not read full article bodies, `article_file`, or `./.state/articles/` to resolve an all-snippet condition.
 
 When emitting the build run manifest, keep `run_manifest.status = completed`
-only to mean the digest artifact was generated. If source discovery or
-enrichment inputs are partial, add `run_manifest.operator_report.digest_generation`
-with `status: generated`, `digest_status: partial_digest` or
-`non_canonical_digest`, and `canonical: false`. Also add a warning that the
-generated digest is not production-clean because upstream inputs were partial.
+only to mean the digest artifact was generated. Set
+`run_manifest.operator_report.digest_generation` from evidence available to this
+mode, such as all-snippet enrichment records or explicit selection evidence
+limits. Use `status: generated`, `digest_status: partial_digest` or
+`non_canonical_digest`, and `canonical: false` when those local inputs make the
+digest non-canonical. Do not infer source discovery completeness from this mode;
+the weekday wrapper/final operator report synthesizes cross-stage source
+discovery, enrichment, review, and delivery readiness from compact stage
+manifests and operator reports.
 
 ## Delivery constraints
 
