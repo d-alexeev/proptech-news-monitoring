@@ -167,6 +167,7 @@ def validate_finish_artifacts(
     run_date: str,
     source_group: str,
     delivery_profile: str,
+    require_finish_summary: bool = False,
 ) -> dict:
     repo_root = repo_root.resolve()
     timestamp = run_timestamp(run_id)
@@ -176,6 +177,8 @@ def validate_finish_artifacts(
         repo_root / ".state" / "runs" / run_date / f"build_daily_digest__{timestamp}__{delivery_profile}.json",
         repo_root / ".state" / "briefs" / "daily" / f"{run_date}__{delivery_profile}.json",
     ]
+    if require_finish_summary:
+        required_paths.append(repo_root / ".state" / "codex-runs" / f"{run_id}-finish-summary.json")
     missing = [path for path in required_paths if not path.exists()]
     if missing:
         missing_text = ", ".join(rel(path, repo_root) for path in missing)
@@ -220,6 +223,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     validate_finish.add_argument("--run-date", required=True)
     validate_finish.add_argument("--source-group", required=True)
     validate_finish.add_argument("--delivery-profile", required=True)
+    validate_finish.add_argument("--require-finish-summary", action="store_true")
     return parser.parse_args(argv)
 
 
@@ -263,6 +267,7 @@ def main(argv: list[str] | None = None) -> None:
                 run_date=args.run_date,
                 source_group=args.source_group,
                 delivery_profile=args.delivery_profile,
+                require_finish_summary=args.require_finish_summary,
             )
             print(json.dumps(validation, ensure_ascii=False))
         else:

@@ -307,7 +307,8 @@ run_weekday_staged_schedule() {
     --run-id "$RUN_ID" \
     --run-date "$RUN_DATE" \
     --source-group daily_core \
-    --delivery-profile telegram_digest
+    --delivery-profile telegram_digest \
+    --require-finish-summary
 
   printf 'Discovery events: %s\n' "$DISCOVERY_EVENT_LOG"
   printf 'Discovery final message: %s\n' "$DISCOVERY_LAST_MESSAGE"

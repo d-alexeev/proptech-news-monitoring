@@ -154,12 +154,49 @@ def test_validate_finish_artifacts_requires_current_run_manifests() -> None:
         assert validation["run_timestamp"] == "20260504T121000Z"
 
 
+def test_validate_finish_artifacts_requires_finish_summary_when_requested() -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        root = pathlib.Path(tmpdir)
+        run_id = "20260504T121000Z-weekday_digest"
+        write_json(
+            root / ".state/enriched/2026-05-04/scrape_and_enrich__20260504T121000Z__daily_core.json",
+            [],
+        )
+        write_json(
+            root / ".state/runs/2026-05-04/scrape_and_enrich__20260504T121000Z__daily_core.json",
+            {"run_id": "scrape_and_enrich__20260504T121000Z__daily_core"},
+        )
+        write_json(
+            root / ".state/runs/2026-05-04/build_daily_digest__20260504T121000Z__telegram_digest.json",
+            {"run_id": "build_daily_digest__20260504T121000Z__telegram_digest"},
+        )
+        write_json(
+            root / ".state/briefs/daily/2026-05-04__telegram_digest.json",
+            {"brief_id": "2026-05-04__telegram_digest"},
+        )
+
+        try:
+            codex_schedule_artifacts.validate_finish_artifacts(
+                repo_root=root,
+                run_id=run_id,
+                run_date="2026-05-04",
+                source_group="daily_core",
+                delivery_profile="telegram_digest",
+                require_finish_summary=True,
+            )
+        except FileNotFoundError as exc:
+            assert "finish-summary.json" in str(exc)
+        else:
+            raise AssertionError("missing finish summary should fail when required")
+
+
 def main() -> None:
     tests = [
         test_find_latest_shortlist_for_source_group,
         test_find_new_shortlist_rejects_stale_shards,
         test_write_synthetic_article_prefetch_fallback,
         test_validate_finish_artifacts_requires_current_run_manifests,
+        test_validate_finish_artifacts_requires_finish_summary_when_requested,
     ]
     for test in tests:
         test()
