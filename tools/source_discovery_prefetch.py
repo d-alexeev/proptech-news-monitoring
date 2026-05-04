@@ -22,6 +22,7 @@ import yaml
 
 
 FetchRunner = Callable[[list[dict], Path], tuple[int, dict, str]]
+BrowserRunner = Callable[[list[dict], Path], tuple[int, dict, str]]
 DnsChecker = Callable[[list[str]], dict[str, dict]]
 
 
@@ -68,20 +69,25 @@ def _source_spec(source: dict, source_group: str) -> dict | None:
     }
 
 
+def _browser_source_spec(source: dict, source_group: str) -> dict | None:
+    source_id = source.get("id")
+    strategy = source.get("fetch_strategy")
+    url = _first_url(source)
+    if not source_id or strategy != "chrome_scrape" or not url:
+        return None
+    return {
+        "source_id": source_id,
+        "source_group": source_group,
+        "fetch_strategy": strategy,
+        "url": str(url),
+    }
+
+
 def _skipped_source(source: dict, source_group: str) -> dict | None:
     source_id = source.get("id")
     strategy = source.get("fetch_strategy")
     if not source_id or not strategy:
         return None
-    if strategy == "chrome_scrape":
-        return {
-            "source_id": source_id,
-            "source_group": source_group,
-            "fetch_strategy": strategy,
-            "status": "not_attempted",
-            "reason": "no_headless_browser_runner",
-            "urls": [str(url) for url in source.get("landing_urls", [])],
-        }
     if strategy not in ("rss", "html_scrape", "itunes_api"):
         return {
             "source_id": source_id,
@@ -105,6 +111,7 @@ def build_prefetch_plan(repo_root: Path, schedule_id: str) -> dict:
         raise ValueError(f"Schedule has no source_groups: {schedule_id}")
 
     source_specs: list[dict] = []
+    browser_source_specs: list[dict] = []
     skipped_sources: list[dict] = []
     configured_source_count = 0
 
@@ -122,21 +129,23 @@ def build_prefetch_plan(repo_root: Path, schedule_id: str) -> dict:
             if spec:
                 source_specs.append(spec)
                 continue
+            browser_spec = _browser_source_spec(source, str(group_id))
+            if browser_spec:
+                browser_source_specs.append(browser_spec)
+                continue
             skipped = _skipped_source(source, str(group_id))
             if skipped:
                 skipped_sources.append(skipped)
 
-    browser_source_count = sum(
-        1 for source in skipped_sources if source.get("fetch_strategy") == "chrome_scrape"
-    )
     return {
         "schedule_id": schedule_id,
         "source_groups": [str(group_id) for group_id in source_groups],
         "delivery_profile": schedule.get("delivery_profile"),
         "configured_source_count": configured_source_count,
         "fetchable_source_count": len(source_specs),
-        "browser_source_count": browser_source_count,
+        "browser_source_count": len(browser_source_specs),
         "source_specs": source_specs,
+        "browser_source_specs": browser_source_specs,
         "skipped_sources": skipped_sources,
     }
 
@@ -165,6 +174,42 @@ def default_fetch_runner(source_specs: list[dict], repo_root: Path) -> tuple[int
     return proc.returncode, doc, proc.stderr[-2000:]
 
 
+def default_browser_runner(browser_source_specs: list[dict], repo_root: Path) -> tuple[int, dict, str]:
+    if not browser_source_specs:
+        return (
+            0,
+            {
+                "fetched_at": now_iso(),
+                "results": [],
+                "batch_status": "success",
+                "failure_class": None,
+                "run_failure": None,
+            },
+            "",
+        )
+    cmd = [sys.executable, "tools/browser_fetch.py", "--stdin", "--pretty"]
+    proc = subprocess.run(
+        cmd,
+        input=json.dumps({"sources": browser_source_specs}, ensure_ascii=False),
+        cwd=repo_root,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    try:
+        doc = json.loads(proc.stdout)
+    except json.JSONDecodeError:
+        doc = {
+            "fetched_at": now_iso(),
+            "results": [],
+            "batch_status": "failed",
+            "failure_class": "browser_output_parse_error",
+            "run_failure": {"message": proc.stdout[:2000]},
+        }
+    return proc.returncode, doc, proc.stderr[-2000:]
+
+
 def default_dns_checker(hosts: list[str]) -> dict[str, dict]:
     result: dict[str, dict] = {}
     for host in hosts:
@@ -188,6 +233,20 @@ def _is_successful_result(result: dict) -> bool:
     return not result.get("error") and not result.get("soft_fail")
 
 
+def _browser_unavailable_skipped_sources(browser_source_specs: list[dict]) -> list[dict]:
+    return [
+        {
+            "source_id": spec.get("source_id"),
+            "source_group": spec.get("source_group"),
+            "fetch_strategy": spec.get("fetch_strategy"),
+            "status": "not_attempted",
+            "reason": "no_headless_browser_runner",
+            "urls": [spec.get("url")],
+        }
+        for spec in browser_source_specs
+    ]
+
+
 def _source_discovery_status(fetch_doc: dict, success_count: int) -> tuple[str, str, bool]:
     if (
         fetch_doc.get("batch_status") == "environment_failure"
@@ -205,6 +264,7 @@ def run_prefetch(
     *,
     run_id: str,
     fetch_runner: FetchRunner = default_fetch_runner,
+    browser_runner: BrowserRunner = default_browser_runner,
     dns_checker: DnsChecker = default_dns_checker,
 ) -> dict:
     repo_root = repo_root.resolve()
@@ -213,10 +273,13 @@ def run_prefetch(
 
     plan = build_prefetch_plan(repo_root, schedule_id)
     source_specs = plan["source_specs"]
+    browser_source_specs = plan["browser_source_specs"]
     fetch_exit_code, fetch_doc, stderr_preview = fetch_runner(source_specs, repo_root)
+    browser_exit_code, browser_doc, browser_stderr_preview = browser_runner(browser_source_specs, repo_root)
     dns_doc = dns_checker(_hosts_for_dns(source_specs))
 
     fetch_path = run_root / f"{run_id}-source-prefetch-fetch-result.json"
+    browser_path = run_root / f"{run_id}-source-prefetch-browser-result.json"
     dns_path = run_root / f"{run_id}-source-prefetch-dns-check.json"
     summary_path = run_root / f"{run_id}-source-prefetch-summary.json"
 
@@ -225,13 +288,25 @@ def run_prefetch(
         "exit_code": fetch_exit_code,
         "stderr_preview": stderr_preview,
     }
+    browser_doc["runner_invocation"] = {
+        "cmd": "python3 tools/browser_fetch.py --stdin --pretty",
+        "exit_code": browser_exit_code,
+        "stderr_preview": browser_stderr_preview,
+    }
 
     results = fetch_doc.get("results") or []
+    browser_results = browser_doc.get("results") or []
     success_count = sum(1 for result in results if _is_successful_result(result))
+    browser_success_count = sum(
+        1 for result in browser_results if _is_successful_result(result)
+    )
     status, downstream_gate, canonical_complete = _source_discovery_status(
         fetch_doc,
         success_count,
     )
+    skipped_sources = list(plan["skipped_sources"])
+    if browser_doc.get("failure_class") == "browser_runtime_unavailable":
+        skipped_sources.extend(_browser_unavailable_skipped_sources(browser_source_specs))
 
     summary = {
         "run_id": run_id,
@@ -249,15 +324,21 @@ def run_prefetch(
         "fetchable_attempted_count": len(source_specs),
         "fetchable_success_count": success_count,
         "browser_source_count": plan["browser_source_count"],
-        "browser_attempted_count": 0,
-        "skipped_sources": plan["skipped_sources"],
+        "browser_attempted_count": len(browser_source_specs),
+        "browser_success_count": browser_success_count,
+        "browser_batch_status": browser_doc.get("batch_status"),
+        "browser_failure_class": browser_doc.get("failure_class"),
+        "skipped_sources": skipped_sources,
         "fetch_result_path": str(fetch_path.relative_to(repo_root)),
+        "browser_result_path": str(browser_path.relative_to(repo_root)),
         "dns_check_path": str(dns_path.relative_to(repo_root)),
         "summary_path": str(summary_path.relative_to(repo_root)),
         "runner_invocation": fetch_doc["runner_invocation"],
+        "browser_runner_invocation": browser_doc["runner_invocation"],
     }
 
     fetch_path.write_text(json.dumps(fetch_doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    browser_path.write_text(json.dumps(browser_doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     dns_path.write_text(json.dumps(dns_doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     summary_path.write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return summary
