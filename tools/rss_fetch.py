@@ -52,8 +52,9 @@ Output (stdout, one JSON document):
   }
 
 Exit codes:
-  0  all sources fetched (items may be empty, soft_fail may be set)
-  1  unexpected error (network stack, parser crash)
+  0  batch_status is success or partial_success
+     (items may be empty, source-level soft_fail may be set)
+  1  batch_status is failed or environment_failure; also unexpected errors
   2  invalid arguments
   10 every source soft-failed (blocked/anti-bot/paywall) — caller should emit change_request
 """
@@ -502,7 +503,7 @@ def main() -> None:
         sys.exit(1)
     if results and all(r.get("soft_fail") for r in results):
         sys.exit(10)
-    if any(r.get("error") and not r.get("soft_fail") for r in results) and len(results) == 1:
+    if doc.get("batch_status") == "failed":
         sys.exit(1)
 
 

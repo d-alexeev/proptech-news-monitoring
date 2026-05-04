@@ -75,6 +75,12 @@ The fetcher emits exactly one JSON document to stdout. It does not write
 result becomes a shortlist item, digest item, full-text enrichment, or
 `change_request`.
 
+Exit codes follow the emitted batch status: `success` and `partial_success`
+exit `0`; `failed` and `environment_failure` exit `1`; invalid invocation exits
+`2`; `soft_failed` exits `10`. A mixed batch with one hard source error and one
+successful source is therefore `batch_status="failed"` and exits `1`. Source-level
+soft fails remain nonfatal unless every source soft-failed.
+
 Soft-fail labels are explicit and stable for runner handling:
 
 | Label | Typical trigger | Boundary |

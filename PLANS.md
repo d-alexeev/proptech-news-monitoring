@@ -229,6 +229,50 @@ the initial plan, but it is a pre-implementation hygiene milestone.
   - no source-specific selector library inside `rss_fetch.py`;
   - no proxy or CAPTCHA handling.
 
+##### WLH-M4. Batch Hard-Failure Exit Status
+
+- Goal: align `rss_fetch.py` process exit status with emitted
+  `batch_status="failed"` for multi-source hard failures.
+- Scope:
+  - change CLI exit handling only after the JSON document is emitted;
+  - add deterministic offline coverage for one hard source error plus one
+    successful source in the same batch;
+  - clarify exit-code documentation if needed.
+- Likely files/artifacts to change:
+  - `tools/rss_fetch.py`
+  - `tools/test_rss_fetch.py`
+  - `tools/README.md`
+- Dependencies: existing RT-M2 fetcher contract and offline test harness.
+- Risks:
+  - accidentally treating source-level soft fails as hard process failures;
+  - changing the documented all-soft-fail exit code `10`;
+  - broadening the diff beyond the WLH-M4 fetcher contract files.
+- Acceptance criteria:
+  - a multi-source batch with at least one non-soft source error exits nonzero;
+  - the emitted JSON `batch_status` remains the source of truth for hard batch
+    failure classification;
+  - source-level soft-fail behavior is preserved, including all-soft-fail exit
+    code `10`;
+  - documentation clearly distinguishes hard batch failures from soft-fail
+    outcomes.
+- Tests or verification steps:
+  - `python3 tools/test_rss_fetch.py`
+  - `python3 tools/validate_runtime_artifacts.py --check all`
+  - `git diff --check`
+- Explicit non-goals:
+  - no new source adapters or source-specific parsing;
+  - no live network fetches;
+  - no state schema or runtime artifact writes.
+
+Coverage matrix for WLH-M4:
+
+| Requirement | Milestone |
+|---|---|
+| Align exit status with `batch_status` for multi-source hard failures. | WLH-M4 |
+| Preserve source-level soft-fail behavior and all-soft-fail behavior. | WLH-M4 |
+| Add deterministic multi-source hard-error plus success test expecting nonzero exit. | WLH-M4 |
+| Update docs if exit-code behavior changes or needs clarification. | WLH-M4 |
+
 #### RT-M3. Browser Fallback Interface
 
 - Goal: define the narrow browser fallback path for Codex-run scraping without

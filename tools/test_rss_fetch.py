@@ -10,9 +10,13 @@ from __future__ import annotations
 import os
 import pathlib
 import socket
+import io
+import json
+import sys
 import tempfile
 import warnings
 from contextlib import contextmanager
+from contextlib import redirect_stdout
 from typing import Iterator
 
 warnings.filterwarnings("ignore", message="urllib3 v2 only supports OpenSSL.*")
@@ -297,6 +301,91 @@ def test_batch_costar_timeout_does_not_mask_other_sources_dns_failure() -> None:
     assert doc["run_failure"]["soft_failed_source_ids"] == ["costar_homes"]
 
 
+def test_cli_multi_source_hard_failure_exits_nonzero() -> None:
+    """A mixed batch with one hard source error exits nonzero with failed JSON."""
+    responses = {
+        "https://broken.example/feed": requests.ConnectionError("connection refused"),
+        "https://inman.example/feed": FakeResponse(
+            text=INMAN_RSS,
+            url="https://inman.example/feed",
+            headers={"Content-Type": "application/rss+xml"},
+        ),
+    }
+    payload = {
+        "sources": [
+            {"source_id": "broken_source", "url": "https://broken.example/feed", "kind": "rss"},
+            {"source_id": "inman_tech_innovation", "url": "https://inman.example/feed", "kind": "rss"},
+        ]
+    }
+
+    original_request = rss_fetch._do_request
+    original_argv = sys.argv
+    original_stdin = sys.stdin
+
+    def _fake_do_request(url, *args, **kwargs):  # noqa: ANN001, ANN002, ANN003, ANN202
+        response_or_exc = responses[url]
+        if isinstance(response_or_exc, Exception):
+            raise response_or_exc
+        return response_or_exc
+
+    stdout = io.StringIO()
+    exit_code = 0
+    rss_fetch._do_request = _fake_do_request
+    sys.argv = ["rss_fetch.py", "--stdin"]
+    sys.stdin = io.StringIO(json.dumps(payload))
+    try:
+        with redirect_stdout(stdout):
+            try:
+                rss_fetch.main()
+            except SystemExit as exc:
+                exit_code = int(exc.code)
+    finally:
+        rss_fetch._do_request = original_request
+        sys.argv = original_argv
+        sys.stdin = original_stdin
+
+    doc = json.loads(stdout.getvalue())
+    assert doc["batch_status"] == "failed"
+    assert exit_code == 1
+
+
+def test_cli_all_soft_failures_still_exit_10() -> None:
+    """A batch where every source soft-fails keeps the documented exit 10."""
+    payload = {
+        "sources": [
+            {"source_id": "blocked_one", "url": "https://blocked-one.example/feed", "kind": "rss"},
+            {"source_id": "blocked_two", "url": "https://blocked-two.example/feed", "kind": "rss"},
+        ]
+    }
+
+    original_request = rss_fetch._do_request
+    original_argv = sys.argv
+    original_stdin = sys.stdin
+
+    def _fake_do_request(*args, **kwargs):  # noqa: ANN002, ANN003, ANN202
+        return FakeResponse(status_code=403, text="Subscribe to continue reading")
+
+    stdout = io.StringIO()
+    exit_code = 0
+    rss_fetch._do_request = _fake_do_request
+    sys.argv = ["rss_fetch.py", "--stdin"]
+    sys.stdin = io.StringIO(json.dumps(payload))
+    try:
+        with redirect_stdout(stdout):
+            try:
+                rss_fetch.main()
+            except SystemExit as exc:
+                exit_code = int(exc.code)
+    finally:
+        rss_fetch._do_request = original_request
+        sys.argv = original_argv
+        sys.stdin = original_stdin
+
+    doc = json.loads(stdout.getvalue())
+    assert doc["batch_status"] == "soft_failed"
+    assert exit_code == 10
+
+
 def test_fetcher_does_not_write_state() -> None:
     """The fetcher returns JSON-ready data and leaves .state ownership to runtime."""
     response = FakeResponse(text="<html>ok</html>", headers={"Content-Type": "text/html"})
@@ -327,6 +416,8 @@ def main() -> None:
         test_batch_all_name_resolution_errors_classifies_environment_failure,
         test_batch_single_timeout_remains_source_level_soft_fail,
         test_batch_costar_timeout_does_not_mask_other_sources_dns_failure,
+        test_cli_multi_source_hard_failure_exits_nonzero,
+        test_cli_all_soft_failures_still_exit_10,
         test_fetcher_does_not_write_state,
     ]
     for test in tests:
