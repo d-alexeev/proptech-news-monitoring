@@ -30,6 +30,7 @@ EVENT_LOG="$RUN_ROOT/$RUN_ID-events.jsonl"
 LAST_MESSAGE="$RUN_ROOT/$RUN_ID-last-message.txt"
 PREFETCH_STDOUT="$RUN_ROOT/$RUN_ID-source-prefetch-stdout.json"
 PREFETCH_SUMMARY="$RUN_ROOT/$RUN_ID-source-prefetch-summary.json"
+BROWSER_PREFETCH_RESULT="$RUN_ROOT/$RUN_ID-source-prefetch-browser-result.json"
 GENERATED_PROMPT="$RUN_ROOT/$RUN_ID-prompt.md"
 CODEX_BIN="${CODEX_BIN:-codex}"
 ENV_FILE="${CODEX_ENV_FILE:-$REPO_ROOT/.env}"
@@ -151,10 +152,11 @@ python3 "$PREFETCH_HELPER" \
 {
   printf '# Runner Source Discovery Prefetch\n\n'
   printf 'The schedule wrapper already ran static source discovery prefetch before this inner Codex agent started.\n'
-  printf 'Use these local JSON artifacts as canonical static source evidence for `monitor_sources`.\n'
+  printf 'Use these local JSON artifacts as canonical static source and browser source evidence for `monitor_sources`.\n'
   printf 'Do not re-run static network fetches for sources already represented in the prefetch artifacts from inside this sandbox.\n'
-  printf 'Configured browser sources remain `not_attempted` unless a separate browser artifact is present.\n\n'
+  printf 'Use browser evidence only when the prefetch summary includes `browser_result_path`; otherwise configured browser sources remain `not_attempted`.\n\n'
   printf '%s\n' "- Prefetch summary: \`$PREFETCH_SUMMARY\`"
+  printf '%s\n' "- Browser prefetch result: \`$BROWSER_PREFETCH_RESULT\` (summary field: \`browser_result_path\`)"
   printf '%s\n' "- Prefetch stdout copy: \`$PREFETCH_STDOUT\`"
   printf '%s\n\n' "- Schedule run id: \`$RUN_ID\`"
   cat "$PROMPT_FILE"

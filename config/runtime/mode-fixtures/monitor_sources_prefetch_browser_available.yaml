@@ -1,0 +1,64 @@
+fixture_id: monitor_sources_prefetch_browser_available
+mode_id: monitor_sources
+
+inputs:
+  run_id: monitor_sources__20260504T122000Z__daily_core
+  run_date: 2026-05-04
+  group_id: daily_core
+  runner_prefetch:
+    summary_path: .state/codex-runs/20260504T122000Z-weekday_digest-source-prefetch-summary.json
+    fetch_result_path: .state/codex-runs/20260504T122000Z-weekday_digest-source-prefetch-fetch-result.json
+    browser_result_path: .state/codex-runs/20260504T122000Z-weekday_digest-source-prefetch-browser-result.json
+    dns_check_path: .state/codex-runs/20260504T122000Z-weekday_digest-source-prefetch-dns-check.json
+    source_discovery_status: partial
+    downstream_gate: prefetch_available
+    fetchable_source_count: 8
+    fetchable_success_count: 6
+    browser_source_count: 2
+    browser_attempted_count: 2
+    browser_success_count: 2
+    browser_batch_status: success
+    browser_failure_class: null
+    skipped_sources: []
+  browser_runner_output:
+    batch_status: success
+    failure_class: null
+    results:
+      - source_id: onlinemarketplaces
+        source_group: daily_core
+        kind: browser
+        url: https://www.onlinemarketplaces.com/property-portal-insights/
+        http:
+          status_like: 200
+          content_type: text/html
+          source: browser_observation
+        final_url: https://www.onlinemarketplaces.com/property-portal-insights/
+        text: Compact visible listing evidence with titles, dates, and snippets only.
+        html: null
+        items: []
+        error: null
+        failure_class: null
+        soft_fail: null
+      - source_id: similarweb_global_real_estate
+        source_group: daily_core
+        kind: browser
+        url: https://www.similarweb.com/website/zillow.com/#overview
+        http:
+          status_like: 200
+          content_type: text/html
+          source: browser_observation
+        final_url: https://www.similarweb.com/website/zillow.com/#overview
+        text: Compact visible Similarweb overview metadata only.
+        html: null
+        items: []
+        error: null
+        failure_class: null
+        soft_fail: null
+
+expected:
+  action: consume_browser_artifact_as_browser_source_runner_output
+  browser_sources_status: consumed
+  rerun_browser_navigation_inside_codex: false
+  browser_evidence_policy: visible_listing_snippet_metadata_only
+  full_article_body_allowed: false
+  large_html_body_policy: evidence_reference_only

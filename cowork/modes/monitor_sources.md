@@ -55,8 +55,13 @@ Source runner failure handling:
   For large `kind=http` bodies, summarize only adapter-relevant listing markers,
   titles, links, dates, and compact snippets. Do not copy full listing HTML into
   raw candidate reasoning notes.
-- Keep configured `chrome_scrape` sources as `not_attempted` unless the wrapper
-  also provides a browser artifact that follows `tools/chrome_notes.md`.
+- Use configured `chrome_scrape` source output only when the wrapper provides a
+  browser artifact path from prefetch summary field `browser_result_path`. The
+  browser artifact must follow `tools/chrome_notes.md` and may contribute only
+  visible listing/snippet/metadata evidence, not full article bodies.
+- If the browser artifact is absent or reports
+  `failure_class=browser_runtime_unavailable`, keep configured `chrome_scrape`
+  sources as `not_attempted` and record the missing runner capability.
 - Treat `tools/rss_fetch.py` output `batch_status=environment_failure` with
   `failure_class=global_dns_resolution_failure` as a runner/network failure,
   not as a canonical empty source result.

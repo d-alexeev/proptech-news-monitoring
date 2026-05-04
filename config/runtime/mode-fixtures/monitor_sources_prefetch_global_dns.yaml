@@ -8,13 +8,17 @@ inputs:
   runner_prefetch:
     summary_path: .state/codex-runs/20260504T121000Z-weekday_digest-source-prefetch-summary.json
     fetch_result_path: .state/codex-runs/20260504T121000Z-weekday_digest-source-prefetch-fetch-result.json
+    browser_result_path: .state/codex-runs/20260504T121000Z-weekday_digest-source-prefetch-browser-result.json
     dns_check_path: .state/codex-runs/20260504T121000Z-weekday_digest-source-prefetch-dns-check.json
     source_discovery_status: failed
     downstream_gate: blocked_before_digest
     fetchable_source_count: 8
     fetchable_success_count: 0
     browser_source_count: 2
-    browser_attempted_count: 0
+    browser_attempted_count: 2
+    browser_success_count: 0
+    browser_batch_status: environment_failure
+    browser_failure_class: browser_runtime_unavailable
   source_runner_output:
     batch_status: environment_failure
     failure_class: global_dns_resolution_failure

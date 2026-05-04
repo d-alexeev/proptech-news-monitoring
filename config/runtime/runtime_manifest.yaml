@@ -67,6 +67,7 @@ files:
     monitor_sources_global_dns_environment_failure: ./config/runtime/mode-fixtures/monitor_sources_global_dns_environment_failure.yaml
     monitor_sources_prefetch_partial_static: ./config/runtime/mode-fixtures/monitor_sources_prefetch_partial_static.yaml
     monitor_sources_prefetch_global_dns: ./config/runtime/mode-fixtures/monitor_sources_prefetch_global_dns.yaml
+    monitor_sources_prefetch_browser_available: ./config/runtime/mode-fixtures/monitor_sources_prefetch_browser_available.yaml
     scrape_and_enrich_non_shortlisted_guard: ./config/runtime/mode-fixtures/scrape_and_enrich_non_shortlisted_guard.yaml
     scrape_and_enrich_adapter_resolution: ./config/runtime/mode-fixtures/scrape_and_enrich_adapter_resolution.yaml
     scrape_and_enrich_full_body: ./config/runtime/mode-fixtures/scrape_and_enrich_full_body.yaml

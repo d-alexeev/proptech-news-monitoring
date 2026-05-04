@@ -49,8 +49,11 @@ artifact paths as local evidence references. For large HTTP listing bodies,
 extract only adapter-relevant compact discovery facts; do not paste full listing
 HTML into run artifacts or reasoning notes.
 
-Configured `chrome_scrape` sources are not covered by static prefetch. Mark them
-as `not_attempted` unless a separate browser artifact is explicitly provided.
+Configured `chrome_scrape` sources are covered only when the prefetch summary
+contains `browser_result_path` and the referenced browser artifact exists. Use
+that browser artifact as compact listing/snippet evidence only. If it is absent
+or reports `browser_runtime_unavailable`, mark those browser sources as
+`not_attempted`.
 
 ## Write Boundaries
 

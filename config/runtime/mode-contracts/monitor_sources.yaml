@@ -78,6 +78,7 @@ source_runner_contract:
     helper: ./tools/source_discovery_prefetch.py
     artifact_fields:
       - fetch_result_path
+      - browser_result_path
       - dns_check_path
       - summary_path
     handling:
@@ -90,6 +91,12 @@ source_runner_contract:
       - when: "prefetch skipped_sources contains fetch_strategy=chrome_scrape"
         action: mark_browser_sources_not_attempted_until_browser_artifact_exists
         note: Static prefetch does not make browser-backed discovery canonical.
+      - when: "prefetch summary contains browser_result_path and browser_batch_status is not environment_failure"
+        action: consume_browser_artifact_as_browser_source_runner_output
+        note: Use visible listing text, snippets, titles, dates, links, and compact metadata only.
+      - when: "browser artifact reports failure_class=browser_runtime_unavailable"
+        action: mark_browser_sources_not_attempted_and_record_runner_dependency_gap
+        note: Playwright or Chromium is unavailable in the scheduled runner environment.
   batch_summary_fields:
     - fetched_at
     - batch_status
@@ -104,6 +111,7 @@ source_runner_contract:
     - environment_failure
   environment_failure_classes:
     - global_dns_resolution_failure
+    - browser_runtime_unavailable
   source_failure_classes:
     - timeout
     - blocked_or_paywall
@@ -116,6 +124,8 @@ source_runner_contract:
     - feed_parse_error
     - dns_resolution
     - network_error
+    - browser_error
+    - browser_runtime_unavailable
   handling_rules:
     - condition: "batch_status == 'environment_failure' and failure_class == 'global_dns_resolution_failure'"
       action: emit_failed_run_manifest_without_canonical_empty_shards
