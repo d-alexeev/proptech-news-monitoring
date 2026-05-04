@@ -8,7 +8,7 @@ delivery profile defined in config/runtime/schedule_bindings.yaml.
 Profiles are resolved by name (--profile) with the following defaults,
 mirroring schedule_bindings.yaml#delivery_profiles:
 
-  telegram_digest         parse_mode=MarkdownV2, split, max=3800, title="PropTech Monitor | {date}"
+  telegram_digest         parse_mode=HTML, split, max=3800, title=""
   telegram_weekly_digest  parse_mode=MarkdownV2, split, max=3800, title="PropTech Weekly | {date}"
   telegram_alert          parse_mode=MarkdownV2, no split, max=2500, title="PropTech Alert | {date}"
 
@@ -117,6 +117,7 @@ _DNS_ERROR_RE = re.compile(
     r"Failed to resolve|nodename nor servname|Name or service not known|getaddrinfo|DNS",
     re.IGNORECASE,
 )
+_MARKDOWN_LINK_RE = re.compile(r"\[[^\]]+\]\((https?://[^)\s]+)\)")
 
 
 def _escape_mdv2(text: str, specials: set[str] = _MDV2_PLAIN_SPECIALS) -> str:
@@ -515,6 +516,27 @@ def _load_profile(name: str) -> dict:
     return merged
 
 
+def _build_link_preview_options(raw_markdown: str, profile: dict) -> dict[str, object] | None:
+    """Build Telegram Bot API link_preview_options from the raw markdown body."""
+    link_preview = profile.get("link_preview") or {}
+    if not isinstance(link_preview, dict) or not link_preview.get("enabled"):
+        return None
+    if link_preview.get("url_mode", "first_markdown_link") != "first_markdown_link":
+        return None
+    match = _MARKDOWN_LINK_RE.search(raw_markdown)
+    if not match:
+        return None
+    options: dict[str, object] = {
+        "is_disabled": False,
+        "url": match.group(1),
+    }
+    if "prefer_large_media" in link_preview:
+        options["prefer_large_media"] = bool(link_preview.get("prefer_large_media"))
+    if "show_above_text" in link_preview:
+        options["show_above_text"] = bool(link_preview.get("show_above_text"))
+    return options
+
+
 def _chunk_markdown(body: str, limit: int) -> list[str]:
     """Split markdown into <= limit chunks, preferring blank-line boundaries."""
     body = body.rstrip() + "\n"
@@ -545,14 +567,18 @@ def _send_chunk(
     thread_id: str | None,
     parse_mode: str | None,
     disable_preview: bool,
+    link_preview_options: dict[str, object] | None = None,
     timeout: int = 30,
 ) -> dict:
     url = f"{TELEGRAM_API_BASE}/bot{bot_token}/sendMessage"
     payload: dict[str, object] = {
         "chat_id": chat_id,
         "text": text,
-        "disable_web_page_preview": disable_preview,
     }
+    if link_preview_options is not None:
+        payload["link_preview_options"] = link_preview_options
+    else:
+        payload["disable_web_page_preview"] = disable_preview
     if parse_mode:
         payload["parse_mode"] = parse_mode
     if thread_id:
@@ -630,6 +656,8 @@ def main() -> None:
         print("stdin is empty", file=sys.stderr)
         sys.exit(2)
     validate_delivery_language(body, profile_name=args.profile, allow_non_russian=args.allow_non_russian)
+    raw_markdown_body = body
+    link_preview_options = _build_link_preview_options(raw_markdown_body, profile)
 
     date_str = args.date or datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
@@ -710,6 +738,7 @@ def main() -> None:
             "message_thread_id": thread_id,
             "parts_sent": len(parts),
             "part_lengths": [len(p) for p in parts],
+            "link_preview_options": link_preview_options,
             "message_ids": [],
             "errors": [],
         }
@@ -718,13 +747,24 @@ def main() -> None:
 
     for idx, part in enumerate(parts):
         try:
+            link_preview = profile.get("link_preview") or {}
+            only_first_preview = bool(link_preview.get("only_first_part", True)) if isinstance(link_preview, dict) else True
+            part_link_preview_options = (
+                link_preview_options
+                if link_preview_options is not None and (idx == 0 or not only_first_preview)
+                else None
+            )
+            disable_preview = bool(profile.get("disable_web_page_preview", True))
+            if link_preview_options is not None and only_first_preview and idx > 0:
+                disable_preview = True
             result = _send_chunk(
                 bot_token,
                 chat_id,
                 part,
                 thread_id=thread_id,
                 parse_mode=profile.get("parse_mode"),
-                disable_preview=bool(profile.get("disable_web_page_preview", True)),
+                disable_preview=disable_preview,
+                link_preview_options=part_link_preview_options,
             )
         except Exception as exc:  # noqa: BLE001
             errors.append(delivery_error_record(idx, exc))

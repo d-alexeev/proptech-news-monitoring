@@ -31,6 +31,8 @@ import requests
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
 from telegram_send import (
+    _build_link_preview_options,
+    _load_profile,
     _send_chunk,
     classify_delivery_error,
     convert_md_to_html,
@@ -542,6 +544,82 @@ def test_telegram_main_redacts_send_exception() -> None:
     print("PASS  test_telegram_main_redacts_send_exception")
 
 
+def test_telegram_digest_profile_uses_body_title_and_large_preview() -> None:
+    profile = _load_profile("telegram_digest")
+
+    assert profile["parse_mode"] == "HTML"
+    assert profile["title_template"] == ""
+    assert profile["disable_web_page_preview"] is False
+    assert profile["link_preview"]["enabled"] is True
+    assert profile["link_preview"]["prefer_large_media"] is True
+    assert profile["link_preview"]["only_first_part"] is True
+
+    print("PASS  test_telegram_digest_profile_uses_body_title_and_large_preview")
+
+
+def test_build_link_preview_options_from_first_markdown_source_link() -> None:
+    profile = _load_profile("telegram_digest")
+    body = (
+        "# PropTech Monitor Daily | 4 мая 2026\n\n"
+        "## ТОП СИГНАЛЫ\n\n"
+        "### 🏢 Новость\n"
+        "Score: 80 | portals | US | [Источник](https://example.test/first)\n\n"
+        "Следующая ссылка [Источник](https://example.test/second)\n"
+    )
+
+    options = _build_link_preview_options(body, profile)
+
+    assert options == {
+        "is_disabled": False,
+        "url": "https://example.test/first",
+        "prefer_large_media": True,
+        "show_above_text": True,
+    }
+
+    print("PASS  test_build_link_preview_options_from_first_markdown_source_link")
+
+
+def test_telegram_dry_run_reports_link_preview_options() -> None:
+    import telegram_send as module
+
+    original_argv = sys.argv[:]
+    original_stdin = sys.stdin
+    original_stdout = sys.stdout
+    try:
+        sys.argv = [
+            "telegram_send.py",
+            "--profile",
+            "telegram_digest",
+            "--date",
+            "2026-05-04",
+            "--dry-run",
+        ]
+        sys.stdin = io.StringIO(
+            "# PropTech Monitor Daily | 4 мая 2026\n\n"
+            "## ТОП СИГНАЛЫ\n\n"
+            "### 🏢 Новость\n"
+            "Score: 80 | portals | US | [Источник](https://example.test/first)\n\n"
+            "Российский текст дайджеста описывает важный сигнал рынка для Avito.\n\n"
+            "**Что это значит:** Порталы конкурируют качеством профессиональных инструментов.\n\n"
+            "**Для Avito:** Нужно оценить применимость подхода для продавцов.\n\n"
+            "Статус запуска: источники 1/1 | статьи 1/1 | качество: validated.\n"
+        )
+        capture = io.StringIO()
+        with contextlib.redirect_stdout(capture):
+            module.main()
+        report = json.loads(capture.getvalue())
+
+        assert report["dry_run"] is True
+        assert report["link_preview_options"]["url"] == "https://example.test/first"
+        assert report["link_preview_options"]["prefer_large_media"] is True
+    finally:
+        sys.argv = original_argv
+        sys.stdin = original_stdin
+        sys.stdout = original_stdout
+
+    print("PASS  test_telegram_dry_run_reports_link_preview_options")
+
+
 # ---------------------------------------------------------------------------
 
 def _run_all() -> None:
@@ -560,6 +638,9 @@ def _run_all() -> None:
         test_telegram_digest_language_gate_accepts_russian_body,
         test_telegram_retry_exhausted_http_status_classification,
         test_telegram_main_redacts_send_exception,
+        test_telegram_digest_profile_uses_body_title_and_large_preview,
+        test_build_link_preview_options_from_first_markdown_source_link,
+        test_telegram_dry_run_reports_link_preview_options,
     ]:
         try:
             fn()
