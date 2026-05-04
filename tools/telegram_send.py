@@ -25,7 +25,7 @@ defaults kick in.
 Required env:
   TELEGRAM_BOT_TOKEN
   TELEGRAM_CHAT_ID
-  TELEGRAM_MESSAGE_THREAD_ID   (optional — forum topic id)
+  TELEGRAM_MESSAGE_THREAD_ID   (optional — forum topic id; empty is unset)
 
 Usage:
   cat digests/2026-04-21-daily.md | \
@@ -43,8 +43,13 @@ Output (stdout, one JSON doc):
     "message_thread_id": "...",
     "parts_sent": 2,
     "message_ids": [12345, 12346],
+    "delivery_status": "delivered",
     "errors": []
   }
+
+Failed delivery reports keep `errors` but use structured, sanitized records
+with classification values such as `delivery_failed_dns`, `delivery_failed_http`,
+`delivery_failed_api`, or `delivery_failed_unknown`.
 
 Exit codes:
   0  delivered (or dry-run ok)
@@ -101,6 +106,14 @@ BUILT_IN_PROFILES: dict[str, dict] = {
 _MDV2_PLAIN_SPECIALS = set("_*[]()~`>#+-=|{}.!\\")
 _MDV2_URL_SPECIALS = set(")\\")
 _MDV2_CODE_SPECIALS = set("`\\")
+_TELEGRAM_BOT_URL_RE = re.compile(
+    r"https://api\.telegram\.org/bot[^\s\"'<>/]+(?P<path>/[^\s\"'<>]*)?"
+)
+_DNS_ERROR_RE = re.compile(
+    r"NameResolutionError|Temporary failure in name resolution|"
+    r"Failed to resolve|nodename nor servname|Name or service not known|getaddrinfo|DNS",
+    re.IGNORECASE,
+)
 
 
 def _escape_mdv2(text: str, specials: set[str] = _MDV2_PLAIN_SPECIALS) -> str:
@@ -147,6 +160,42 @@ def escape_body_for_markdown_v2(body: str) -> str:
         cursor = m.end()
     out.append(_escape_mdv2(body[cursor:]))
     return "".join(out)
+
+
+def sanitize_delivery_error(exc: BaseException | str) -> str:
+    """Return a delivery error string with Telegram bot-token URLs redacted."""
+    message = str(exc)
+
+    def _replace(match: re.Match[str]) -> str:
+        path = match.group("path") or ""
+        endpoint = path.split("?", 1)[0]
+        return f"https://api.telegram.org/<bot-token-redacted>{endpoint}"
+
+    return _TELEGRAM_BOT_URL_RE.sub(_replace, message)
+
+
+def classify_delivery_error(exc: BaseException | str) -> str:
+    """Classify Telegram delivery failures for operator-facing reports."""
+    message = str(exc)
+    if _DNS_ERROR_RE.search(message):
+        return "delivery_failed_dns"
+    if isinstance(exc, requests.HTTPError):
+        return "delivery_failed_http"
+    if "telegram api error" in message.lower():
+        return "delivery_failed_api"
+    if "status=" in message.lower() or "http" in message.lower():
+        return "delivery_failed_http"
+    return "delivery_failed_unknown"
+
+
+def delivery_error_record(part_index: int, exc: BaseException) -> dict[str, object]:
+    """Build a sanitized, classified delivery error record."""
+    classification = classify_delivery_error(exc)
+    return {
+        "part": part_index,
+        "classification": classification,
+        "message": f"part {part_index}: {sanitize_delivery_error(exc)}",
+    }
 
 # ---------------------------------------------------------------------------
 # HTML conversion helpers (for parse_mode=HTML profiles)
@@ -630,7 +679,7 @@ def main() -> None:
         sys.exit(2)
 
     message_ids: list[int] = []
-    errors: list[str] = []
+    errors: list[dict[str, object]] = []
 
     if args.dry_run:
         report = {
@@ -658,7 +707,7 @@ def main() -> None:
                 disable_preview=bool(profile.get("disable_web_page_preview", True)),
             )
         except Exception as exc:  # noqa: BLE001
-            errors.append(f"part {idx}: {exc}")
+            errors.append(delivery_error_record(idx, exc))
             break
         message_ids.append(int(result.get("message_id")))
         # Telegram rate: <=30 msg/s globally, <=1 msg/s to same chat. Be gentle.
@@ -673,6 +722,7 @@ def main() -> None:
         "parts_sent": len(message_ids),
         "message_ids": message_ids,
         "errors": errors,
+        "delivery_status": errors[0]["classification"] if errors else "delivered",
     }
     sys.stdout.write(json.dumps(report, ensure_ascii=False, indent=2) + "\n")
 
@@ -686,5 +736,8 @@ if __name__ == "__main__":
     except SystemExit:
         raise
     except Exception as exc:  # noqa: BLE001
-        print(f"unhandled_error: {exc.__class__.__name__}: {exc}", file=sys.stderr)
+        print(
+            f"unhandled_error: {exc.__class__.__name__}: {sanitize_delivery_error(exc)}",
+            file=sys.stderr,
+        )
         sys.exit(1)

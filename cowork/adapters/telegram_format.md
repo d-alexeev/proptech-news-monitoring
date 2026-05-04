@@ -61,6 +61,29 @@ the mode prompt (`build_daily_digest.md`) forbids operator content in the body.
 
 ---
 
+## Delivery failure reporting
+
+`tools/telegram_send.py` must sanitize Telegram request exceptions before they
+reach stdout/stderr JSON or delivery metadata. Token-bearing Bot API URLs such as
+`https://api.telegram.org/bot.../sendMessage` are rewritten to preserve only the
+endpoint path, for example `https://api.telegram.org/<bot-token-redacted>/sendMessage`.
+
+Failed sends keep the `errors` array, but each entry is a structured record:
+
+- `part` — zero-based message part index
+- `classification` — one of `delivery_failed_dns`, `delivery_failed_http`,
+  `delivery_failed_api`, or `delivery_failed_unknown`
+- `message` — sanitized operator-facing detail
+
+The top-level `delivery_status` mirrors the first error classification when
+delivery fails, or `delivered` after successful live delivery.
+
+`TELEGRAM_MESSAGE_THREAD_ID=` with an empty value is normalized as unset. The
+JSON report emits `message_thread_id: null` and the Telegram payload omits
+`message_thread_id`.
+
+---
+
 ## What digest authors must ensure
 
 See `cowork/modes/build_daily_digest.md` → "Delivery constraints" for the full rules.
@@ -81,5 +104,7 @@ Fixtures: `tools/test_telegram_send.py`
 - `test_telegram_no_internal_notes` — verifies `strip_operator_content`
 - `test_digest_file_full_overwrite` — documents the Write-not-Edit contract
 - `test_strip_run_id_from_footer` — verifies `strip_run_id_from_footer`
+- `test_telegram_delivery_error_redaction` — verifies Bot API URL redaction and classification
+- `test_telegram_main_redacts_send_exception` — verifies JSON output does not leak token URLs
 
 Run: `python3 -m pytest tools/test_telegram_send.py -v`

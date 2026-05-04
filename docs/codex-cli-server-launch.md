@@ -66,6 +66,10 @@ TELEGRAM_MESSAGE_THREAD_ID=
 HTTP_USER_AGENT='PropTechMonitor/1.0 (+you@example.com)'
 ```
 
+Leave `TELEGRAM_MESSAGE_THREAD_ID` empty when the chat is not a forum topic;
+Telegram delivery treats the empty value as unset and omits it from the API
+payload.
+
 The wrapper loads `.env` with a restricted parser, not shell `source`. Use simple
 `KEY=VALUE` lines only. Single-quote values that contain spaces, parentheses,
 `#`, `$`, or quotes. If `.env` is malformed, launch fails before Codex starts

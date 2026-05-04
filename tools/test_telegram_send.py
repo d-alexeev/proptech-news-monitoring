@@ -22,12 +22,20 @@ import os
 import sys
 import tempfile
 import pathlib
+import io
+import json
+import contextlib
+import requests
 
 # Allow running from repo root or from tools/
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
 from telegram_send import (
+    classify_delivery_error,
     convert_md_to_html,
+    delivery_error_record,
+    main as telegram_main,
+    sanitize_delivery_error,
     strip_operator_content,
     strip_run_id_from_footer,
     validate_html_output,
@@ -346,6 +354,100 @@ def test_write_presend_cr() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Fixture 8: telegram_delivery_error_redaction
+# ---------------------------------------------------------------------------
+
+def test_telegram_delivery_error_redaction() -> None:
+    """Secret-bearing Telegram API URLs must not reach delivery metadata."""
+
+    secret_url = (
+        "https://api.telegram.org/bot123456:ABC-SECRET-TOKEN/sendMessage"
+        "?chat_id=-100123456"
+    )
+    exc = requests.ConnectionError(f"NameResolutionError while calling {secret_url}")
+
+    record = delivery_error_record(2, exc)
+    serialized = json.dumps(record, ensure_ascii=False)
+
+    assert "123456:ABC-SECRET-TOKEN" not in serialized
+    assert secret_url not in serialized
+    assert "https://api.telegram.org/bot" not in serialized
+    assert "https://api.telegram.org/<bot-token-redacted>/sendMessage" in record["message"]
+    assert record["classification"] == "delivery_failed_dns"
+    assert classify_delivery_error(exc) == "delivery_failed_dns"
+    assert sanitize_delivery_error(exc) in record["message"]
+
+    print("PASS  test_telegram_delivery_error_redaction")
+
+
+# ---------------------------------------------------------------------------
+# Fixture 9: telegram_main_redacts_send_exception
+# ---------------------------------------------------------------------------
+
+def test_telegram_main_redacts_send_exception() -> None:
+    """main() JSON output must redact tokens and expose classified failures."""
+
+    import telegram_send as module
+
+    secret_url = "https://api.telegram.org/bot999999:FAKE-TOKEN/sendMessage"
+    original_send_chunk = module._send_chunk
+    original_argv = sys.argv[:]
+    original_stdin = sys.stdin
+    original_stdout = sys.stdout
+    original_env = {
+        key: os.environ.get(key)
+        for key in ("TELEGRAM_BOT_TOKEN", "TELEGRAM_CHAT_ID", "TELEGRAM_MESSAGE_THREAD_ID")
+    }
+
+    def fake_send_chunk(*_args, **_kwargs):
+        raise RuntimeError(f"telegram api error calling {secret_url}: Bad Request")
+
+    try:
+        module._send_chunk = fake_send_chunk
+        sys.argv = [
+            "telegram_send.py",
+            "--profile",
+            "telegram_digest",
+            "--date",
+            "2026-05-04",
+        ]
+        sys.stdin = io.StringIO("Plain digest body\n")
+        capture = io.StringIO()
+        os.environ["TELEGRAM_BOT_TOKEN"] = "999999:FAKE-TOKEN"
+        os.environ["TELEGRAM_CHAT_ID"] = "-100123456"
+        os.environ["TELEGRAM_MESSAGE_THREAD_ID"] = ""
+
+        exit_code = 0
+        with contextlib.redirect_stdout(capture):
+            try:
+                telegram_main()
+            except SystemExit as exc:
+                exit_code = int(exc.code)
+
+        output = capture.getvalue()
+        report = json.loads(output)
+
+        assert exit_code == 1
+        assert "999999:FAKE-TOKEN" not in output
+        assert secret_url not in output
+        assert report["message_thread_id"] is None
+        assert report["errors"][0]["classification"] == "delivery_failed_api"
+        assert report["delivery_status"] == "delivery_failed_api"
+    finally:
+        module._send_chunk = original_send_chunk
+        sys.argv = original_argv
+        sys.stdin = original_stdin
+        sys.stdout = original_stdout
+        for key, value in original_env.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
+
+    print("PASS  test_telegram_main_redacts_send_exception")
+
+
+# ---------------------------------------------------------------------------
 
 def _run_all() -> None:
     failures: list[str] = []
@@ -357,6 +459,8 @@ def _run_all() -> None:
         test_pipe_table_conversion,
         test_validate_html_output,
         test_write_presend_cr,
+        test_telegram_delivery_error_redaction,
+        test_telegram_main_redacts_send_exception,
     ]:
         try:
             fn()
