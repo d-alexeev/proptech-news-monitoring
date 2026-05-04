@@ -215,4 +215,34 @@ PY`
 
 ## Current Recommendation
 
-Implement HBR-M1 first and stop for review after the helper contract is green. Then complete HBR-M2 in the actual runner environment before wiring browser artifacts into scheduled runs.
+Completed through HBR-M5 on 2026-05-04.
+
+Implementation status:
+
+- HBR-M1 added `tools/browser_fetch.py` and offline contract tests.
+- HBR-M2 installed and verified Playwright Chromium in the runner environment;
+  Chromium launch works outside the inner sandbox.
+- HBR-M3 integrated browser fetching into `tools/source_discovery_prefetch.py`
+  and wrote browser evidence artifacts under `.state/codex-runs/`.
+- HBR-M4 wired browser artifact paths into the scheduled prompt and
+  `monitor_sources` contracts/fixtures.
+- HBR-M5 recovery run `20260504T111039Z-weekday_digest` generated
+  `digests/2026-05-04-daily-digest.md` as `partial_digest`.
+
+Recovery run findings:
+
+- static prefetch: `6/8` usable; `costar_homes` timed out and `rightmove_plc`
+  failed DNS;
+- browser prefetch: `1/2` usable; `onlinemarketplaces` loaded but produced no
+  article listing items, while `similarweb_global_real_estate` returned 403
+  blocked/paywall;
+- enrichment: all `14` shortlisted items used `snippet_fallback`;
+- Telegram delivery: `not_configured` because required env vars are absent.
+
+Remaining follow-ups:
+
+- improve or replace OnlineMarketplaces extraction target/selectors;
+- treat Similarweb as blocked source unless a compliant public evidence path is
+  found;
+- retry/remediate `rightmove_plc` DNS and monitor `costar_homes` timeouts;
+- configure Telegram env before expecting live delivery.

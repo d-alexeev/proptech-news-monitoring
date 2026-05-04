@@ -1,6 +1,6 @@
 # PropTech Monitor | 04.05.2026
 
-Статус выпуска: частичный. Статическая разведка источников неполная, а все карточки ниже собраны по snippet/metadata без полного текста статей. Использовать как рабочий мониторинг, не как production-clean дайджест.
+Статус выпуска: частичный. Разведка источников неполная, а все карточки ниже собраны по snippet/metadata без полного текста статей. Использовать как рабочий мониторинг, не как production-clean дайджест.
 
 ## Главное
 
@@ -60,9 +60,10 @@
 
 ## Статус источников
 
-- Canonical static prefetch: partial, 6/8 static fetchable sources with usable items.
-- Not attempted: OnlineMarketplaces and Similarweb browser-backed sources; no browser artifact was provided.
-- Source failures: CoStar RSS timeout; Rightmove PLC DNS resolution failure.
+- Canonical prefetch evidence: partial; static fetch 6/8 usable, browser fetch 1/2 usable.
+- Browser evidence: OnlineMarketplaces loaded but produced no article listing items; Similarweb returned 403 blocked/paywall.
+- Static source failures: CoStar RSS timeout; Rightmove PLC DNS resolution failure.
+- Stale/low-yield source: Mike DelPrete index reachable, latest detected article is 2026-01-22.
 - Evidence gate: all selected items are `snippet_fallback`, so this digest is `partial_digest`.
 
 mode: build_daily_digest | 04.05.2026
