@@ -19,6 +19,7 @@ they are not required runtime context for implementing RT-M2 through RT-M7.
 | Inman Visible Paywall Text | completed; live Inman check passed | `## Addendum: Inman Visible Paywall Text` | Preserves publicly visible article text on Inman paywall pages as `snippet_fallback` evidence through source-scoped public browser fallback, without login, CAPTCHA, subscription, or paywall bypass. |
 | Russian Telegram Digest | planned | `docs/superpowers/plans/2026-05-04-russian-telegram-digest.md` | Enforce Russian-only editorial prose for `telegram_digest` through prompt/contracts, Stage C materializer gate, and Telegram pre-send gate. |
 | Telegram Digest Template and Preview | planned | `docs/superpowers/plans/2026-05-04-telegram-digest-length-budget.md` | Add a stable compact one-message template for weekday `telegram_digest`, parse top-story lead image metadata, deliver via large Telegram link preview, enforce Stage C hard length/template/preview gates, and verify a regenerated digest with Telegram dry-run `parts_sent=1`. |
+| Runner Telegram Delivery Retry | completed through TDR-M1 | `## Addendum: Runner Telegram Delivery Retry` | Final weekday Telegram delivery retry now runs in the schedule wrapper after deterministic materialization, so DNS/network delivery failures can be retried without rerunning discovery, enrichment, or digest generation. |
 
 ## Archived and Inactive Plans
 
@@ -36,6 +37,61 @@ they are not required runtime context for implementing RT-M2 through RT-M7.
   `Claude Cowork` runtime dependencies.
 - Historical requirement traceability is preserved in the archive files by keeping
   the moved plan bodies intact with their original headings and tables.
+
+## Addendum: Runner Telegram Delivery Retry
+
+### Goal
+
+Make `weekday_digest` Telegram delivery recoverable when the inner Stage C
+`codex exec` sandbox cannot resolve or reach `api.telegram.org`, without
+rerunning source discovery, article prefetch, enrichment, or digest generation.
+
+### Scope
+
+Likely files/artifacts to change:
+
+- `ops/codex-cli/run_schedule.sh`
+- `tools/codex_schedule_delivery.py`
+- `tools/test_codex_schedule_delivery.py`
+- `PLANS.md`
+
+### Milestones
+
+| Milestone | Goal | Acceptance criteria | Verification |
+| --- | --- | --- | --- |
+| TDR-M1 | Add wrapper-level Telegram delivery retry after Stage C materialization | If Stage C already reports `delivered: true`, wrapper delivery is skipped; otherwise the wrapper sends the materialized markdown through `tools/telegram_send.py`; DNS/HTTP/API failures are retried by rerunning only delivery; a delivery report is written under `.state/codex-runs/`; digest manifest and finish summary expose the final delivery status; failed delivery does not invalidate already materialized digest artifacts. | New helper fixture tests pass; schedule self-test still passes; Python compile checks pass. |
+
+Status: completed on 2026-05-05.
+
+### Coverage Matrix
+
+| Requirement | Milestone |
+| --- | --- |
+| Retry Telegram delivery after DNS failure | TDR-M1 |
+| Do not rerun discovery/enrichment/digest just to retry delivery | TDR-M1 |
+| Avoid duplicate sends when Stage C already delivered | TDR-M1 |
+| Preserve reviewable delivery status in artifacts | TDR-M1 |
+| Keep non-delivery from corrupting materialized digest artifacts | TDR-M1 |
+
+### Non-Goals
+
+- No changes to source discovery, article prefetch, enrichment, digest scoring,
+  digest template, or Russian-language gates.
+- No proxy, alternate DNS, CAPTCHA, login, or Telegram API workaround.
+- No automatic resend of historical failed runs beyond the current wrapper run.
+
+### Current Milestone Acceptance Criteria
+
+- `weekday_digest` calls the wrapper delivery helper after
+  `tools/stage_c_finish.py`.
+- The helper reads the materialized markdown path from the finish summary.
+- The helper does not send when the finish draft already contains
+  `telegram_delivery.delivered: true`.
+- The helper retries delivery attempts without rerunning upstream stages.
+- The helper writes `.state/codex-runs/<run_id>-telegram-delivery-report.json`.
+- The helper updates the digest manifest operator report and finish summary with
+  the final delivery status.
+- Delivery failure remains a downstream delivery status, not a wrapper failure.
 
 ## Addendum: Inman Visible Paywall Text
 

@@ -52,6 +52,7 @@ PREFETCH_HELPER="$REPO_ROOT/tools/source_discovery_prefetch.py"
 ARTIFACT_HELPER="$REPO_ROOT/tools/codex_schedule_artifacts.py"
 ARTICLE_PREFETCH_HELPER="$REPO_ROOT/tools/shortlist_article_prefetch.py"
 STAGE_C_FINISH_HELPER="$REPO_ROOT/tools/stage_c_finish.py"
+DELIVERY_HELPER="$REPO_ROOT/tools/codex_schedule_delivery.py"
 
 if [ ! -f "$PROMPT_FILE" ]; then
   printf 'Prompt file not found: %s\n' "$PROMPT_FILE" >&2
@@ -136,6 +137,7 @@ if [ "${CODEX_RUN_SCHEDULE_SELF_TEST:-}" = "1" ]; then
   printf 'Stage B helper: %s\n' "$ARTICLE_PREFETCH_HELPER"
   printf 'Stage C prompt: %s\n' "$FINISH_PROMPT_FILE"
   printf 'Stage C materializer: %s\n' "$STAGE_C_FINISH_HELPER"
+  printf 'Delivery helper: %s\n' "$DELIVERY_HELPER"
   printf 'Artifact helper: %s\n' "$ARTIFACT_HELPER"
   printf 'Codex exec flags: -C --cd, -s --sandbox, --json, --output-last-message\n'
   exit 0
@@ -243,6 +245,10 @@ run_weekday_staged_schedule() {
     printf 'Stage C finish helper not found: %s\n' "$STAGE_C_FINISH_HELPER" >&2
     exit 2
   fi
+  if [ ! -f "$DELIVERY_HELPER" ]; then
+    printf 'Delivery helper not found: %s\n' "$DELIVERY_HELPER" >&2
+    exit 2
+  fi
 
   SHORTLIST_BEFORE_JSON="$(python3 "$ARTIFACT_HELPER" snapshot-shortlists \
     --repo-root "$REPO_ROOT" \
@@ -302,6 +308,16 @@ run_weekday_staged_schedule() {
     --draft-path "$FINISH_DRAFT" \
     --pretty > "$FINISH_SUMMARY"
 
+  python3 "$DELIVERY_HELPER" \
+    --repo-root "$REPO_ROOT" \
+    --run-id "$RUN_ID" \
+    --date "$RUN_DATE" \
+    --delivery-profile telegram_digest \
+    --finish-summary "$FINISH_SUMMARY" \
+    --finish-draft "$FINISH_DRAFT" \
+    --attempts "${CODEX_TELEGRAM_DELIVERY_ATTEMPTS:-3}" \
+    --delay-seconds "${CODEX_TELEGRAM_DELIVERY_RETRY_DELAY_SECONDS:-20}" > "$RUN_ROOT/$RUN_ID-telegram-delivery-stdout.json"
+
   python3 "$ARTIFACT_HELPER" validate-finish-artifacts \
     --repo-root "$REPO_ROOT" \
     --run-id "$RUN_ID" \
@@ -314,6 +330,7 @@ run_weekday_staged_schedule() {
   printf 'Discovery final message: %s\n' "$DISCOVERY_LAST_MESSAGE"
   printf 'Article prefetch summary: %s\n' "$ARTICLE_PREFETCH_SUMMARY"
   printf 'Finish materializer summary: %s\n' "$FINISH_SUMMARY"
+  printf 'Telegram delivery report: %s\n' "$RUN_ROOT/$RUN_ID-telegram-delivery-report.json"
   printf 'Finish events: %s\n' "$FINISH_EVENT_LOG"
   printf 'Finish final message: %s\n' "$FINISH_LAST_MESSAGE"
 }
