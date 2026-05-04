@@ -1,0 +1,106 @@
+fixture_id: scrape_and_enrich_runner_article_prefetch
+mode_id: scrape_and_enrich
+
+inputs:
+  shortlist_shard:
+    path: ./.state/shortlists/2026-05-04/monitor_sources__20260504T120000Z__daily_core.json
+    items:
+      - run_id: monitor_sources__20260504T120000Z__daily_core
+        source_id: example_source
+        url: https://example.test/full
+        canonical_url: https://example.test/full
+        title: Full Article
+        published: 2026-05-04
+        triage_decision: shortlist
+      - run_id: monitor_sources__20260504T120000Z__daily_core
+        source_id: example_source
+        url: https://example.test/paywall
+        canonical_url: https://example.test/paywall
+        title: Paywall Article
+        published: 2026-05-04
+        triage_decision: shortlist
+      - run_id: monitor_sources__20260504T120000Z__daily_core
+        source_id: example_source
+        url: https://example.test/snippet
+        canonical_url: https://example.test/snippet
+        title: Snippet Article
+        published: 2026-05-04
+        raw_snippet: Short open metadata remains available.
+        triage_decision: shortlist
+  article_prefetch_summary:
+    path: ./.state/codex-runs/20260504T121000Z-weekday_digest-article-prefetch-summary.json
+    shortlisted_count: 3
+    attempted_count: 3
+    full_count: 1
+    snippet_fallback_count: 1
+    paywall_stub_count: 1
+    result_path: ./.state/codex-runs/20260504T121000Z-weekday_digest-article-prefetch-result.json
+    summary_path: ./.state/codex-runs/20260504T121000Z-weekday_digest-article-prefetch-summary.json
+  article_prefetch_result:
+    path: ./.state/codex-runs/20260504T121000Z-weekday_digest-article-prefetch-result.json
+    results:
+      - source_id: example_source
+        url: https://example.test/full
+        canonical_url: https://example.test/full
+        title: Full Article
+        published: 2026-05-04
+        body_status_hint: full
+        article_file: ./.state/articles/2026-05/2026-05-04_full-article.md
+        fetch_method: static_http
+        text_char_count: 1320
+        soft_fail:
+        failure_class:
+      - source_id: example_source
+        url: https://example.test/paywall
+        canonical_url: https://example.test/paywall
+        title: Paywall Article
+        published: 2026-05-04
+        body_status_hint: paywall_stub
+        article_file:
+        fetch_method: static_http
+        text_char_count: 0
+        soft_fail: blocked_or_paywall
+        failure_class: blocked_or_paywall
+      - source_id: example_source
+        url: https://example.test/snippet
+        canonical_url: https://example.test/snippet
+        title: Snippet Article
+        published: 2026-05-04
+        body_status_hint: snippet_fallback
+        article_file:
+        fetch_method: static_http
+        text_char_count: 96
+        soft_fail:
+        failure_class: below_minimum_body_threshold
+      - source_id: example_source
+        url: https://example.test/non-shortlisted
+        canonical_url: https://example.test/non-shortlisted
+        title: Non-shortlisted Article
+        published: 2026-05-04
+        body_status_hint: full
+        article_file: ./.state/articles/2026-05/2026-05-04_non-shortlisted-article.md
+        fetch_method: static_http
+        text_char_count: 1400
+        soft_fail:
+        failure_class:
+
+expected:
+  enriched_items:
+    - url: https://example.test/full
+      body_status: full
+      article_file: ./.state/articles/2026-05/2026-05-04_full-article.md
+      evidence_points_count: 3
+      confidence_range: [0.70, 1.00]
+    - url: https://example.test/paywall
+      body_status: paywall_stub
+      article_file:
+      evidence_points: []
+      confidence_range: [0.20, 0.44]
+    - url: https://example.test/snippet
+      body_status: snippet_fallback
+      article_file:
+      evidence_points_count: 1
+      confidence_range: [0.45, 0.69]
+  rejected_prefetch_manifest_urls:
+    - https://example.test/non-shortlisted
+  contract_warning: unmatched_article_prefetch_entries_ignored

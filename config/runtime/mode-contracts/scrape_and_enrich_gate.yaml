@@ -27,12 +27,17 @@ upstream_gate:
 
 allowed_runtime_inputs:
   - shortlist shard for the current run
+  - current-run article prefetch result manifest under ./.state/codex-runs/*-article-prefetch-result.json
+  - current-run article prefetch summary under ./.state/codex-runs/*-article-prefetch-summary.json
+  - article artifacts under ./.state/articles/ only when referenced by the current-run article prefetch manifest and matched to a shortlisted URL
   - shared briefs
   - source map
   - only adapters resolved from source IDs present in the shortlist shard
 
 forbidden_runtime_inputs:
   - ./.state/raw/
+  - article artifacts not referenced by the current-run article prefetch manifest
+  - article prefetch manifests from prior runs or unrelated schedules
   - non-shortlisted raw candidates
   - digest archive
   - stakeholder profiles
@@ -60,6 +65,8 @@ adapter_resolution:
 gate_outcome:
   fetch_queue_scope:
     description: only shortlisted items become eligible for body fetch
+  article_prefetch_scope:
+    description: runner-provided article_file inputs are eligible only after url or canonical_url matches the current-run shortlist
   excluded_scope:
     description: noisy or irrelevant candidates stay outside the fetch queue
 

@@ -73,6 +73,7 @@ files:
     scrape_and_enrich_full_body: ./config/runtime/mode-fixtures/scrape_and_enrich_full_body.yaml
     scrape_and_enrich_paywall_stub: ./config/runtime/mode-fixtures/scrape_and_enrich_paywall_stub.yaml
     scrape_and_enrich_snippet_fallback: ./config/runtime/mode-fixtures/scrape_and_enrich_snippet_fallback.yaml
+    scrape_and_enrich_runner_article_prefetch: ./config/runtime/mode-fixtures/scrape_and_enrich_runner_article_prefetch.yaml
     monitor_sources_blocked_manual_change_request: ./config/runtime/mode-fixtures/monitor_sources_blocked_manual_change_request.yaml
     scrape_and_enrich_scrape_failure_change_request: ./config/runtime/mode-fixtures/scrape_and_enrich_scrape_failure_change_request.yaml
     scrape_and_enrich_adapter_gap_change_request: ./config/runtime/mode-fixtures/scrape_and_enrich_adapter_gap_change_request.yaml

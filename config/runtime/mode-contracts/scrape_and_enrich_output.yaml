@@ -20,6 +20,8 @@ full_text_authority:
 
 allowed_runtime_inputs:
   - fetch queue derived from shortlisted_item[] only
+  - runner article prefetch result/summary manifests for the current run only
+  - runner article files referenced by matched manifest entries only
   - resolved adapter files from source_map
   - shared briefs
 
@@ -51,7 +53,7 @@ processing_stages:
 
 body_status_policy:
   full:
-    trigger: body text extracted and above the minimum useful-body threshold
+    trigger: body text extracted and above the minimum useful-body threshold, either by this mode or by the runner article prefetch stage
     confidence_range: [0.70, 1.00]
     evidence_points_rule: 2_to_4_required
     article_file_rule: non_null_required
@@ -65,6 +67,40 @@ body_status_policy:
     confidence_range: [0.20, 0.44]
     evidence_points_rule: zero_required
     article_file_rule: nullable
+
+runner_article_prefetch_contract:
+  result_manifest:
+    path_template: ./.state/codex-runs/{runner_run_id}-article-prefetch-result.json
+    allowed_entry_match_keys:
+      - url
+      - canonical_url
+    required_entry_fields:
+      - source_id
+      - url
+      - canonical_url
+      - title
+      - published
+      - body_status_hint
+      - article_file
+      - fetch_method
+      - text_char_count
+      - soft_fail
+      - failure_class
+  summary_manifest:
+    path_template: ./.state/codex-runs/{runner_run_id}-article-prefetch-summary.json
+    required_fields:
+      - shortlisted_count
+      - attempted_count
+      - full_count
+      - snippet_fallback_count
+      - paywall_stub_count
+      - result_path
+      - summary_path
+  consumption_rules:
+    - match every result entry to the current-run shortlist before use
+    - read article_file only for matched entries with body_status_hint = full
+    - ignore unmatched manifest entries and record a compact contract warning
+    - do not pass article body text to downstream digest or review modes
 
 evidence_completeness_policy:
   all_snippet_fallback:
