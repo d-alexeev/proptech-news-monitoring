@@ -7,7 +7,7 @@
 | Schedule | `weekday_digest` |
 | Run date | `2026-05-04` |
 | Reviewer | `Codex` |
-| Review status | `partial` |
+| Review status | `production_candidate_95` |
 | Local evidence window | `.state/` local-only, retained per operator policy |
 | Tracked summary prepared from | sanitized operator review, not raw JSONL |
 
@@ -15,59 +15,56 @@
 
 | Area | Outcome | Evidence |
 | --- | --- | --- |
-| Source discovery | `partial` | runner prefetch produced usable static evidence for `6/8` fetchable `daily_core` sources and browser evidence for `1/2` configured `chrome_scrape` sources; `costar_homes` timed out, `rightmove_plc` failed DNS, OnlineMarketplaces yielded no listing items, and Similarweb returned 403 blocked/paywall. |
-| Article prefetch | `partial_success` | live Victory run `20260504T131334Z` fetched 14 shortlisted URLs: 8 `full`, 4 `paywall_stub`, 2 `snippet_fallback`; full article bodies remain local-only under `.state/articles/`. |
-| Enrichment | `blocked_current_run` | live Victory run did not create current-run `scrape_and_enrich__20260504T131334Z__daily_core` artifacts; prior `111039Z` snippet-only enrichment remains historical evidence only. |
-| Digest generation | `blocked_current_run` | existing `digests/2026-05-04-daily-digest.md` is a prior partial digest, not a verified current-run Stage C output for `20260504T131334Z`. |
-| QA/review | `skipped_current_run` | no current-run review artifact or finish last-message was produced before the Stage C process was stopped. |
-| Telegram delivery | `not_configured` | test run used an empty env file; required Telegram env vars were not configured; no live send was attempted. |
+| Source discovery | `partial_classified` | production-like run `20260504T142209Z` produced usable static evidence for `6/8` fetchable `daily_core` sources and browser evidence for configured browser sources; `costar_homes` timed out, `rightmove_plc` failed DNS, OnlineMarketplaces yielded no listing items, and Similarweb returned 403 blocked/paywall. |
+| Article prefetch | `partial_success` | `20260504T142209Z` fetched all 15 shortlisted URLs: 9 `full`, 4 `paywall_stub`, 2 `snippet_fallback`; `run_failure = null`. |
+| Enrichment | `materialized_current_run` | deterministic Stage C materializer wrote current-run `scrape_and_enrich__20260504T142209Z__daily_core` artifacts. |
+| Digest generation | `materialized_current_run` | deterministic materializer wrote current-run digest manifest, daily brief, and `digests/2026-05-04-daily-digest.md`. |
+| QA/review | `warnings_no_critical` | finish draft QA status was `warnings` with `critical_findings_count = 0`. |
+| Telegram delivery | `dry_run_passed` | Telegram dry-run rendered 2 message parts without hitting the Telegram API; live credentials were intentionally absent. |
+| 95% production-ready gate | `production_candidate_95` | current-run artifacts validated, article prefetch gate passed, QA had zero critical findings, digest safety scans had no matches, and Telegram dry-run succeeded. |
 
 ## Source Outcomes
 
 | Source or group | Status | Evidence reference | Notes |
 | --- | --- | --- | --- |
-| `daily_core` static prefetch | `partial` | `.state/codex-runs/20260504T131334Z-weekday_digest-source-prefetch-summary.json` | 6 successful static sources; no global DNS failure. |
-| `daily_core` browser prefetch | `partial_success` | `.state/codex-runs/20260504T131334Z-weekday_digest-source-prefetch-browser-result.json` | Playwright runner executed configured browser sources. |
-| `onlinemarketplaces` | `fetched_empty` | `.state/codex-runs/20260504T131334Z-weekday_digest-source-prefetch-browser-result.json` | page loaded with status-like 200 but produced no article listing items; change request emitted. |
-| `similarweb_global_real_estate` | `blocked_or_paywall` | `.state/codex-runs/20260504T131334Z-weekday_digest-source-prefetch-browser-result.json` | browser runner observed 403 blocked/paywall; change request emitted. |
-| `costar_homes` | `timeout` | `.state/codex-runs/20260504T131334Z-weekday_digest-source-prefetch-fetch-result.json` | source-level timeout. |
-| `rightmove_plc` | `dns_resolution` | `.state/codex-runs/20260504T131334Z-weekday_digest-source-prefetch-fetch-result.json` | source-level DNS failure; change request emitted. |
+| `daily_core` static prefetch | `partial` | local codex-run source prefetch summary for run `20260504T142209Z` | 6 successful static sources; no global environment failure. |
+| `daily_core` browser prefetch | `partial_success` | local browser prefetch result for run `20260504T142209Z` | Playwright runner executed configured browser sources. |
+| `onlinemarketplaces` | `fetched_empty` | local browser prefetch result for run `20260504T142209Z` | page loaded with status-like 200 but produced no article listing items; change request emitted. |
+| `similarweb_global_real_estate` | `blocked_or_paywall` | local browser prefetch result for run `20260504T142209Z` | browser runner observed 403 blocked/paywall; change request emitted. |
+| `costar_homes` | `timeout` | local static prefetch result for run `20260504T142209Z` | source-level timeout. |
+| `rightmove_plc` | `dns_resolution` | local static prefetch result for run `20260504T142209Z` | source-level DNS failure; change request emitted. |
 
-## Victory Run: 20260504T131334Z
+## Victory Run: 20260504T142209Z
 
 | Stage | Status | Evidence |
 | --- | --- | --- |
-| Stage A discovery | `partial_success` | 59 raw candidates, 14 shortlisted items; static fetch 6/8 usable, browser fetch 1/2 usable. |
-| Stage B article prefetch | `partial_success` | 8 full article files, 4 paywall stubs, 2 snippet fallbacks. |
-| Stage C finish | `blocked_current_run` | no current-run enriched shard or run manifests for timestamp `20260504T131334Z`; no finish last-message. |
-| Wrapper completion | `stopped` | inner `codex exec` was stopped after repeated Codex plugin/analytics warnings and no clean Stage C completion. |
-
-Post-run guard added after this finding: the wrapper now runs
-`validate-finish-artifacts` after Stage C and fails if current-run
-`scrape_and_enrich` and `build_daily_digest` manifests are missing. This
-prevents a stale date-level digest or prior `.state/` shard from being mistaken
-for a successful Victory Digest run.
+| Stage A discovery | `partial_success` | 59 raw candidates, 15 shortlisted items; source-level failures were classified. |
+| Stage B article prefetch | `partial_success` | 9 full article entries, 4 paywall stubs, 2 snippet fallbacks; all shortlisted URLs attempted. |
+| Stage C finish | `materialized_current_run` | strict finish draft was validated and deterministic materializer wrote fresh current-run artifacts. |
+| Wrapper completion | `completed` | wrapper printed `Codex schedule run complete` for the run id. |
+| 95% gate | `passed` | finish validation, article prefetch thresholds, QA gate, digest safety scans, and Telegram dry-run passed. |
 
 ## Delivery Outcome
 
 | Field | Value |
 | --- | --- |
 | Delivery profile | `telegram_digest` |
-| Delivery mode | `not_configured` |
-| Delivery status | `not_configured` |
+| Delivery mode | `dry_run` |
+| Delivery status | `dry_run_passed` |
 | Sanitized endpoint | `not_used` |
-| Message parts | `0` |
-| Error summary | digest existed, but Telegram credentials were unavailable in runtime env. |
+| Message parts | `2` |
+| Error summary | live Telegram credentials were unavailable by design; dry-run rendered successfully. |
 
 ## Review Notes
 
-- `Status note`: Playwright browser prefetch and direct article prefetch are wired and executed. The run is still not production-clean because Stage C did not produce current-run finish artifacts.
-- `Evidence note`: latest Victory wrapper run id was `20260504T131334Z-weekday_digest`; monitor run status was `partial`; article prefetch status was `partial_success`; finish stage status is `blocked_current_run`.
-- `Follow-up`: `.state/change-requests/2026-05-04/cr_rightmove_dns__20260504T131334Z.json`, `.state/change-requests/2026-05-04/cr_onlinemarketplaces_listing_empty__20260504T131334Z.json`, and `.state/change-requests/2026-05-04/cr_similarweb_blocked__20260504T131334Z.json`.
+- `Status note`: Playwright browser prefetch, direct article prefetch, strict Stage C finish draft, deterministic materialization, and post-run validation all executed.
+- `Evidence note`: latest Victory wrapper run id was `20260504T142209Z-weekday_digest`; monitor run status was `partial`; article prefetch status was `partial_success`; finish stage status is `materialized_current_run`.
+- `95% note`: this is a `production_candidate_95`, not a fully production-clean run, because source discovery remains partial and live Telegram send was not attempted.
+- `Follow-up`: latest run emitted source-level change requests for Rightmove DNS, OnlineMarketplaces listing extraction, and Similarweb blocked/paywall behavior.
 - `Previous partial run`: `20260504T104232Z` remains local evidence for the pre-browser-runner partial digest.
 - `Previous blocked run`: `20260504T101043Z` remains local evidence for the original inner-sandbox DNS failure.
 - `Wrapper note`: Codex plugin/analytics sync emitted external `403` warnings, but they did not stop the run.
-- `Guard note`: the wrapper now validates current-run finish manifests after Stage C, so this failure mode becomes explicit in the next run.
+- `Guard note`: the wrapper validates current-run finish manifests and requires the deterministic finish summary after Stage C.
 
 ## Safety Checklist
 

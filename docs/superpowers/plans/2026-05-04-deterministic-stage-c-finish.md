@@ -1,12 +1,24 @@
 # Deterministic Stage C Finish Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Replace Stage C freeform artifact writing with a deterministic finish materializer so every successful Victory Digest run emits fresh current-run enrichment, digest, brief, and run manifests.
 
 **Architecture:** Keep Codex as the analyst, but move filesystem artifact creation to a deterministic Python helper. Stage C Codex writes one strict compact draft JSON under `.state/codex-runs/{run_id}-finish-draft.json`; `tools/stage_c_finish.py` validates the draft against the current shortlist and article-prefetch manifests, then materializes all current-run `.state` and digest artifacts with exact names.
 
 **Tech Stack:** Bash wrapper, Python stdlib JSON/pathlib/argparse, existing `.state` schemas, existing Codex CLI staged wrapper, offline Python tests.
+
+---
+
+## Implementation Status
+
+Status: completed on 2026-05-04.
+
+Live rerun `20260504T142209Z-weekday_digest` passed the 95% production-ready
+test-run gate: wrapper completion, finish artifact validation, article prefetch
+thresholds, QA gate, digest safety scans, and Telegram dry-run all passed.
+Residual caveats are source-level discovery failures and absence of live
+Telegram credentials in the test environment.
 
 ---
 
@@ -187,7 +199,7 @@ Required pass conditions:
 - Create: `tools/test_stage_c_finish.py`
 - Create later in Task 2: `tools/stage_c_finish.py`
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 Create `tools/test_stage_c_finish.py`:
 
@@ -445,7 +457,7 @@ if __name__ == "__main__":
     main()
 ```
 
-- [ ] **Step 2: Run tests to verify RED**
+- [x] **Step 2: Run tests to verify RED**
 
 Run:
 
@@ -459,7 +471,7 @@ Expected:
 ModuleNotFoundError: No module named 'stage_c_finish'
 ```
 
-- [ ] **Step 3: Commit RED test**
+- [x] **Step 3: Commit RED test**
 
 Run:
 
@@ -480,7 +492,7 @@ Expected:
 - Create: `tools/stage_c_finish.py`
 - Modify: `tools/test_stage_c_finish.py` only if RED test has syntax mistakes
 
-- [ ] **Step 1: Create helper with validation and materialization**
+- [x] **Step 1: Create helper with validation and materialization**
 
 Create `tools/stage_c_finish.py`:
 
@@ -872,7 +884,7 @@ if __name__ == "__main__":
     main()
 ```
 
-- [ ] **Step 2: Run tests to verify GREEN**
+- [x] **Step 2: Run tests to verify GREEN**
 
 Run:
 
@@ -886,7 +898,7 @@ Expected:
 3 tests passed
 ```
 
-- [ ] **Step 3: Run compile check**
+- [x] **Step 3: Run compile check**
 
 Run:
 
@@ -896,7 +908,7 @@ PYTHONPYCACHEPREFIX=.pycache-local python3 -m py_compile tools/stage_c_finish.py
 
 Expected: exit code `0`, no output.
 
-- [ ] **Step 4: Commit implementation**
+- [x] **Step 4: Commit implementation**
 
 Run:
 
@@ -917,7 +929,7 @@ Expected:
 - Modify: `ops/codex-cli/run_schedule.sh`
 - Modify: `tools/test_codex_cli_run_schedule.py`
 
-- [ ] **Step 1: Add failing wrapper tests**
+- [x] **Step 1: Add failing wrapper tests**
 
 Modify `tools/test_codex_cli_run_schedule.py` by adding this test after
 `test_wrapper_validates_current_run_finish_artifacts`:
@@ -945,7 +957,7 @@ Add the test to the `tests = [...]` list:
         test_readme_documents_staged_victory_digest_runbook,
 ```
 
-- [ ] **Step 2: Run wrapper tests to verify RED**
+- [x] **Step 2: Run wrapper tests to verify RED**
 
 Run:
 
@@ -961,7 +973,7 @@ AssertionError
 
 from `test_wrapper_invokes_stage_c_materializer_after_finish_agent`.
 
-- [ ] **Step 3: Modify wrapper variables**
+- [x] **Step 3: Modify wrapper variables**
 
 In `ops/codex-cli/run_schedule.sh`, add these variables near the existing
 `ARTICLE_PREFETCH_*` variables:
@@ -983,7 +995,7 @@ Add this self-test line after `Stage C prompt`:
   printf 'Stage C materializer: %s\n' "$STAGE_C_FINISH_HELPER"
 ```
 
-- [ ] **Step 4: Extend generated finish prompt with draft path**
+- [x] **Step 4: Extend generated finish prompt with draft path**
 
 In `build_finish_prompt()`, after the article prefetch summary line, add:
 
@@ -992,7 +1004,7 @@ In `build_finish_prompt()`, after the article prefetch summary line, add:
     printf '%s\n\n' "- Finish summary path: \`$FINISH_SUMMARY\`"
 ```
 
-- [ ] **Step 5: Validate helper exists before Stage C**
+- [x] **Step 5: Validate helper exists before Stage C**
 
 In `run_weekday_staged_schedule()`, after the `ARTICLE_PREFETCH_HELPER` existence
 check, add:
@@ -1004,7 +1016,7 @@ check, add:
   fi
 ```
 
-- [ ] **Step 6: Call materializer after Codex Stage C**
+- [x] **Step 6: Call materializer after Codex Stage C**
 
 Immediately after the Stage C `codex exec` command and before
 `validate-finish-artifacts`, add:
@@ -1022,7 +1034,7 @@ Immediately after the Stage C `codex exec` command and before
     --pretty > "$FINISH_SUMMARY"
 ```
 
-- [ ] **Step 7: Print finish summary path**
+- [x] **Step 7: Print finish summary path**
 
 After the existing `printf 'Article prefetch summary...'` line, add:
 
@@ -1030,7 +1042,7 @@ After the existing `printf 'Article prefetch summary...'` line, add:
   printf 'Finish materializer summary: %s\n' "$FINISH_SUMMARY"
 ```
 
-- [ ] **Step 8: Run wrapper tests to verify GREEN**
+- [x] **Step 8: Run wrapper tests to verify GREEN**
 
 Run:
 
@@ -1044,7 +1056,7 @@ Expected:
 13 tests passed
 ```
 
-- [ ] **Step 9: Run shell syntax check**
+- [x] **Step 9: Run shell syntax check**
 
 Run:
 
@@ -1054,7 +1066,7 @@ bash -n ops/codex-cli/run_schedule.sh
 
 Expected: exit code `0`, no output.
 
-- [ ] **Step 10: Commit wrapper wiring**
+- [x] **Step 10: Commit wrapper wiring**
 
 Run:
 
@@ -1075,7 +1087,7 @@ Expected:
 - Modify: `ops/codex-cli/prompts/weekday_digest_finish.md`
 - Modify: `tools/test_codex_cli_run_schedule.py`
 
-- [ ] **Step 1: Add failing prompt assertions**
+- [x] **Step 1: Add failing prompt assertions**
 
 Extend `test_staged_prompt_files_exist_and_have_stage_boundaries()` in
 `tools/test_codex_cli_run_schedule.py` with:
@@ -1087,7 +1099,7 @@ Extend `test_staged_prompt_files_exist_and_have_stage_boundaries()` in
     assert "Do not write final .state/enriched" in finish_text
 ```
 
-- [ ] **Step 2: Run tests to verify RED**
+- [x] **Step 2: Run tests to verify RED**
 
 Run:
 
@@ -1097,7 +1109,7 @@ python3 tools/test_codex_cli_run_schedule.py
 
 Expected: `AssertionError` from the new prompt assertions.
 
-- [ ] **Step 3: Replace Stage C output instructions**
+- [x] **Step 3: Replace Stage C output instructions**
 
 Modify `ops/codex-cli/prompts/weekday_digest_finish.md` so the output section
 contains this exact contract:
@@ -1139,7 +1151,7 @@ acceptable for a 95% production-ready test-run. `critical_findings_count` must
 be `0`.
 ```
 
-- [ ] **Step 4: Run tests to verify GREEN**
+- [x] **Step 4: Run tests to verify GREEN**
 
 Run:
 
@@ -1153,7 +1165,7 @@ Expected:
 13 tests passed
 ```
 
-- [ ] **Step 5: Commit prompt contract**
+- [x] **Step 5: Commit prompt contract**
 
 Run:
 
@@ -1174,7 +1186,7 @@ Expected:
 - Modify: `tools/codex_schedule_artifacts.py`
 - Modify: `tools/test_codex_schedule_artifacts.py`
 
-- [ ] **Step 1: Add failing validation test**
+- [x] **Step 1: Add failing validation test**
 
 Add this test to `tools/test_codex_schedule_artifacts.py` after
 `test_validate_finish_artifacts_requires_current_run_manifests()`:
@@ -1223,7 +1235,7 @@ Add the test to the list:
         test_validate_finish_artifacts_requires_finish_summary_when_requested,
 ```
 
-- [ ] **Step 2: Run tests to verify RED**
+- [x] **Step 2: Run tests to verify RED**
 
 Run:
 
@@ -1237,7 +1249,7 @@ Expected:
 TypeError: validate_finish_artifacts() got an unexpected keyword argument 'require_finish_summary'
 ```
 
-- [ ] **Step 3: Extend validation helper**
+- [x] **Step 3: Extend validation helper**
 
 Change the `validate_finish_artifacts` signature in
 `tools/codex_schedule_artifacts.py` to:
@@ -1273,7 +1285,7 @@ Pass it in `main()`:
                 require_finish_summary=args.require_finish_summary,
 ```
 
-- [ ] **Step 4: Update wrapper validation call**
+- [x] **Step 4: Update wrapper validation call**
 
 In `ops/codex-cli/run_schedule.sh`, add this flag to the existing
 `validate-finish-artifacts` command:
@@ -1282,7 +1294,7 @@ In `ops/codex-cli/run_schedule.sh`, add this flag to the existing
     --require-finish-summary
 ```
 
-- [ ] **Step 5: Run tests to verify GREEN**
+- [x] **Step 5: Run tests to verify GREEN**
 
 Run:
 
@@ -1298,7 +1310,7 @@ Expected:
 13 tests passed
 ```
 
-- [ ] **Step 6: Commit validation tightening**
+- [x] **Step 6: Commit validation tightening**
 
 Run:
 
@@ -1321,7 +1333,7 @@ Expected:
 - Modify: `docs/run-reviews/2026-05-04-victory-digest-completion-audit.md`
 - Modify: `PLANS.md`
 
-- [ ] **Step 1: Update operator README**
+- [x] **Step 1: Update operator README**
 
 In `ops/codex-cli/README.md`, add this paragraph after the Stage C validation
 paragraph:
@@ -1335,7 +1347,7 @@ If the draft is missing, stale, invalid, or leaks runtime paths into the digest
 body, the wrapper fails before delivery.
 ```
 
-- [ ] **Step 2: Update tools README**
+- [x] **Step 2: Update tools README**
 
 In `tools/README.md`, add this table row after `codex_schedule_artifacts.py`:
 
@@ -1343,7 +1355,7 @@ In `tools/README.md`, add this table row after `codex_schedule_artifacts.py`:
 | `stage_c_finish.py` | Deterministic Stage C materializer that validates compact finish drafts and writes current-run enrichment, daily brief, digest markdown, and run manifests. |
 ```
 
-- [ ] **Step 3: Update completion audit follow-up status**
+- [x] **Step 3: Update completion audit follow-up status**
 
 In `docs/run-reviews/2026-05-04-victory-digest-completion-audit.md`, add this
 section before `## Follow-Ups`:
@@ -1357,7 +1369,7 @@ The intended fix is to keep Codex responsible for compact analysis, but move
 artifact writes to `tools/stage_c_finish.py`.
 ```
 
-- [ ] **Step 4: Update active plan index**
+- [x] **Step 4: Update active plan index**
 
 In `PLANS.md`, add a row to the active plan table:
 
@@ -1365,7 +1377,7 @@ In `PLANS.md`, add a row to the active plan table:
 | Deterministic Stage C Finish | active; planned | `docs/superpowers/plans/2026-05-04-deterministic-stage-c-finish.md` | Make Stage C emit a strict compact draft and materialize current-run enrichment/digest artifacts through a deterministic helper. |
 ```
 
-- [ ] **Step 5: Run documentation checks**
+- [x] **Step 5: Run documentation checks**
 
 Run:
 
@@ -1375,7 +1387,7 @@ rg -n "stage_c_finish.py|finish-draft|Deterministic Stage C Finish" ops/codex-cl
 
 Expected output includes all four files.
 
-- [ ] **Step 6: Commit docs**
+- [x] **Step 6: Commit docs**
 
 Run:
 
@@ -1395,7 +1407,7 @@ Expected:
 **Files:**
 - No code changes unless a verification failure identifies a concrete bug.
 
-- [ ] **Step 1: Run Stage C helper tests**
+- [x] **Step 1: Run Stage C helper tests**
 
 Run:
 
@@ -1409,7 +1421,7 @@ Expected:
 3 tests passed
 ```
 
-- [ ] **Step 2: Run schedule artifact tests**
+- [x] **Step 2: Run schedule artifact tests**
 
 Run:
 
@@ -1423,7 +1435,7 @@ Expected:
 5 tests passed
 ```
 
-- [ ] **Step 3: Run wrapper tests**
+- [x] **Step 3: Run wrapper tests**
 
 Run:
 
@@ -1437,7 +1449,7 @@ Expected:
 13 tests passed
 ```
 
-- [ ] **Step 4: Run runtime validators**
+- [x] **Step 4: Run runtime validators**
 
 Run:
 
@@ -1452,7 +1464,7 @@ Expected output includes:
 PASS  all
 ```
 
-- [ ] **Step 5: Run compile and shell checks**
+- [x] **Step 5: Run compile and shell checks**
 
 Run:
 
@@ -1464,7 +1476,7 @@ git diff --check
 
 Expected: all commands exit `0`.
 
-- [ ] **Step 6: Run wrapper self-test**
+- [x] **Step 6: Run wrapper self-test**
 
 Run:
 
@@ -1480,7 +1492,7 @@ Stage C materializer:
 Codex exec flags: -C --cd, -s --sandbox, --json, --output-last-message
 ```
 
-- [ ] **Step 7: Commit verification note if docs changed**
+- [x] **Step 7: Commit verification note if docs changed**
 
 If a verification note is added to a docs file, commit it:
 
@@ -1498,7 +1510,7 @@ If no docs changed, do not create an empty commit.
 - Modify after run: `docs/run-reviews/2026-05-04-victory-digest-completion-audit.md`
 - Modify after run: `PLANS.md`
 
-- [ ] **Step 1: Run production-like wrapper with empty env**
+- [x] **Step 1: Run production-like wrapper with empty env**
 
 Run:
 
@@ -1512,7 +1524,7 @@ Expected:
 - If sandbox denial occurs, rerun with an approved escalation through the Codex tool policy.
 - The run either reaches `Codex schedule run complete: <run_id>` or fails with a clear `stage c finish failed:` message.
 
-- [ ] **Step 2: Inspect latest run artifacts**
+- [x] **Step 2: Inspect latest run artifacts**
 
 Run:
 
@@ -1532,7 +1544,7 @@ Expected successful run includes files matching:
 .state/runs/2026-05-04/build_daily_digest__<timestamp>__telegram_digest.json
 ```
 
-- [ ] **Step 3: Validate current-run finish artifacts**
+- [x] **Step 3: Validate current-run finish artifacts**
 
 Replace `<run_id>` with the latest wrapper run id:
 
@@ -1552,7 +1564,7 @@ Expected successful output:
 {"status": "ok", "run_id": "<run_id>", "run_timestamp": "<timestamp>", "required_paths": [...]}
 ```
 
-- [ ] **Step 4: Run digest safety scans**
+- [x] **Step 4: Run digest safety scans**
 
 Run:
 
@@ -1563,7 +1575,7 @@ rg -n -P 'https://api\.telegram\.org/bot[0-9]+:[A-Za-z0-9_-]+|/bot[0-9]+:[A-Za-z
 
 Expected: no matches.
 
-- [ ] **Step 5: Update run review**
+- [x] **Step 5: Update run review**
 
 In `docs/run-reviews/2026-05-04-weekday-digest.md`, update `Victory Run` with:
 
@@ -1577,7 +1589,7 @@ If the run failed, record the exact failure class instead:
 | Stage C finish | `failed` | materializer failed with `<sanitized error class>` before writing current-run digest artifacts. |
 ```
 
-- [ ] **Step 6: Update completion audit**
+- [x] **Step 6: Update completion audit**
 
 In `docs/run-reviews/2026-05-04-victory-digest-completion-audit.md`, update
 the verdict:
@@ -1589,7 +1601,7 @@ Status: deterministic Stage C implemented; live rerun status: `<success_or_failu
 Use `success` only if `validate-finish-artifacts --require-finish-summary`
 passed and digest safety scans returned no matches.
 
-- [ ] **Step 7: Update plan index**
+- [x] **Step 7: Update plan index**
 
 In `PLANS.md`, change the deterministic Stage C row status to one of:
 
@@ -1609,7 +1621,7 @@ or:
 implemented; live rerun blocked by <sanitized blocker>
 ```
 
-- [ ] **Step 8: Commit live run review**
+- [x] **Step 8: Commit live run review**
 
 Run:
 
@@ -1631,7 +1643,7 @@ Expected:
 - Modify after gate: `docs/run-reviews/2026-05-04-victory-digest-completion-audit.md`
 - Modify after gate: `PLANS.md`
 
-- [ ] **Step 1: Identify the latest successful wrapper run id**
+- [x] **Step 1: Identify the latest successful wrapper run id**
 
 Run:
 
@@ -1647,7 +1659,7 @@ Expected output shape:
 
 Set `<run_id>` from the filename before `-finish-summary.json`.
 
-- [ ] **Step 2: Validate finish artifacts with summary required**
+- [x] **Step 2: Validate finish artifacts with summary required**
 
 Run:
 
@@ -1663,7 +1675,7 @@ python3 tools/codex_schedule_artifacts.py validate-finish-artifacts \
 
 Expected: exit code `0` and JSON with `"status": "ok"`.
 
-- [ ] **Step 3: Validate article prefetch readiness**
+- [x] **Step 3: Validate article prefetch readiness**
 
 Run:
 
@@ -1688,7 +1700,7 @@ Expected:
 article_prefetch_gate=pass
 ```
 
-- [ ] **Step 4: Validate QA readiness**
+- [x] **Step 4: Validate QA readiness**
 
 Run:
 
@@ -1712,7 +1724,7 @@ Expected:
 qa_gate=pass
 ```
 
-- [ ] **Step 5: Run digest safety scans**
+- [x] **Step 5: Run digest safety scans**
 
 Run:
 
@@ -1723,7 +1735,7 @@ rg -n -P 'https://api\.telegram\.org/bot[0-9]+:[A-Za-z0-9_-]+|/bot[0-9]+:[A-Za-z
 
 Expected: both commands return no matches.
 
-- [ ] **Step 6: Run Telegram dry-run delivery check**
+- [x] **Step 6: Run Telegram dry-run delivery check**
 
 Run:
 
@@ -1747,7 +1759,7 @@ Expected JSON includes:
 `parts_sent` may be greater than `1` for a long digest, but it must be at least
 `1`, and `errors` must be an empty list.
 
-- [ ] **Step 7: Record 95% verdict**
+- [x] **Step 7: Record 95% verdict**
 
 If Steps 2-6 all pass, update
 `docs/run-reviews/2026-05-04-weekday-digest.md` with:
@@ -1762,7 +1774,7 @@ If any step fails, update the same table with:
 | 95% production-ready gate | `failed` | blocker: `<sanitized blocker>` |
 ```
 
-- [ ] **Step 8: Update audit and plan index**
+- [x] **Step 8: Update audit and plan index**
 
 If the gate passed, update
 `docs/run-reviews/2026-05-04-victory-digest-completion-audit.md` with:
@@ -1777,7 +1789,7 @@ Update `PLANS.md`:
 | Deterministic Stage C Finish | completed; live rerun passed 95% production-ready gate | `docs/superpowers/plans/2026-05-04-deterministic-stage-c-finish.md` | Stage C emits a strict compact draft and deterministic materializer writes current-run enrichment/digest artifacts. |
 ```
 
-- [ ] **Step 9: Commit 95% gate result**
+- [x] **Step 9: Commit 95% gate result**
 
 Run:
 
