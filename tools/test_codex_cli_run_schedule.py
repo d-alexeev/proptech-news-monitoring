@@ -223,6 +223,20 @@ def test_wrapper_validates_current_run_finish_artifacts() -> None:
     assert "scrape_and_enrich__<run timestamp>__daily_core" in finish_prompt
 
 
+def test_wrapper_invokes_stage_c_materializer_after_finish_agent() -> None:
+    wrapper_text = WRAPPER.read_text(encoding="utf-8")
+
+    assert "STAGE_C_FINISH_HELPER" in wrapper_text
+    assert "tools/stage_c_finish.py" in wrapper_text
+    assert "FINISH_DRAFT" in wrapper_text
+    assert "finish-draft.json" in wrapper_text
+    assert "finish-summary.json" in wrapper_text
+    assert "stage_c_finish.py" in wrapper_text
+    assert "--draft-path \"$FINISH_DRAFT\"" in wrapper_text
+    assert "--article-prefetch-result \"$ARTICLE_PREFETCH_RESULT\"" in wrapper_text
+    assert "validate-finish-artifacts" in wrapper_text
+
+
 def test_readme_documents_staged_victory_digest_runbook() -> None:
     readme = (REPO_ROOT / "ops/codex-cli/README.md").read_text(encoding="utf-8")
 
@@ -247,6 +261,7 @@ def main() -> None:
         test_wrapper_invokes_article_prefetch_helper_directly,
         test_wrapper_validates_article_prefetch_manifest_presence,
         test_wrapper_validates_current_run_finish_artifacts,
+        test_wrapper_invokes_stage_c_materializer_after_finish_agent,
         test_readme_documents_staged_victory_digest_runbook,
     ]
     for test in tests:

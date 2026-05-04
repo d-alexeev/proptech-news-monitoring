@@ -44,11 +44,14 @@ FINISH_PROMPT="$RUN_ROOT/$RUN_ID-finish-prompt.md"
 ARTICLE_PREFETCH_STDOUT="$RUN_ROOT/$RUN_ID-article-prefetch-stdout.json"
 ARTICLE_PREFETCH_RESULT="$RUN_ROOT/$RUN_ID-article-prefetch-result.json"
 ARTICLE_PREFETCH_SUMMARY="$RUN_ROOT/$RUN_ID-article-prefetch-summary.json"
+FINISH_DRAFT="$RUN_ROOT/$RUN_ID-finish-draft.json"
+FINISH_SUMMARY="$RUN_ROOT/$RUN_ID-finish-summary.json"
 CODEX_BIN="${CODEX_BIN:-codex}"
 ENV_FILE="${CODEX_ENV_FILE:-$REPO_ROOT/.env}"
 PREFETCH_HELPER="$REPO_ROOT/tools/source_discovery_prefetch.py"
 ARTIFACT_HELPER="$REPO_ROOT/tools/codex_schedule_artifacts.py"
 ARTICLE_PREFETCH_HELPER="$REPO_ROOT/tools/shortlist_article_prefetch.py"
+STAGE_C_FINISH_HELPER="$REPO_ROOT/tools/stage_c_finish.py"
 
 if [ ! -f "$PROMPT_FILE" ]; then
   printf 'Prompt file not found: %s\n' "$PROMPT_FILE" >&2
@@ -132,6 +135,7 @@ if [ "${CODEX_RUN_SCHEDULE_SELF_TEST:-}" = "1" ]; then
   printf 'Stage A prompt: %s\n' "$DISCOVERY_PROMPT_FILE"
   printf 'Stage B helper: %s\n' "$ARTICLE_PREFETCH_HELPER"
   printf 'Stage C prompt: %s\n' "$FINISH_PROMPT_FILE"
+  printf 'Stage C materializer: %s\n' "$STAGE_C_FINISH_HELPER"
   printf 'Artifact helper: %s\n' "$ARTIFACT_HELPER"
   printf 'Codex exec flags: -C --cd, -s --sandbox, --json, --output-last-message\n'
   exit 0
@@ -191,7 +195,9 @@ build_finish_prompt() {
     printf 'Use these local JSON artifacts as the only article full-text handoff for `scrape_and_enrich`.\n\n'
     printf '%s\n' "- Shortlist shard: \`$shortlist_path\`"
     printf '%s\n' "- Article prefetch result: \`$ARTICLE_PREFETCH_RESULT\`"
-    printf '%s\n\n' "- Article prefetch summary: \`$ARTICLE_PREFETCH_SUMMARY\`"
+    printf '%s\n' "- Article prefetch summary: \`$ARTICLE_PREFETCH_SUMMARY\`"
+    printf '%s\n' "- Finish draft path: \`$FINISH_DRAFT\`"
+    printf '%s\n\n' "- Finish summary path: \`$FINISH_SUMMARY\`"
     cat "$FINISH_PROMPT_FILE"
   } > "$FINISH_PROMPT"
 }
@@ -231,6 +237,10 @@ run_weekday_staged_schedule() {
   fi
   if [ ! -f "$ARTICLE_PREFETCH_HELPER" ]; then
     printf 'Article prefetch helper not found: %s\n' "$ARTICLE_PREFETCH_HELPER" >&2
+    exit 2
+  fi
+  if [ ! -f "$STAGE_C_FINISH_HELPER" ]; then
+    printf 'Stage C finish helper not found: %s\n' "$STAGE_C_FINISH_HELPER" >&2
     exit 2
   fi
 
@@ -281,6 +291,17 @@ run_weekday_staged_schedule() {
     --output-last-message "$FINISH_LAST_MESSAGE" \
     - < "$FINISH_PROMPT" > "$FINISH_EVENT_LOG"
 
+  python3 "$STAGE_C_FINISH_HELPER" \
+    --repo-root "$REPO_ROOT" \
+    --run-id "$RUN_ID" \
+    --run-date "$RUN_DATE" \
+    --source-group daily_core \
+    --delivery-profile telegram_digest \
+    --shortlist-path "$SHORTLIST_PATH" \
+    --article-prefetch-result "$ARTICLE_PREFETCH_RESULT" \
+    --draft-path "$FINISH_DRAFT" \
+    --pretty > "$FINISH_SUMMARY"
+
   python3 "$ARTIFACT_HELPER" validate-finish-artifacts \
     --repo-root "$REPO_ROOT" \
     --run-id "$RUN_ID" \
@@ -291,6 +312,7 @@ run_weekday_staged_schedule() {
   printf 'Discovery events: %s\n' "$DISCOVERY_EVENT_LOG"
   printf 'Discovery final message: %s\n' "$DISCOVERY_LAST_MESSAGE"
   printf 'Article prefetch summary: %s\n' "$ARTICLE_PREFETCH_SUMMARY"
+  printf 'Finish materializer summary: %s\n' "$FINISH_SUMMARY"
   printf 'Finish events: %s\n' "$FINISH_EVENT_LOG"
   printf 'Finish final message: %s\n' "$FINISH_LAST_MESSAGE"
 }
