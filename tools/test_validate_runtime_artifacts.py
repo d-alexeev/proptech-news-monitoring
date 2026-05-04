@@ -425,6 +425,43 @@ def test_all_snippet_digest_gate_requires_partial_status_and_evidence_notes() ->
     assert good_errors == []
 
 
+def test_all_snippet_digest_gate_rejects_non_canonical_non_partial_statuses() -> None:
+    fixture = {
+        "fixture_id": "bad_all_snippet_non_canonical",
+        "mode_id": "build_daily_digest",
+        "inputs": {
+            "enriched_items": [
+                {
+                    "story_id": "story_1",
+                    "body_status": "snippet_fallback",
+                    "evidence_points": ["Snippet evidence."],
+                }
+            ]
+        },
+        "expected": {
+            "selection_outputs": {"digest_status": "non_canonical_digest"},
+            "daily_brief": {
+                "render_metadata": {"digest_status": "non_canonical_digest"},
+                "story_cards": [
+                    {
+                        "story_id": "story_1",
+                        "url": "https://example.test/story-1",
+                        "canonical_url": "https://example.test/story-1",
+                        "evidence_notes": ["Snippet evidence."],
+                    }
+                ],
+            },
+        },
+    }
+
+    errors = validator.validate_all_snippet_digest_fixture(
+        fixture,
+        pathlib.Path("bad_all_snippet_non_canonical.yaml"),
+    )
+
+    assert any("partial_digest" in error for error in errors)
+
+
 def main() -> None:
     tests = [
         test_adapter_validation_requires_configured_sources_to_resolve,
@@ -437,6 +474,7 @@ def main() -> None:
         test_runner_integration_validation_rejects_empty_fixture_coverage,
         test_runner_integration_validation_reports_missing_and_duplicate_sources,
         test_all_snippet_digest_gate_requires_partial_status_and_evidence_notes,
+        test_all_snippet_digest_gate_rejects_non_canonical_non_partial_statuses,
     ]
     for test in tests:
         test()

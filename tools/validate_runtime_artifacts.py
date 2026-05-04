@@ -61,11 +61,7 @@ CHANGE_REQUEST_SIGNAL_KEYS = {
     "change_request",
     "change_request_output_path",
 }
-ALL_SNIPPET_DIGEST_STATUSES = {
-    "blocked_before_digest",
-    "partial_digest",
-    "non_canonical_digest",
-}
+ALL_SNIPPET_DIGEST_STATUS = "partial_digest"
 EXPECTED_PRIMARY_TOOL_PATH_BY_STRATEGY = {
     "rss": "HTTP/RSS fetcher",
     "html_scrape": "HTTP/RSS fetcher",
@@ -630,10 +626,10 @@ def validate_all_snippet_digest_fixture(
     selection_outputs = expected.get("selection_outputs", {})
     digest_status = selection_outputs.get("digest_status")
     errors: list[str] = []
-    if digest_status not in ALL_SNIPPET_DIGEST_STATUSES:
+    if digest_status != ALL_SNIPPET_DIGEST_STATUS:
         errors.append(
-            f"{path}: all-snippet build_daily_digest fixture must expect one of "
-            f"{sorted(ALL_SNIPPET_DIGEST_STATUSES)}, got {digest_status!r}"
+            f"{path}: all-snippet build_daily_digest fixture must expect "
+            f"{ALL_SNIPPET_DIGEST_STATUS!r}, got {digest_status!r}"
         )
 
     render_status = expected.get("daily_brief", {}).get("render_metadata", {}).get("digest_status")
