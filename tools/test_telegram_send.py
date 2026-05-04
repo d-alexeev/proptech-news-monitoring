@@ -31,6 +31,7 @@ import requests
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
 from telegram_send import (
+    _send_chunk,
     classify_delivery_error,
     convert_md_to_html,
     delivery_error_record,
@@ -380,6 +381,71 @@ def test_telegram_delivery_error_redaction() -> None:
     print("PASS  test_telegram_delivery_error_redaction")
 
 
+def test_telegram_delivery_error_redacts_relative_bot_path() -> None:
+    """urllib3 relative /botTOKEN/sendMessage paths must be redacted."""
+
+    relative_path = "/bot123456:ABC-SECRET-TOKEN/sendMessage"
+    exc = requests.ConnectionError(
+        "HTTPSConnectionPool(host='api.telegram.org', port=443): "
+        f"Max retries exceeded with url: {relative_path} "
+        "(Caused by NameResolutionError('failed'))"
+    )
+
+    record = delivery_error_record(1, exc)
+    serialized = json.dumps(record, ensure_ascii=False)
+
+    assert "123456:ABC-SECRET-TOKEN" not in serialized
+    assert relative_path not in serialized
+    assert "/bot" not in record["message"]
+    assert "/<bot-token-redacted>/sendMessage" in record["message"]
+    assert record["classification"] == "delivery_failed_dns"
+
+    print("PASS  test_telegram_delivery_error_redacts_relative_bot_path")
+
+
+def test_telegram_retry_exhausted_http_status_classification() -> None:
+    """Retry-exhausted HTTP statuses must keep status context for classification."""
+
+    import telegram_send as module
+
+    class FakeResponse:
+        status_code = 429
+
+        @staticmethod
+        def json() -> dict:
+            return {"ok": False, "parameters": {"retry_after": 0}}
+
+    original_post = module.requests.post
+    original_sleep = module.time.sleep
+
+    try:
+        module.requests.post = lambda *_args, **_kwargs: FakeResponse()
+        module.time.sleep = lambda *_args, **_kwargs: None
+
+        try:
+            _send_chunk(
+                "123456:ABC-SECRET-TOKEN",
+                "-100123456",
+                "body",
+                thread_id=None,
+                parse_mode="HTML",
+                disable_preview=True,
+            )
+        except RuntimeError as exc:
+            message = sanitize_delivery_error(exc)
+            assert "status=429" in message
+            assert "123456:ABC-SECRET-TOKEN" not in message
+            assert classify_delivery_error(exc) == "delivery_failed_http"
+            assert delivery_error_record(0, exc)["classification"] == "delivery_failed_http"
+        else:
+            raise AssertionError("_send_chunk should fail after retry-exhausted 429s")
+    finally:
+        module.requests.post = original_post
+        module.time.sleep = original_sleep
+
+    print("PASS  test_telegram_retry_exhausted_http_status_classification")
+
+
 # ---------------------------------------------------------------------------
 # Fixture 9: telegram_main_redacts_send_exception
 # ---------------------------------------------------------------------------
@@ -460,6 +526,8 @@ def _run_all() -> None:
         test_validate_html_output,
         test_write_presend_cr,
         test_telegram_delivery_error_redaction,
+        test_telegram_delivery_error_redacts_relative_bot_path,
+        test_telegram_retry_exhausted_http_status_classification,
         test_telegram_main_redacts_send_exception,
     ]:
         try:

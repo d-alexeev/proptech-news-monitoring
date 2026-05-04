@@ -107,7 +107,7 @@ _MDV2_PLAIN_SPECIALS = set("_*[]()~`>#+-=|{}.!\\")
 _MDV2_URL_SPECIALS = set(")\\")
 _MDV2_CODE_SPECIALS = set("`\\")
 _TELEGRAM_BOT_URL_RE = re.compile(
-    r"https://api\.telegram\.org/bot[^\s\"'<>/]+(?P<path>/[^\s\"'<>]*)?"
+    r"(?P<base>https://api\.telegram\.org)?/bot[^\s\"'<>/]+(?P<path>/[^\s\"'<>]*)?"
 )
 _DNS_ERROR_RE = re.compile(
     r"NameResolutionError|Temporary failure in name resolution|"
@@ -167,9 +167,10 @@ def sanitize_delivery_error(exc: BaseException | str) -> str:
     message = str(exc)
 
     def _replace(match: re.Match[str]) -> str:
+        base = match.group("base") or ""
         path = match.group("path") or ""
         endpoint = path.split("?", 1)[0]
-        return f"https://api.telegram.org/<bot-token-redacted>{endpoint}"
+        return f"{base}/<bot-token-redacted>{endpoint}"
 
     return _TELEGRAM_BOT_URL_RE.sub(_replace, message)
 
@@ -559,10 +560,14 @@ def _send_chunk(
 
         if resp.status_code == 429:
             retry_after = int(resp.json().get("parameters", {}).get("retry_after", 2))
+            last_exc = RuntimeError(
+                f"telegram retryable http status={resp.status_code} retry_after={retry_after}"
+            )
             time.sleep(max(1, retry_after))
             continue
 
         if resp.status_code >= 500:
+            last_exc = RuntimeError(f"telegram retryable http status={resp.status_code}")
             time.sleep(1.5 * (attempt + 1))
             continue
 
