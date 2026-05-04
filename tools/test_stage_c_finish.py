@@ -8,6 +8,17 @@ import tempfile
 import stage_c_finish
 
 
+LEAD_IMAGE = {
+    "status": "available",
+    "url": "https://example.test/images/lead.jpg",
+    "source": "og_image",
+    "alt": None,
+    "content_type": None,
+    "width": 1200,
+    "height": 630,
+}
+
+
 def write_json(path: pathlib.Path, data: object) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -68,6 +79,7 @@ def article_prefetch_doc(url: str) -> dict:
                 "soft_fail": None,
                 "soft_fail_detail": None,
                 "http": {"status": 200},
+                "lead_image": dict(LEAD_IMAGE),
             }
         ],
     }
@@ -105,6 +117,7 @@ def finish_draft(url: str) -> dict:
                     "Статья связывает функцию с рабочим процессом профессиональных продавцов.",
                 ],
                 "source_quality": "trade_media",
+                "lead_image": dict(LEAD_IMAGE),
             }
         ],
         "daily_brief": {
@@ -126,6 +139,7 @@ def finish_draft(url: str) -> dict:
                     "avito_implication": "Avito стоит сравнить этот подход со своей дорожной картой инструментов для профессионалов.",
                     "context_refs": [],
                     "evidence_notes": ["Статья сообщает, что ExampleCo расширила портальную функцию."],
+                    "lead_image": dict(LEAD_IMAGE),
                 }
             ],
             "render_metadata": {
@@ -133,12 +147,19 @@ def finish_draft(url: str) -> dict:
                 "evidence_completeness": "mixed_or_full_evidence",
             },
         },
-        "digest_markdown": "# PropTech Monitor | 04.05.2026\n\n## Главное\n\n1. **[Full Article](https://example.test/full)**\n   - Сигнал: ExampleCo расширила портал функцией для качества инвентаря.\n   - Почему важно: порталы конкурируют рабочими инструментами для профессиональных продавцов.\n   - Для Avito: стоит сравнить подход со своей дорожной картой.\n   - Доказательство: статья описывает запуск функции для профессионального workflow.\n\nmode: build_daily_digest | 04.05.2026\n",
+        "digest_markdown": "# PropTech Monitor Daily | 4 мая 2026\n\n## ТОП СИГНАЛЫ\n\n### 🏢 Full Article\nScore: 72 | portal_strategy/product_signal | US | [Источник](https://example.test/full)\n\nExampleCo расширила портал функцией для качества инвентаря.\n\n**Что это значит:** Порталы конкурируют рабочими инструментами для профессиональных продавцов.\n\n**Для Avito:** Стоит сравнить подход со своей дорожной картой инструментов для профессионалов.\n\nСтатус запуска: источники 1/1 | статьи 1/1 | качество: warnings; покрытие достаточно для тестового запуска.\n",
         "qa_review": {
             "status": "warnings",
             "critical_findings_count": 0,
             "warning_findings_count": 1,
             "summary": "QA-проверка не нашла критических проблем и отметила одно ограничение покрытия источников.",
+        },
+        "telegram_preview": {
+            "status": "available",
+            "preview_url": url,
+            "source_story_id": "story_example_full_20260504",
+            "lead_image_url": "https://example.test/images/lead.jpg",
+            "reason": "first_top_signal_has_lead_image",
         },
         "telegram_delivery": {
             "status": "not_configured",
@@ -177,6 +198,14 @@ def test_materialize_finish_draft_writes_current_run_artifacts() -> None:
         assert (root / ".state/briefs/daily/2026-05-04__telegram_digest.json").exists()
         assert (root / "digests/2026-05-04-daily-digest.md").exists()
         assert (root / ".state/codex-runs/20260504T121000Z-weekday_digest-finish-summary.json").exists()
+        brief = json.loads((root / ".state/briefs/daily/2026-05-04__telegram_digest.json").read_text(encoding="utf-8"))
+        manifest = json.loads(
+            (root / ".state/runs/2026-05-04/build_daily_digest__20260504T121000Z__telegram_digest.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        assert brief["telegram_preview"]["status"] == "available"
+        assert manifest["operator_report"]["telegram_preview"]["preview_url"] == "https://example.test/full"
 
 
 def test_rejects_non_shortlisted_draft_url() -> None:
@@ -244,7 +273,7 @@ def test_rejects_english_telegram_digest_markdown() -> None:
         article_result_path = root / ".state/codex-runs/20260504T121000Z-weekday_digest-article-prefetch-result.json"
         draft_path = root / ".state/codex-runs/20260504T121000Z-weekday_digest-finish-draft.json"
         draft = finish_draft(url)
-        draft["digest_markdown"] = "# PropTech Monitor | 04.05.2026\n\n## Top Signals\n\nAvito lens: challenger pressure starts with inventory.\n"
+        draft["digest_markdown"] = "# PropTech Monitor Daily | 4 мая 2026\n\n## ТОП СИГНАЛЫ\n\n### 🏢 Full Article\nScore: 72 | portal_strategy/product_signal | US | [Источник](https://example.test/full)\n\nExampleCo expanded its portal with a feature for inventory quality.\n\n**Что это значит:** Portals compete with professional workflow tools.\n\n**Для Avito:** Avito should compare this approach with its professional tools roadmap.\n\nСтатус запуска: источники 1/1 | статьи 1/1 | качество: warnings; coverage is enough for the test run.\n"
         write_json(shortlist_path, [shortlist_item(url)])
         write_json(article_result_path, article_prefetch_doc(url))
         write_json(draft_path, draft)
@@ -266,12 +295,106 @@ def test_rejects_english_telegram_digest_markdown() -> None:
             raise AssertionError("English telegram_digest markdown should be rejected")
 
 
+def test_rejects_overlong_telegram_digest_markdown() -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        root = pathlib.Path(tmpdir)
+        url = "https://example.test/full"
+        shortlist_path = root / ".state/shortlists/2026-05-04/monitor_sources__20260504T120000Z__daily_core.json"
+        article_result_path = root / ".state/codex-runs/20260504T121000Z-weekday_digest-article-prefetch-result.json"
+        draft_path = root / ".state/codex-runs/20260504T121000Z-weekday_digest-finish-draft.json"
+        draft = finish_draft(url)
+        long_sentence = "Это русское предложение намеренно повторяется, чтобы превысить лимит длины Telegram-дайджеста. "
+        draft["digest_markdown"] = "# PropTech Monitor Daily | 4 мая 2026\n\n## ТОП СИГНАЛЫ\n\n" + (long_sentence * 80)
+        write_json(shortlist_path, [shortlist_item(url)])
+        write_json(article_result_path, article_prefetch_doc(url))
+        write_json(draft_path, draft)
+
+        try:
+            stage_c_finish.materialize_finish(
+                repo_root=root,
+                run_id="20260504T121000Z-weekday_digest",
+                run_date="2026-05-04",
+                source_group="daily_core",
+                delivery_profile="telegram_digest",
+                shortlist_path=shortlist_path,
+                article_prefetch_result_path=article_result_path,
+                draft_path=draft_path,
+            )
+        except ValueError as exc:
+            assert "digest markdown exceeds telegram_digest hard max" in str(exc)
+        else:
+            raise AssertionError("overlong telegram_digest markdown should be rejected")
+
+
+def test_rejects_off_template_telegram_digest_markdown() -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        root = pathlib.Path(tmpdir)
+        url = "https://example.test/full"
+        shortlist_path = root / ".state/shortlists/2026-05-04/monitor_sources__20260504T120000Z__daily_core.json"
+        article_result_path = root / ".state/codex-runs/20260504T121000Z-weekday_digest-article-prefetch-result.json"
+        draft_path = root / ".state/codex-runs/20260504T121000Z-weekday_digest-finish-draft.json"
+        draft = finish_draft(url)
+        draft["digest_markdown"] = "# Проптех-дайджест — 4 мая 2026\n\n## Главное\n\n1. Старый свободный формат без строки статуса.\n"
+        write_json(shortlist_path, [shortlist_item(url)])
+        write_json(article_result_path, article_prefetch_doc(url))
+        write_json(draft_path, draft)
+
+        try:
+            stage_c_finish.materialize_finish(
+                repo_root=root,
+                run_id="20260504T121000Z-weekday_digest",
+                run_date="2026-05-04",
+                source_group="daily_core",
+                delivery_profile="telegram_digest",
+                shortlist_path=shortlist_path,
+                article_prefetch_result_path=article_result_path,
+                draft_path=draft_path,
+            )
+        except ValueError as exc:
+            assert "digest markdown missing telegram_digest template marker" in str(exc)
+        else:
+            raise AssertionError("off-template telegram_digest markdown should be rejected")
+
+
+def test_rejects_preview_url_not_in_first_source_link() -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        root = pathlib.Path(tmpdir)
+        url = "https://example.test/full"
+        shortlist_path = root / ".state/shortlists/2026-05-04/monitor_sources__20260504T120000Z__daily_core.json"
+        article_result_path = root / ".state/codex-runs/20260504T121000Z-weekday_digest-article-prefetch-result.json"
+        draft_path = root / ".state/codex-runs/20260504T121000Z-weekday_digest-finish-draft.json"
+        draft = finish_draft(url)
+        draft["telegram_preview"]["preview_url"] = "https://example.test/different"
+        write_json(shortlist_path, [shortlist_item(url)])
+        write_json(article_result_path, article_prefetch_doc(url))
+        write_json(draft_path, draft)
+
+        try:
+            stage_c_finish.materialize_finish(
+                repo_root=root,
+                run_id="20260504T121000Z-weekday_digest",
+                run_date="2026-05-04",
+                source_group="daily_core",
+                delivery_profile="telegram_digest",
+                shortlist_path=shortlist_path,
+                article_prefetch_result_path=article_result_path,
+                draft_path=draft_path,
+            )
+        except ValueError as exc:
+            assert "telegram_preview.preview_url must match a rendered source link" in str(exc)
+        else:
+            raise AssertionError("preview URL outside rendered source links should be rejected")
+
+
 def main() -> None:
     tests = [
         test_materialize_finish_draft_writes_current_run_artifacts,
         test_rejects_non_shortlisted_draft_url,
         test_rejects_digest_body_runtime_path_leakage,
         test_rejects_english_telegram_digest_markdown,
+        test_rejects_overlong_telegram_digest_markdown,
+        test_rejects_off_template_telegram_digest_markdown,
+        test_rejects_preview_url_not_in_first_source_link,
     ]
     for test in tests:
         test()

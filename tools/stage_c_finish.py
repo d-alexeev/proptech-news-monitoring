@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import pathlib
+import re
 import sys
 from datetime import datetime, timezone
 from typing import Any
@@ -30,6 +31,10 @@ FORBIDDEN_DIGEST_MARKERS = [
     "run id",
 ]
 RUSSIAN_DELIVERY_PROFILES = {"telegram_digest", "telegram_weekly_digest"}
+TELEGRAM_DIGEST_HARD_MAX_MARKDOWN_CHARS = 3400
+LENGTH_LIMITED_DELIVERY_PROFILES = {"telegram_digest"}
+TEMPLATE_VALIDATED_DELIVERY_PROFILES = {"telegram_digest"}
+SOURCE_LINK_RE = re.compile(r"\[Источник\]\(([^)]+)\)")
 
 
 def now_iso() -> str:
@@ -113,6 +118,66 @@ def validate_digest_markdown(markdown: str) -> None:
             raise ValueError(f"digest markdown contains forbidden runtime marker: {marker}")
 
 
+def validate_digest_length(markdown: str, delivery_profile: str) -> None:
+    if delivery_profile not in LENGTH_LIMITED_DELIVERY_PROFILES:
+        return
+    length = len(markdown)
+    if length > TELEGRAM_DIGEST_HARD_MAX_MARKDOWN_CHARS:
+        raise ValueError(
+            "digest markdown exceeds telegram_digest hard max: "
+            f"{length}>{TELEGRAM_DIGEST_HARD_MAX_MARKDOWN_CHARS}"
+        )
+
+
+def validate_digest_template(markdown: str, delivery_profile: str) -> None:
+    if delivery_profile not in TEMPLATE_VALIDATED_DELIVERY_PROFILES:
+        return
+    required_markers = [
+        "# PropTech Monitor Daily |",
+        "## ТОП СИГНАЛЫ",
+        "Score:",
+        "| [Источник](",
+        "**Что это значит:**",
+        "**Для Avito:**",
+        "Статус запуска:",
+    ]
+    for marker in required_markers:
+        if marker not in markdown:
+            raise ValueError(f"digest markdown missing telegram_digest template marker: {marker}")
+    forbidden_sections = [
+        "## Стоит отслеживать",
+        "## Слабые сигналы",
+        "## Вывод для Авито",
+        "## Качество доказательств",
+    ]
+    for marker in forbidden_sections:
+        if marker in markdown:
+            raise ValueError(f"digest markdown contains forbidden compact telegram section: {marker}")
+
+
+def validate_telegram_preview(draft: dict, delivery_profile: str) -> None:
+    if delivery_profile != "telegram_digest":
+        return
+    preview = draft.get("telegram_preview")
+    if not isinstance(preview, dict):
+        raise ValueError("finish draft telegram_preview must be an object")
+    status = preview.get("status")
+    if status not in {"available", "unavailable"}:
+        raise ValueError("telegram_preview.status must be available or unavailable")
+    if status == "available":
+        preview_url = str(preview.get("preview_url") or "")
+        if not preview_url:
+            raise ValueError("telegram_preview.preview_url is required when preview is available")
+        rendered_urls = SOURCE_LINK_RE.findall(str(draft.get("digest_markdown", "")))
+        if preview_url not in rendered_urls:
+            raise ValueError("telegram_preview.preview_url must match a rendered source link")
+        if not preview.get("lead_image_url"):
+            raise ValueError("telegram_preview.lead_image_url is required when preview is available")
+        return
+    if preview.get("preview_url") is not None:
+        raise ValueError("telegram_preview.preview_url must be null when preview is unavailable")
+
+
 def validate_russian_delivery_text(draft: dict, delivery_profile: str) -> None:
     if delivery_profile not in RUSSIAN_DELIVERY_PROFILES:
         return
@@ -162,6 +227,7 @@ def validate_enriched_items(enriched_items: list[dict], shortlisted_urls: set[st
         "article_file",
         "evidence_points",
         "source_quality",
+        "lead_image",
     ]
     for index, item in enumerate(enriched_items):
         require_keys(f"enriched_items[{index}]", item, required)
@@ -229,6 +295,9 @@ def validate_draft(
     if not isinstance(draft["daily_brief"], dict):
         raise ValueError("finish draft daily_brief must be an object")
     validate_digest_markdown(str(draft["digest_markdown"]))
+    validate_digest_length(str(draft["digest_markdown"]), delivery_profile)
+    validate_digest_template(str(draft["digest_markdown"]), delivery_profile)
+    validate_telegram_preview(draft, delivery_profile)
     validate_russian_delivery_text(draft, delivery_profile)
     qa_review = draft["qa_review"]
     if not isinstance(qa_review, dict):
@@ -299,6 +368,7 @@ def build_daily_brief(draft: dict, run_id: str, run_date: str, delivery_profile:
         "story_ids": story_ids,
         "context_refs": daily.get("context_refs", []),
         "markdown_path": markdown_path,
+        "telegram_preview": draft.get("telegram_preview", {"status": "unavailable"}),
     })
     return daily
 
@@ -338,6 +408,7 @@ def build_digest_manifest(
                 "canonical": digest_status == "canonical_digest",
             },
             "qa_review": draft.get("qa_review", {"status": "skipped"}),
+            "telegram_preview": draft.get("telegram_preview", {"status": "unavailable"}),
             "telegram_delivery": draft.get("telegram_delivery", {"status": "skipped", "delivered": False}),
         },
         "notes": [f"Materialized by stage_c_finish for {run_date}."],
