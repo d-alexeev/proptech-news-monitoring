@@ -6,6 +6,13 @@ This is an external launch wrapper for the existing PropTech News Monitoring
 runtime. It is not a request to change the repository's canonical runtime
 source files.
 
+Production runs use the staged `weekday_digest` wrapper path in
+`ops/codex-cli/run_schedule.sh`: Stage A reads
+`ops/codex-cli/prompts/weekday_digest_discovery.md`, Stage B runs the direct
+article prefetch helper for current-run shortlisted URLs, and Stage C reads
+`ops/codex-cli/prompts/weekday_digest_finish.md`. This file remains the
+operator-facing schedule summary and compatibility prompt for non-staged use.
+
 ## Schedule Binding
 
 Run `weekday_digest` exactly as defined in

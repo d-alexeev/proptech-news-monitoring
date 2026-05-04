@@ -155,6 +155,25 @@ def test_self_test_reports_prefetch_wiring_without_live_network() -> None:
     assert "source_discovery_prefetch.py" in result.stdout
 
 
+def test_staged_prompt_files_exist_and_have_stage_boundaries() -> None:
+    discovery = REPO_ROOT / "ops/codex-cli/prompts/weekday_digest_discovery.md"
+    finish = REPO_ROOT / "ops/codex-cli/prompts/weekday_digest_finish.md"
+
+    assert discovery.exists()
+    assert finish.exists()
+
+    discovery_text = discovery.read_text(encoding="utf-8")
+    finish_text = finish.read_text(encoding="utf-8")
+
+    assert "monitor_sources only" in discovery_text
+    assert "Do not run scrape_and_enrich" in discovery_text
+    assert "Stage B article prefetch manifest" in finish_text
+    assert "Do not read .state/articles/ from digest or review modes" in finish_text
+    assert "scrape_and_enrich" in finish_text
+    assert "build_daily_digest" in finish_text
+    assert "review_digest" in finish_text
+
+
 def main() -> None:
     tests = [
         test_malformed_env_fails_with_operator_error_without_secret_values,
@@ -163,6 +182,7 @@ def main() -> None:
         test_env_loader_rejects_unquoted_special_values,
         test_wrapper_uses_supported_codex_exec_flags_and_quotes_user_agent_template,
         test_self_test_reports_prefetch_wiring_without_live_network,
+        test_staged_prompt_files_exist_and_have_stage_boundaries,
     ]
     for test in tests:
         test()
