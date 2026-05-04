@@ -125,11 +125,31 @@ def test_wrapper_uses_supported_codex_exec_flags_and_quotes_user_agent_template(
     env_text = ENV_EXAMPLE.read_text(encoding="utf-8")
 
     assert "-a never" not in wrapper_text
+    assert "danger-full-access" not in wrapper_text
     assert "-C \"$REPO_ROOT\"" in wrapper_text
     assert "-s workspace-write" in wrapper_text
     assert "--json" in wrapper_text
     assert "--output-last-message \"$LAST_MESSAGE\"" in wrapper_text
+    assert "source_discovery_prefetch.py" in wrapper_text
+    assert "$GENERATED_PROMPT" in wrapper_text
     assert "HTTP_USER_AGENT='PropTechNewsMonitor/1.0 (+team@example.com)'" in env_text
+
+
+def test_self_test_reports_prefetch_wiring_without_live_network() -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        root = pathlib.Path(tmpdir)
+        script_path = make_wrapper_fixture(root)
+        env_file = root / ".env.good"
+        env_file.write_text(
+            "HTTP_USER_AGENT='PropTechNewsMonitor/1.0 (+team@example.com)'\n",
+            encoding="utf-8",
+        )
+
+        result = run_wrapper(script_path, env_file)
+
+    assert result.returncode == 0
+    assert "Prefetch helper:" in result.stdout
+    assert "source_discovery_prefetch.py" in result.stdout
 
 
 def main() -> None:
@@ -139,6 +159,7 @@ def main() -> None:
         test_env_loader_rejects_command_substitution_before_self_test,
         test_env_loader_rejects_unquoted_special_values,
         test_wrapper_uses_supported_codex_exec_flags_and_quotes_user_agent_template,
+        test_self_test_reports_prefetch_wiring_without_live_network,
     ]
     for test in tests:
         test()

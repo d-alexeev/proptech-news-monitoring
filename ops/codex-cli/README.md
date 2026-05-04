@@ -42,8 +42,16 @@ The wrapper:
 - validates and loads `.env` if present;
 - activates `.venv` if present;
 - creates `.state/codex-runs/`;
+- runs static source discovery prefetch through
+  `tools/source_discovery_prefetch.py` before the inner Codex agent starts;
+- passes prefetch artifact paths to the generated inner prompt;
 - uses a lock directory to prevent concurrent scheduled runs;
 - writes Codex JSONL events and the final message under `.state/codex-runs/`.
+
+The inner Codex agent still runs with `-s workspace-write`. Do not switch the
+scheduled wrapper to `danger-full-access` to work around network access. Static
+network I/O belongs in the prefetch helper; the inner agent should consume the
+local JSON artifacts and apply the canonical runtime contracts.
 
 The wrapper loads `.env` with a restricted parser, not shell `source`. Use simple
 `KEY=VALUE` lines only. Single-quote any value containing spaces, parentheses,
