@@ -48,6 +48,36 @@ The wrapper:
 - uses a lock directory to prevent concurrent scheduled runs;
 - writes Codex JSONL events and the final message under `.state/codex-runs/`.
 
+## Runner Dependencies
+
+Install Python dependencies in the same environment used by scheduled jobs:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r tools/requirements.txt
+python3 -m playwright install chromium
+```
+
+Verify Playwright before expecting `chrome_scrape` sources to work:
+
+```bash
+python3 -c "from playwright.sync_api import sync_playwright; print('playwright import ok')"
+python3 - <<'PY'
+from playwright.sync_api import sync_playwright
+with sync_playwright() as p:
+    browser = p.chromium.launch(headless=True)
+    page = browser.new_page()
+    page.goto("about:blank")
+    print(page.title())
+    browser.close()
+PY
+```
+
+The Chromium payload is installed outside the repository in Playwright's cache.
+Initial install may require network access. Scheduled runs must not attempt to
+install browsers automatically.
+
 The inner Codex agent still runs with `-s workspace-write`. Do not switch the
 scheduled wrapper to `danger-full-access` to work around network access. Static
 network I/O belongs in the prefetch helper; the inner agent should consume the

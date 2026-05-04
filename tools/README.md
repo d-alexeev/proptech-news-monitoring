@@ -32,6 +32,7 @@
 | Файл | Назначение |
 |---|---|
 | `rss_fetch.py` | Единый минимальный fetcher для `fetch_strategy: rss`, `html_scrape` и простых JSON/API источников вроде `itunes_api`. |
+| `browser_fetch.py` | Headless Playwright fetcher for configured `fetch_strategy: chrome_scrape` sources. |
 | `source_discovery_prefetch.py` | Runner-side static source prefetch for scheduled runs before the inner Codex agent starts. |
 | `pdf_extract.py` | Enrichment-only PDF-to-text helper for shortlisted public PDFs such as Rightmove RNS documents. |
 | `validate_runtime_artifacts.py` | Offline validator for source adapter resolution, compact state fixtures, change-request fixtures, full-text boundaries, and runner integration dry-run maps. |
@@ -178,6 +179,33 @@ Offline contract coverage lives in `tools/test_pdf_extract.py`; the Rightmove
 enrichment-only boundary is represented in
 `config/runtime/mode-fixtures/runner_pdf_extract_rightmove.yaml`.
 
+## `browser_fetch.py`
+
+`browser_fetch.py` is the low-level JSON-in/JSON-out helper for configured
+`fetch_strategy: chrome_scrape` sources. It uses Playwright Chromium in
+headless mode, emits compact visible text and browser provenance, and writes no
+`.state/` files by itself.
+
+It is intentionally narrower than a general crawler:
+
+- allowed only for explicit `chrome_scrape` source specs;
+- no login, CAPTCHA, paywall bypass, proxy rotation, or manual-only flow;
+- no broad crawl beyond configured source URLs;
+- no full article body enrichment.
+
+Batch example:
+
+```bash
+printf '%s\n' '{"sources":[{"source_id":"similarweb_global_real_estate","source_group":"daily_core","fetch_strategy":"chrome_scrape","url":"https://www.similarweb.com/website/zillow.com/#overview"}]}' \
+  | python3 tools/browser_fetch.py --stdin --pretty
+```
+
+If the Python package or Chromium payload is unavailable, the helper returns
+`batch_status: environment_failure` with
+`failure_class: browser_runtime_unavailable` instead of crashing.
+
+Offline contract coverage lives in `tools/test_browser_fetch.py`.
+
 ## Browser fallback
 
 Browser fallback is documented in `tools/chrome_notes.md`. It is separate from
@@ -187,9 +215,8 @@ be used for `manual_only_permanent` sources, login, CAPTCHA, paywall bypass, or
 proxy workarounds.
 
 Local interactive Codex/browser use is an operator interface. Cron/server runs
-need a future headless implementation that emits the same `kind: browser`
-JSON-shaped result; RT-M3 defines that output contract but does not add a live
-browser automation script.
+use the Playwright-backed `tools/browser_fetch.py` helper when the dependency
+and Chromium payload are installed in the scheduled runner environment.
 
 ## `validate_runtime_artifacts.py`
 
@@ -227,7 +254,23 @@ Telegram send validation.
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r tools/requirements.txt
+python3 -m playwright install chromium
+python3 -c "from playwright.sync_api import sync_playwright; print('playwright import ok')"
+python3 - <<'PY'
+from playwright.sync_api import sync_playwright
+with sync_playwright() as p:
+    browser = p.chromium.launch(headless=True)
+    page = browser.new_page()
+    page.goto("about:blank")
+    print(page.title())
+    browser.close()
+PY
 ```
+
+The initial Playwright Chromium install downloads a browser payload and may
+require network access plus filesystem writes outside the repository. Do this
+once for the same Python environment used by scheduled jobs; do not install
+browsers inside every schedule run.
 
 ## Env
 
