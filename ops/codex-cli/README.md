@@ -50,6 +50,25 @@ The wrapper loads `.env` with a restricted parser, not shell `source`. Use simpl
 `#`, `$`, or quotes. Malformed `.env` files fail before Codex is started, and
 the wrapper reports the offending file without printing secret values.
 
+## Secret-Safe Run Review
+
+`.state/` remains git-ignored and local-only. Do not commit Codex JSONL event
+logs, final-message transcripts, `.env` values, full Telegram Bot API URLs, or
+scraped HTML/article bodies.
+
+For launch review, write a compact tracked summary under `docs/run-reviews/`
+using the template there. Record source, enrichment, digest, QA, and delivery
+outcomes with sanitized status labels and redacted placeholders only. Keep raw
+run evidence in local `.state/` until the operator retention window expires.
+
+If a JSONL event log may contain a token, full Bot API URL, cookie, proxy
+credential, or bulky scraped body, keep it out of tracked docs and quarantine it
+locally under `.state/quarantine/` for operator review. Do not redact or rewrite
+historical `.state/` logs without explicit operator approval.
+
+Before committing review material, run the secret scan documented in
+`docs/run-reviews/README.md`.
+
 Set `CODEX_BIN` to override the Codex executable:
 
 ```bash
