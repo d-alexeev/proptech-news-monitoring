@@ -1,0 +1,41 @@
+fixture_id: monitor_sources_prefetch_global_dns
+mode_id: monitor_sources
+
+inputs:
+  run_id: monitor_sources__20260504T121000Z__daily_core
+  run_date: 2026-05-04
+  group_id: daily_core
+  runner_prefetch:
+    summary_path: .state/codex-runs/20260504T121000Z-weekday_digest-source-prefetch-summary.json
+    fetch_result_path: .state/codex-runs/20260504T121000Z-weekday_digest-source-prefetch-fetch-result.json
+    dns_check_path: .state/codex-runs/20260504T121000Z-weekday_digest-source-prefetch-dns-check.json
+    source_discovery_status: failed
+    downstream_gate: blocked_before_digest
+    fetchable_source_count: 8
+    fetchable_success_count: 0
+    browser_source_count: 2
+    browser_attempted_count: 0
+  source_runner_output:
+    batch_status: environment_failure
+    failure_class: global_dns_resolution_failure
+    run_failure:
+      failure_type: dns_resolution
+      message: Configured source discovery failed during DNS resolution; treat as runner/network failure.
+    results:
+      - source_id: inman_tech_innovation
+        kind: rss
+        items: []
+        body: null
+        error: "network_error: Failed to resolve feeds.feedburner.com"
+        failure_class: dns_resolution
+        soft_fail: null
+
+expected:
+  action: emit_failed_run_manifest_without_canonical_empty_shards
+  rerun_static_network_fetch_inside_codex: false
+  source_discovery_status: failed
+  failure_class: global_dns_resolution_failure
+  canonical_source_complete: false
+  raw_shard_written: false
+  shortlist_shard_written: false
+  downstream_digest_gate: blocked_before_digest

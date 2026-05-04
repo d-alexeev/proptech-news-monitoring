@@ -47,6 +47,16 @@ Do not edit prompts, config, or adapters to work around the issue.
 
 Source runner failure handling:
 
+- If the scheduled wrapper provides runner source discovery prefetch artifacts,
+  read the prefetch summary and fetch result as the static source runner output.
+  Do not re-run static network fetches for those sources from inside the inner
+  `codex exec` sandbox.
+- Treat prefetch artifacts as evidence references, not prompt context dumps.
+  For large `kind=http` bodies, summarize only adapter-relevant listing markers,
+  titles, links, dates, and compact snippets. Do not copy full listing HTML into
+  raw candidate reasoning notes.
+- Keep configured `chrome_scrape` sources as `not_attempted` unless the wrapper
+  also provides a browser artifact that follows `tools/chrome_notes.md`.
 - Treat `tools/rss_fetch.py` output `batch_status=environment_failure` with
   `failure_class=global_dns_resolution_failure` as a runner/network failure,
   not as a canonical empty source result.

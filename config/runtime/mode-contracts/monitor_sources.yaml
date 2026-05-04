@@ -74,6 +74,22 @@ processing_stages:
 
 source_runner_contract:
   primary_static_tool: ./tools/rss_fetch.py
+  scheduled_prefetch:
+    helper: ./tools/source_discovery_prefetch.py
+    artifact_fields:
+      - fetch_result_path
+      - dns_check_path
+      - summary_path
+    handling:
+      - when: "prefetch summary is provided by the schedule wrapper"
+        action: consume_prefetch_artifacts_as_static_source_runner_output
+        note: Do not repeat static network fetches from inside the inner codex exec sandbox.
+      - when: "prefetch result contains large kind=http body fields"
+        action: use_as_local_evidence_reference_not_prompt_context_dump
+        note: Summarize adapter-relevant listing markers, titles, links, dates, and compact snippets only.
+      - when: "prefetch skipped_sources contains fetch_strategy=chrome_scrape"
+        action: mark_browser_sources_not_attempted_until_browser_artifact_exists
+        note: Static prefetch does not make browser-backed discovery canonical.
   batch_summary_fields:
     - fetched_at
     - batch_status

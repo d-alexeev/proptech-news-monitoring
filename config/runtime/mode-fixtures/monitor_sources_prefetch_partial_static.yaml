@@ -1,0 +1,71 @@
+fixture_id: monitor_sources_prefetch_partial_static
+mode_id: monitor_sources
+
+inputs:
+  run_id: monitor_sources__20260504T120000Z__daily_core
+  run_date: 2026-05-04
+  group_id: daily_core
+  runner_prefetch:
+    summary_path: .state/codex-runs/20260504T120000Z-weekday_digest-source-prefetch-summary.json
+    fetch_result_path: .state/codex-runs/20260504T120000Z-weekday_digest-source-prefetch-fetch-result.json
+    dns_check_path: .state/codex-runs/20260504T120000Z-weekday_digest-source-prefetch-dns-check.json
+    source_discovery_status: partial
+    downstream_gate: prefetch_available
+    fetchable_source_count: 8
+    fetchable_success_count: 6
+    browser_source_count: 2
+    browser_attempted_count: 0
+    skipped_sources:
+      - source_id: onlinemarketplaces
+        fetch_strategy: chrome_scrape
+        status: not_attempted
+        reason: no_headless_browser_runner
+      - source_id: similarweb_global_real_estate
+        fetch_strategy: chrome_scrape
+        status: not_attempted
+        reason: no_headless_browser_runner
+  source_runner_output:
+    batch_status: failed
+    failure_class: null
+    results:
+      - source_id: inman_tech_innovation
+        kind: rss
+        items:
+          - title: Sample Inman item
+            link: https://www.inman.com/sample
+        body: null
+        error: null
+        failure_class: null
+        soft_fail: null
+      - source_id: rea_group_media_releases
+        kind: http
+        items: []
+        body: null
+        body_artifact_ref: .state/codex-runs/20260504T120000Z-weekday_digest-source-prefetch-fetch-result.json#/results/1/body
+        error: null
+        failure_class: null
+        soft_fail: null
+      - source_id: costar_homes
+        kind: rss
+        items: []
+        body: null
+        error: null
+        failure_class: timeout
+        soft_fail: timeout
+      - source_id: rightmove_plc
+        kind: http
+        items: []
+        body: null
+        error: "network_error: DNS failed for plc.rightmove.co.uk"
+        failure_class: dns_resolution
+        soft_fail: null
+
+expected:
+  action: consume_prefetch_artifacts_as_static_source_runner_output
+  rerun_static_network_fetch_inside_codex: false
+  source_discovery_status: partial
+  canonical_source_complete: false
+  browser_sources_status: not_attempted
+  large_http_body_policy: evidence_reference_only
+  downstream_digest_gate: prefetch_available
+  web_fallback_allowed_as_canonical: false

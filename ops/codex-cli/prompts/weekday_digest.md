@@ -37,6 +37,21 @@ Read only the compact canonical runtime files needed for this run:
 
 Avoid loading broad human reference docs unless blocked and necessary.
 
+## Runner Source Prefetch
+
+When this prompt contains a "Runner Source Discovery Prefetch" preamble, treat
+the listed prefetch summary and fetch result JSON files as the static source
+runner output for `monitor_sources`.
+
+Do not repeat static RSS/HTTP network fetches from inside this `codex exec`
+sandbox for sources already represented in the prefetch artifacts. Use the
+artifact paths as local evidence references. For large HTTP listing bodies,
+extract only adapter-relevant compact discovery facts; do not paste full listing
+HTML into run artifacts or reasoning notes.
+
+Configured `chrome_scrape` sources are not covered by static prefetch. Mark them
+as `not_attempted` unless a separate browser artifact is explicitly provided.
+
 ## Write Boundaries
 
 Allowed writes:
