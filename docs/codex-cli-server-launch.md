@@ -32,7 +32,7 @@ systemd timer or cron
       -> stage_c_finish.py deterministic materializer
       -> validate-finish-artifacts
       -> codex_schedule_delivery.py wrapper retry/finalization
-          -> telegram_send.py when delivery env is configured
+          -> invokes low-level Telegram sender (`tools/telegram_send.py`)
 ```
 
 Supported schedule IDs:
