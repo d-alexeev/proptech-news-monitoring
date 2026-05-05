@@ -89,6 +89,23 @@ runner/run.sh --self-test weekday
 runner/run.sh --self-test weekly
 ```
 
+## Weekday Lookback Policy
+
+Weekday discovery must not assume the previous successful run happened
+yesterday. The runner should compute the discovery window from the last
+successful weekday report when that evidence exists, then clamp the window to a
+safe operational range:
+
+- minimum lookback: 3 days
+- maximum lookback: 5 days
+
+This policy intentionally covers weekends, when weekday digest does not run, and
+also covers one or more missed scheduled runs. If no previous successful
+weekday report exists, the first run should use the 3-day minimum window.
+
+Discovery should still deduplicate and suppress repeats through compact state;
+the wider lookback is for recall, not for repeating already-covered stories.
+
 ## Judgment Layer
 
 The rebuild uses four logical filtering stages represented by three editable
@@ -319,6 +336,7 @@ Validation must verify:
 | Use current repo as prototype but rebuild cleanly | Goal, Keep/Rewrite, Milestones |
 | Remove legacy previous runs and development artifacts | Remove list, Milestone 6 |
 | Keep one or two examples | Target Structure, Keep/Rewrite, Validation |
+| Load missed weekday materials and cover weekends | Weekday Lookback Policy, Runtime Flow |
 | Make industry filters configurable | Judgment Layer Level 1 |
 | Add shortlist rules before full text | Judgment Layer Level 2 |
 | Include precise strategic relevance in scoring | Judgment Layer Level 3 |
@@ -330,6 +348,7 @@ Validation must verify:
 - `runtime/schedules.yaml` defines only weekday and weekly.
 - `runner/run.sh weekday` and `runner/run.sh weekly` exist.
 - Server self-tests pass for both schedules.
+- Weekday source discovery uses an adaptive lookback clamped to 3-5 days.
 - `runtime/judgment/industry_filter.yaml`,
   `runtime/judgment/discovery_rules.yaml`, and
   `runtime/judgment/scoring_profile.yaml` exist and are referenced by prompts.
@@ -344,4 +363,3 @@ Validation must verify:
 - Tracked repo contains curated samples but no large historical digest archive.
 - Removed legacy surfaces are not referenced by new docs, prompts, runner, or
   manifest.
-

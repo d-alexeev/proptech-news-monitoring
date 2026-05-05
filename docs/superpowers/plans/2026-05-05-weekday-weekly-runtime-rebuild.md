@@ -20,7 +20,7 @@ The spec touches config, prompts, source adapters, runner orchestration, helper 
 
 - `runtime/manifest.yaml`: canonical index of runtime files, checks, and supported jobs.
 - `runtime/schedules.yaml`: only weekday and weekly schedules plus Telegram delivery profiles.
-- `runtime/sources/weekday.yaml`: weekday source universe migrated from current `daily_core`.
+- `runtime/sources/weekday.yaml`: weekday source universe migrated from current `daily_core`, including adaptive 3-5 day lookback.
 - `runtime/sources/weekly.yaml`: weekly context source universe migrated from current `weekly_context`.
 - `runtime/judgment/industry_filter.yaml`: Level 1 industry gate before scoring.
 - `runtime/judgment/discovery_rules.yaml`: Level 2 shortlist rules before article full text.
@@ -74,6 +74,19 @@ rebuild is not complete until these docs exist and pass validation:
   partial items, missing items, and compatibility caveats.
 - `runner/tools/validate_runtime.py --check all` must verify that the required
   docs exist and do not reference removed runtime paths.
+
+## Weekday Lookback Requirement
+
+Weekday discovery must cover missed scheduled runs and weekends. The new runtime
+must define an adaptive weekday lookback policy:
+
+- minimum: 3 days;
+- maximum: 5 days;
+- if a previous successful weekday report exists, compute days since that run
+  and clamp it into the 3-5 day range;
+- if no previous successful weekday report exists, use the 3-day minimum;
+- use the wider window for recall, while deduplication and scoring suppress
+  already-covered stories.
 
 ### Legacy Files Removed Only After New Checks Pass
 
@@ -210,6 +223,12 @@ def test_sources_have_expected_profiles() -> None:
     weekly = read_yaml("runtime/sources/weekly.yaml")
     assert weekday["source_profile"] == "weekday"
     assert weekly["source_profile"] == "weekly"
+    assert weekday["lookback_policy"] == {
+        "mode": "adaptive_since_last_success",
+        "min_days": 3,
+        "max_days": 5,
+        "first_run_default_days": 3,
+    }
     weekday_ids = {source["id"] for source in weekday["sources"]}
     weekly_ids = {source["id"] for source in weekly["sources"]}
     assert "aim_group_real_estate_intelligence" in weekday_ids
@@ -378,7 +397,11 @@ Then edit the first metadata block in `runtime/sources/weekday.yaml` to:
 ```yaml
 source_profile: weekday
 description: "High-signal weekday monitoring for real estate marketplace moves"
-lookback_hours: 36
+lookback_policy:
+  mode: adaptive_since_last_success
+  min_days: 3
+  max_days: 5
+  first_run_default_days: 3
 max_items_per_source: 8
 ```
 
@@ -1706,6 +1729,32 @@ def test_fetch_sources_self_test_returns_runtime_paths() -> None:
     assert payload["status"] == "passed"
     assert payload["job"] == "weekday"
     assert payload["source_profile_path"] == "runtime/sources/weekday.yaml"
+    assert payload["lookback_days"] == 3
+
+
+def test_fetch_sources_clamps_weekday_lookback_to_five_days() -> None:
+    result = subprocess.run(
+        [
+            "python3",
+            str(FETCH_SOURCES),
+            "--job",
+            "weekday",
+            "--run-id",
+            "20260505T090000Z-weekday",
+            "--repo-root",
+            str(REPO_ROOT),
+            "--last-success-date",
+            "2026-04-25",
+            "--self-test",
+        ],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    assert result.returncode == 0
+    payload = json.loads(result.stdout)
+    assert payload["lookback_days"] == 5
 
 
 def test_fetch_sources_rejects_breaking_alert() -> None:
@@ -1793,15 +1842,35 @@ In `runner/tools/fetch_sources.py`, add an argparse option:
 
 ```python
 parser.add_argument("--self-test", action="store_true")
+parser.add_argument("--last-success-date")
 ```
 
-When `--self-test` is set, return:
+Add this helper:
+
+```python
+from datetime import date
+
+
+def compute_weekday_lookback_days(today: date, last_success_date: str | None) -> int:
+    min_days = 3
+    max_days = 5
+    if not last_success_date:
+        return min_days
+    previous = date.fromisoformat(last_success_date)
+    elapsed_days = max((today - previous).days, min_days)
+    return min(max(elapsed_days, min_days), max_days)
+```
+
+When `--self-test` is set, compute `lookback_days` with
+`today = date.fromisoformat("2026-05-05")` so the test is deterministic, then
+return:
 
 ```python
 {
     "status": "passed",
     "job": args.job,
     "source_profile_path": "runtime/sources/weekday.yaml" if args.job == "weekday" else "runtime/sources/weekly.yaml",
+    "lookback_days": compute_weekday_lookback_days(date.fromisoformat("2026-05-05"), args.last_success_date) if args.job == "weekday" else None,
 }
 ```
 
@@ -2188,6 +2257,14 @@ Full article text is fetched only by `runner/tools/fetch_articles.py`, only
 after discovery writes a current-run shortlist. Discovery and weekly synthesis
 must not read broad `.state/articles/` content.
 
+## Weekday Lookback
+
+Weekday discovery uses an adaptive lookback window. It looks back at least 3
+days and at most 5 days. When the previous successful weekday report is older
+than one day, the runner expands the discovery window up to the 5-day cap. This
+covers weekends and missed weekday runs without turning the repository into a
+historical archive.
+
 ## Delivery States
 
 - `dry_run`: Telegram path was validated without sending.
@@ -2481,6 +2558,8 @@ Replace `COMPLETION_AUDIT.md` with:
 - Make hot filters configurable through a general industry filter and thematic rules.
 - Add precise strategic relevance scoring for Avito Real Estate.
 - Clarify where full text appears.
+- Load missed weekday materials and intentionally cover weekends with a 3-5 day
+  weekday lookback.
 
 ## Implemented Requirements
 
@@ -2488,6 +2567,7 @@ Replace `COMPLETION_AUDIT.md` with:
 - `runner/run.sh weekday` and `runner/run.sh weekly` are the only launch jobs.
 - `runtime/judgment/industry_filter.yaml`, `discovery_rules.yaml`, and `scoring_profile.yaml` define filtering and scoring.
 - Full text is fetched only through `runner/tools/fetch_articles.py` after shortlist.
+- Weekday discovery uses adaptive lookback with a 3-day minimum and 5-day cap.
 - Server self-tests exist for weekday and weekly.
 - Runtime validation exists in `runner/tools/validate_runtime.py`.
 - Curated samples live under `samples/`.
