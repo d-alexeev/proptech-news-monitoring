@@ -47,7 +47,8 @@ For `weekday_digest`, the wrapper runs:
 3. Stage B article prefetch through `tools/shortlist_article_prefetch.py`;
 4. Stage C finish draft inside `codex exec`;
 5. deterministic materialization through `tools/stage_c_finish.py`;
-6. Telegram delivery or dry-run through `tools/telegram_send.py`.
+6. wrapper-level Telegram delivery retry/finalization through
+   `tools/codex_schedule_delivery.py`, which invokes `tools/telegram_send.py`.
 
 The generated digest lives at `digests/YYYY-MM-DD-daily-digest.md`.
 Current-run manifests are required under `.state/runs/YYYY-MM-DD/`; a date-level
