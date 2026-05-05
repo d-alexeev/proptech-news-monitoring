@@ -88,6 +88,21 @@ must define an adaptive weekday lookback policy:
 - use the wider window for recall, while deduplication and scoring suppress
   already-covered stories.
 
+## Weekly Synthesis Requirement
+
+Weekly digest is not a ranked list of the highest-scored daily articles. It is
+an incremental synthesis job with month-scale memory:
+
+- read current-week compact daily briefs;
+- read several prior compact weekly briefs, targeting a rolling monthly view;
+- cluster related stories into themes;
+- identify what repeated, intensified, faded, or newly emerged this week;
+- connect weak signals that were not individually daily-top material;
+- explain the incremental implication for Avito Real Estate over the last month;
+- use article scores as evidence inputs, not as the primary selection rule.
+
+The weekly prompt, schema, sample, and validation must make this explicit.
+
 ### Legacy Files Removed Only After New Checks Pass
 
 - `benchmark/`
@@ -249,6 +264,8 @@ def test_judgment_files_define_four_logical_filter_levels() -> None:
     assert "strategic_relevance" in scoring["dimensions"]
     assert scoring["digest_selection"]["bands"]["90_100"]["daily_policy"] == "must_cover"
     assert scoring["evidence_caps"]["max_score_if_no_full_text"] == 74
+    assert scoring["weekly_synthesis"]["memory_window_weeks"] == 4
+    assert scoring["weekly_synthesis"]["selection_rule"] == "theme_synthesis_not_article_ranking"
 
 
 def test_schema_files_define_full_text_boundary() -> None:
@@ -589,6 +606,29 @@ digest_selection:
       label: ignore_or_log
       daily_policy: suppress
       weekly_policy: suppress_unless_operator_selected
+
+weekly_synthesis:
+  memory_window_weeks: 4
+  selection_rule: theme_synthesis_not_article_ranking
+  required_operations:
+    - cluster_related_stories_into_themes
+    - compare_current_week_to_prior_weekly_briefs
+    - identify_repeated_intensified_faded_and_new_themes
+    - connect_weak_signals_into_larger_patterns
+    - explain_incremental_monthly_implication_for_avito
+  forbidden_operations:
+    - rank_daily_articles_by_score_only
+    - copy_daily_digest_story_cards_without_synthesis
+  required_trend_card_fields:
+    - trend_id
+    - title
+    - monthly_context
+    - current_week_increment
+    - supporting_story_ids
+    - prior_week_refs
+    - why_it_matters
+    - avito_implication
+    - watch_next
 ```
 
 - [ ] **Step 10: Create compact schemas**
@@ -669,6 +709,15 @@ artifacts:
     consumer: runtime/prompts/weekly_digest.md
   weekly_brief:
     producer: runtime/prompts/weekly_digest.md
+    required_fields:
+      - brief_id
+      - week_id
+      - delivery_profile
+      - monthly_memory_window
+      - trend_clusters
+      - current_week_increment
+      - prior_week_refs
+      - watchpoints
   run_report:
     producer: runner/run.sh
     required_fields:
@@ -762,6 +811,9 @@ def test_prompts_reference_new_runtime_files() -> None:
     assert "runtime/judgment/discovery_rules.yaml" in discovery
     assert "runtime/judgment/scoring_profile.yaml" in finish
     assert "runtime/judgment/scoring_profile.yaml" in weekly
+    assert "incremental monthly synthesis" in weekly
+    assert "not a ranked list" in weekly
+    assert "prior weekly briefs" in weekly
     assert "cowork/" not in combined
     assert "config/runtime/" not in combined
     assert "ops/codex-cli/" not in combined
@@ -950,9 +1002,25 @@ Read:
 - `runtime/judgment/discovery_rules.yaml`
 - `runtime/judgment/scoring_profile.yaml`
 - compact daily briefs from `.state/briefs/daily/` for the target ISO week
-- limited prior weekly briefs from `.state/briefs/weekly/`
+- prior compact weekly briefs from `.state/briefs/weekly/`, targeting the last
+  4 weeks when available
 
-Weekly should primarily synthesize compact daily briefs. Do not read the
+Weekly is an incremental monthly synthesis, not a ranked list of the most
+interesting or highest-scored daily articles. Article-level scores are evidence
+inputs only. Cluster related stories into themes, compare this week with prior
+weekly briefs, and explain what repeated, intensified, faded, or newly emerged
+over the last month.
+
+The weekly output must include:
+
+- trend clusters with supporting story IDs;
+- current-week increment for each cluster;
+- prior weekly references when a theme continued;
+- weak signals that now form a larger pattern;
+- Avito Real Estate implication;
+- watchpoints for the next month.
+
+Do not copy daily digest story cards without synthesis. Do not read the
 historical markdown digest archive. Do not read broad `.state/articles/`.
 
 If the weekly runner provides new weekly context source evidence, apply the same
@@ -2257,6 +2325,13 @@ Full article text is fetched only by `runner/tools/fetch_articles.py`, only
 after discovery writes a current-run shortlist. Discovery and weekly synthesis
 must not read broad `.state/articles/` content.
 
+## Weekly Synthesis
+
+Weekly Digest is a monthly-context synthesis. It reads the current week's
+compact daily briefs plus prior compact weekly briefs, targets a 4-week memory
+window, clusters related stories into themes, and explains the current week's
+increment. It must not simply rank daily articles by score.
+
 ## Weekday Lookback
 
 Weekday discovery uses an adaptive lookback window. It looks back at least 3
@@ -2560,6 +2635,8 @@ Replace `COMPLETION_AUDIT.md` with:
 - Clarify where full text appears.
 - Load missed weekday materials and intentionally cover weekends with a 3-5 day
   weekday lookback.
+- Make Weekly Digest synthesize the last month incrementally rather than rank
+  daily articles by score.
 
 ## Implemented Requirements
 
@@ -2568,6 +2645,8 @@ Replace `COMPLETION_AUDIT.md` with:
 - `runtime/judgment/industry_filter.yaml`, `discovery_rules.yaml`, and `scoring_profile.yaml` define filtering and scoring.
 - Full text is fetched only through `runner/tools/fetch_articles.py` after shortlist.
 - Weekday discovery uses adaptive lookback with a 3-day minimum and 5-day cap.
+- Weekly digest clusters related stories into month-scale themes and reports the
+  current week's increment.
 - Server self-tests exist for weekday and weekly.
 - Runtime validation exists in `runner/tools/validate_runtime.py`.
 - Curated samples live under `samples/`.

@@ -218,15 +218,29 @@ cron/systemd
 cron/systemd
   -> runner/run.sh weekly
       -> reads compact daily briefs from current week
+      -> reads several prior compact weekly briefs for monthly continuity
       -> optionally fetches configured weekly context sources
       -> applies industry/discovery/scoring rules where new weekly context exists
-      -> renders weekly digest from compact artifacts
+      -> clusters related stories into themes
+      -> renders an incremental monthly synthesis, not a ranked article list
       -> send_telegram.py
       -> validate_runtime.py / run report
 ```
 
-Weekly should primarily synthesize compact daily briefs. It must not depend on
-the historical markdown digest archive or broad full-text article state.
+Weekly should primarily synthesize compact daily and weekly briefs. It must not
+depend on the historical markdown digest archive or broad full-text article
+state. It should look back over the current week plus several prior weekly
+briefs, with a target monthly memory window, and answer:
+
+- which themes repeated or intensified this week;
+- what changed versus the previous weekly briefs;
+- which weak signals now form a larger pattern;
+- what is the incremental implication for Avito Real Estate over the last month.
+
+Weekly must not simply select the most interesting or highest-scored articles
+from daily digests. Article-level scores are inputs, but the weekly output is
+theme synthesis with trend clusters, supporting story references, changes since
+prior weekly briefs, and forward-looking watchpoints.
 
 ## Full-Text Boundary
 
@@ -337,6 +351,7 @@ Validation must verify:
 | Remove legacy previous runs and development artifacts | Remove list, Milestone 6 |
 | Keep one or two examples | Target Structure, Keep/Rewrite, Validation |
 | Load missed weekday materials and cover weekends | Weekday Lookback Policy, Runtime Flow |
+| Make Weekly Digest an incremental monthly synthesis | Runtime Flow, Acceptance Criteria |
 | Make industry filters configurable | Judgment Layer Level 1 |
 | Add shortlist rules before full text | Judgment Layer Level 2 |
 | Include precise strategic relevance in scoring | Judgment Layer Level 3 |
@@ -358,6 +373,8 @@ Validation must verify:
   manifest.
 - Weekly digest reads compact daily/weekly artifacts, not the historical digest
   archive.
+- Weekly digest clusters related stories into monthly themes and reports the
+  current week's incremental change instead of ranking daily articles.
 - Telegram delivery works for daily and weekly profiles or reports explicit
   not-configured/failure status.
 - Tracked repo contains curated samples but no large historical digest archive.
