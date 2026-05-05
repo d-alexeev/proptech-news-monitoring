@@ -92,7 +92,7 @@ Score: XX | <topic/category> | <short regions> | [Источник](url)
 
 Rules:
 - Use a Russian month name in the title, for example `4 мая 2026`.
-- Render up to 3 signal cards.
+- Render up to 5 signal cards.
 - Pick one relevant emoji per card; do not use emoji elsewhere.
 - `Score:` is the only allowed English fixed label in the visible digest.
 - Use compact Russian topic/category labels and short region labels such as
@@ -106,7 +106,7 @@ Rules:
 **Length budget for `telegram_digest`:**
 - Target raw markdown length: <= 3000 characters before Telegram HTML conversion.
 - Hard maximum raw markdown length: <= 3400 characters.
-- `## ТОП СИГНАЛЫ`: up to 3 story cards.
+- `## ТОП СИГНАЛЫ`: up to 5 story cards.
 - Each story field must be one short paragraph, with no nested story bullets.
 
 If evidence is mixed or partial, keep the evidence-quality disclosure but compress it
