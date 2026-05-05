@@ -24,12 +24,15 @@ referenced by `config/runtime/runtime_manifest.yaml`.
 
 ```text
 systemd timer or cron
-  -> ops/codex-cli/run_schedule.sh <schedule_id>
-      -> codex exec
-          -> reads canonical runtime files
-          -> performs the requested schedule path
-          -> writes .state/ and digests/ artifacts
-          -> sends Telegram delivery when configured
+  -> ops/codex-cli/run_schedule.sh weekday_digest
+      -> source_discovery_prefetch.py
+      -> codex exec Stage A: monitor_sources
+      -> shortlist_article_prefetch.py
+      -> codex exec Stage C: finish draft
+      -> stage_c_finish.py deterministic materializer
+      -> validate-finish-artifacts
+      -> codex_schedule_delivery.py wrapper retry/finalization
+          -> invokes low-level Telegram sender (`tools/telegram_send.py`)
 ```
 
 Supported schedule IDs:
@@ -48,7 +51,12 @@ cd /opt/proptech-news-monitoring
 python3 -m venv .venv
 . .venv/bin/activate
 pip install -r tools/requirements.txt
+python3 -m playwright install chromium
 ```
+
+The scheduled `chrome_scrape` source path depends on Playwright Chromium through
+`tools/browser_fetch.py`. Install the Chromium payload once in the same Python
+environment used by the timer or cron job.
 
 Install and authenticate Codex CLI on the server:
 
@@ -102,6 +110,19 @@ without starting Codex:
 ```bash
 CODEX_RUN_SCHEDULE_SELF_TEST=1 ops/codex-cli/run_schedule.sh weekday_digest
 ```
+
+After a production-like weekday run, verify the materialized digest can be sent
+through the Telegram dry-run path without delivering it:
+
+```bash
+python3 tools/telegram_send.py --profile telegram_digest --date YYYY-MM-DD --dry-run < digests/YYYY-MM-DD-daily-digest.md
+```
+
+For `weekday_digest`, the self-test should report the Stage A prompt,
+`source_discovery_prefetch.py`, Stage B `shortlist_article_prefetch.py`, the
+Stage C finish prompt, `stage_c_finish.py`, and Telegram delivery wiring. Weekly
+and breaking launches remain single schedule IDs through the same wrapper and
+should stay concise unless their runtime path changes.
 
 ## systemd Example
 

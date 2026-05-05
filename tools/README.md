@@ -22,10 +22,15 @@
 - **Env vars:** читаются из process env. Ни один скрипт не пишет секреты в
   stdout и не логирует их в stderr.
 - **State writes:** low-level data helpers such as `rss_fetch.py` and
-  `pdf_extract.py` do not write `./.state/`. Runner orchestration helpers may
-  write narrowly documented evidence artifacts when they own that runtime step;
-  today this exception is `source_discovery_prefetch.py`, which writes only
-  `.state/codex-runs/` prefetch evidence for the scheduled agent to consume.
+  `browser_fetch.py`, `article_fetch.py`, and `pdf_extract.py` do not write
+  `./.state/`. Wrapper orchestration and materialization helpers may write
+  narrowly documented runtime artifacts when they own that scheduled step:
+  `source_discovery_prefetch.py` writes source prefetch evidence,
+  `shortlist_article_prefetch.py` writes article prefetch evidence,
+  `codex_schedule_artifacts.py` writes synthetic fallback and validation
+  artifacts, `stage_c_finish.py` materializes current-run state/digest
+  artifacts, and `codex_schedule_delivery.py` writes delivery finalization
+  evidence.
 
 ## Состав
 
@@ -34,7 +39,9 @@
 | `rss_fetch.py` | Единый минимальный fetcher для `fetch_strategy: rss`, `html_scrape` и простых JSON/API источников вроде `itunes_api`. |
 | `browser_fetch.py` | Headless Playwright fetcher for configured `fetch_strategy: chrome_scrape` sources. |
 | `source_discovery_prefetch.py` | Runner-side static source prefetch for scheduled runs before the inner Codex agent starts. |
+| `shortlist_article_prefetch.py` | Deterministic Stage B article/full-text prefetch for shortlisted URLs only. |
 | `codex_schedule_artifacts.py` | Wrapper helper for locating current-run shortlist shards, writing synthetic article prefetch fallback manifests, and validating current-run Stage C finish artifacts. |
+| `codex_schedule_delivery.py` | Wrapper-level Telegram delivery retry/finalization helper that invokes `telegram_send.py` and records delivery evidence. |
 | `stage_c_finish.py` | Deterministic Stage C materializer that validates compact finish drafts and writes current-run enrichment, daily brief, digest markdown, and run manifests. |
 | `pdf_extract.py` | Enrichment-only PDF-to-text helper for shortlisted public PDFs such as Rightmove RNS documents. |
 | `validate_runtime_artifacts.py` | Offline validator for source adapter resolution, compact state fixtures, change-request fixtures, full-text boundaries, and runner integration dry-run maps. |
@@ -109,8 +116,12 @@ sources through `rss_fetch.py`, and writes local evidence artifacts under
 
 It intentionally does not create `.state/raw/` or `.state/shortlists/` shards.
 The scheduled agent remains responsible for interpreting the evidence under
-`monitor_sources` contracts. Configured `chrome_scrape` sources are reported as
-`not_attempted` until a non-interactive browser runner exists.
+`monitor_sources` contracts. Configured `chrome_scrape` sources are attempted
+through `tools/browser_fetch.py` when Playwright and the Chromium payload are
+installed. If the browser runtime is unavailable, the result is classified as
+`environment_failure` / `browser_runtime_unavailable` or an explicit
+unavailable status, and the scheduled run continues with partial source
+evidence.
 
 Example:
 
@@ -208,6 +219,27 @@ If the Python package or Chromium payload is unavailable, the helper returns
 
 Offline contract coverage lives in `tools/test_browser_fetch.py`.
 
+## `shortlist_article_prefetch.py`
+
+`shortlist_article_prefetch.py` is the deterministic Stage B helper for
+`weekday_digest`. It receives the current-run shortlist shard, fetches article
+text only for shortlisted URLs, writes `*-article-prefetch-result.json` and
+`*-article-prefetch-summary.json`, and records `body_status_hint` plus
+`lead_image` metadata. It does not broaden full-text usage beyond
+`scrape_and_enrich`.
+
+Offline contract coverage lives in `tools/test_shortlist_article_prefetch.py`.
+
+## `stage_c_finish.py`
+
+`stage_c_finish.py` validates the strict Stage C finish draft and materializes
+current-run `.state/enriched`, `.state/runs`, `.state/briefs`, and
+`digests/YYYY-MM-DD-daily-digest.md`. For `telegram_digest`, it enforces Russian
+text, compact template markers, raw markdown length, `lead_image`, and
+`telegram_preview`.
+
+Offline contract coverage lives in `tools/test_stage_c_finish.py`.
+
 ## Browser fallback
 
 Browser fallback is documented in `tools/chrome_notes.md`. It is separate from
@@ -246,6 +278,17 @@ python3 tools/validate_runtime_artifacts.py --check all
 
 The validator performs no live source fetch, digest editorial scoring check, or
 Telegram send validation.
+
+## `telegram_send.py`
+
+`telegram_send.py` renders and sends markdown through the configured Telegram
+delivery profile, or validates the request path in `--dry-run` mode.
+Scheduled wrapper delivery is coordinated by `codex_schedule_delivery.py`, which
+invokes `telegram_send.py` and owns retry/finalization evidence.
+
+For `telegram_digest`, the sender keeps the digest as one text message when
+possible and uses Telegram `link_preview_options` from the first markdown source
+link to request a large preview above the text.
 
 ## Зависимости
 

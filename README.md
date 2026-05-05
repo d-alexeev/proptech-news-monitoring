@@ -32,6 +32,39 @@ Canonical runtime layer:
 Папка `prompts/` сохраняется как reference/migration history и не должна
 считаться главным описанием текущего runtime-дизайна.
 
+## Current Operator Path
+
+The production-like weekday path is the staged Codex wrapper:
+
+```bash
+ops/codex-cli/run_schedule.sh weekday_digest
+```
+
+For `weekday_digest`, the wrapper runs:
+
+1. source discovery prefetch through `tools/source_discovery_prefetch.py`;
+2. Stage A `monitor_sources` inside `codex exec`;
+3. Stage B article prefetch through `tools/shortlist_article_prefetch.py`;
+4. Stage C finish draft inside `codex exec`;
+5. deterministic materialization through `tools/stage_c_finish.py`;
+6. wrapper-level Telegram delivery retry/finalization through
+   `tools/codex_schedule_delivery.py`, which invokes `tools/telegram_send.py`.
+
+The generated digest lives at `digests/YYYY-MM-DD-daily-digest.md`.
+Current-run manifests are required under `.state/runs/YYYY-MM-DD/`; a date-level
+digest file alone is not enough to mark a scheduled run complete.
+
+## Runbook Quick Links
+
+| Need | Start here |
+| --- | --- |
+| New machine or new Cowork session | [`docs/cowork-onboarding.md`](./docs/cowork-onboarding.md) |
+| Scheduled Codex runner | [`ops/codex-cli/README.md`](./ops/codex-cli/README.md) |
+| Server/systemd/cron launch | [`docs/codex-cli-server-launch.md`](./docs/codex-cli-server-launch.md) |
+| Tool contracts and local helper tests | [`tools/README.md`](./tools/README.md) |
+| Production-like run reviews | [`docs/run-reviews/`](./docs/run-reviews/) |
+| LLM benchmark suite | [`benchmark/README.md`](./benchmark/README.md) |
+
 ## Canonical Runtime Structure
 
 ```
@@ -56,8 +89,8 @@ PropTech News Monitoring/
    `shortlisted_item`.
 2. `scrape_and_enrich` обрабатывает только shortlist и является единственным
    mode, где full article text допустим как primary working input.
-3. `build_daily_digest` собирает markdown digest и `daily_brief` только из
-   compact artifacts.
+3. `build_daily_digest` produces the compact Russian `telegram_digest`
+   markdown and `daily_brief` from compact artifacts only.
 4. `review_digest` выполняет QA-review готового digest.
 5. `build_weekly_digest` строится по `daily_brief` и bounded `weekly_brief`
    history.

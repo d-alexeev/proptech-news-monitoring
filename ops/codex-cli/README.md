@@ -22,10 +22,17 @@ directory.
 
 | File | Role |
 | --- | --- |
-| `run_schedule.sh` | Server wrapper around `codex exec`. |
-| `prompts/weekday_digest.md` | Non-interactive prompt for the weekday daily schedule. |
+| `run_schedule.sh` | Server wrapper around `codex exec`, source/article prefetch, Stage C materialization, validation, and delivery. |
+| `prompts/weekday_digest.md` | Wrapper prompt template for the staged weekday daily schedule. |
+| `prompts/weekday_digest_discovery.md` | Stage A prompt for `monitor_sources` shortlist generation. |
+| `prompts/weekday_digest_finish.md` | Stage C prompt for strict finish draft generation. |
 | `prompts/weekly_digest.md` | Non-interactive prompt for the weekly digest schedule. |
 | `prompts/breaking_alert.md` | Non-interactive prompt for the hourly alert check. |
+| `../../tools/source_discovery_prefetch.py` | Stage A source evidence prefetch before inner Codex starts. |
+| `../../tools/shortlist_article_prefetch.py` | Stage B article/full-text prefetch for shortlisted URLs only. |
+| `../../tools/stage_c_finish.py` | Deterministic Stage C materializer for current-run artifacts and digest markdown. |
+| `../../tools/codex_schedule_delivery.py` | Wrapper-level delivery retry/finalization helper that invokes `telegram_send.py` and records delivery evidence. |
+| `../../tools/telegram_send.py` | Low-level Telegram send and dry-run helper for the materialized digest. |
 
 ## Server Usage
 
@@ -83,6 +90,27 @@ runs `tools/stage_c_finish.py` to materialize `.state/enriched`,
 `.state/runs`, `.state/briefs`, and `digests/{date}-daily-digest.md`.
 If the draft is missing, stale, invalid, or leaks runtime paths into the digest
 body, the wrapper fails before delivery.
+
+Delivery is a wrapper-owned finalization step. `tools/codex_schedule_delivery.py`
+invokes `tools/telegram_send.py`, handles retry/finalization policy, and records
+delivery evidence for the scheduled run.
+
+Post-run checks:
+
+```bash
+CODEX_RUN_SCHEDULE_SELF_TEST=1 ops/codex-cli/run_schedule.sh weekday_digest
+test -s digests/YYYY-MM-DD-daily-digest.md
+find .state/runs/YYYY-MM-DD -type f \( -name '*scrape_and_enrich*' -o -name '*build_daily_digest*' \) -print
+find .state/codex-runs -type f -name '*-finish-draft.json' -print
+python3 tools/validate_runtime_artifacts.py --check all
+python3 tools/test_stage_c_finish.py
+python3 tools/test_telegram_send.py
+python3 tools/telegram_send.py --profile telegram_digest --date YYYY-MM-DD --dry-run < digests/YYYY-MM-DD-daily-digest.md
+```
+
+A production-like weekday run should have current-run `scrape_and_enrich` and
+`build_daily_digest` manifests, `critical_findings_count = 0`, Russian digest
+text, no runtime path leakage, and Telegram dry-run `parts_sent = 1`.
 
 ## Runner Dependencies
 

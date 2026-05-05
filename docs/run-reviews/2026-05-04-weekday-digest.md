@@ -20,7 +20,7 @@
 | Enrichment | `materialized_current_run` | deterministic Stage C materializer wrote current-run `scrape_and_enrich__20260504T142209Z__daily_core` artifacts. |
 | Digest generation | `materialized_current_run` | deterministic materializer wrote current-run digest manifest, daily brief, and `digests/2026-05-04-daily-digest.md`. |
 | QA/review | `warnings_no_critical` | finish draft QA status was `warnings` with `critical_findings_count = 0`. |
-| Telegram delivery | `dry_run_passed` | Telegram dry-run rendered 2 message parts without hitting the Telegram API; live credentials were intentionally absent. |
+| Telegram delivery | `dry_run_passed` | Historical dry-run rendered 2 message parts before the compact one-message template gate; live credentials were intentionally absent. Current weekday Telegram dry-runs should target `parts_sent = 1`. |
 | 95% production-ready gate | `production_candidate_95` | current-run artifacts validated, article prefetch gate passed, QA had zero critical findings, digest safety scans had no matches, and Telegram dry-run succeeded. |
 
 ## Source Outcomes
@@ -52,7 +52,7 @@
 | Delivery mode | `dry_run` |
 | Delivery status | `dry_run_passed` |
 | Sanitized endpoint | `not_used` |
-| Message parts | `2` |
+| Message parts | `2` historical dry-run parts; current compact template target is `parts_sent = 1` |
 | Error summary | live Telegram credentials were unavailable by design; dry-run rendered successfully. |
 
 ## Review Notes
