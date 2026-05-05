@@ -6,6 +6,7 @@
 # Runtime state and caches
 .state/
 .state-*/
+.auto-memory/
 .worktrees/
 *.log
 
