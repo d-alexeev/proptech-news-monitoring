@@ -6,21 +6,19 @@ rendered UI surface. It is not the default fetch path and must not replace
 
 ## Operational interface
 
-For local Codex/Cowork runs, the operational browser interface may be either:
+For local Codex/Cowork debugging, the operational browser interface may be:
 
 - the Codex in-app browser, when the operator is reviewing or manually
   exercising a public page; or
-- Claude in Chrome / an equivalent browser connector, when it is available in
-  the active Cowork session.
+- a Chrome-style browser connector, when it is available in the active Cowork
+  session.
 
 These interactive interfaces are for local operator-assisted runs only. A
-cron/server runner must not depend on a logged-in desktop Chrome session. A
-future headless runner may use Playwright, Puppeteer, or another server-safe
-browser implementation, but it must emit the same JSON-shaped result described
-below and preserve the same eligibility rules.
-
-No RT-M3 implementation adds browser automation scripts. This document defines
-the contract and review boundary for later runner implementations.
+cron/server runner must not depend on a logged-in desktop Chrome session.
+Scheduled runs use the Playwright-backed `tools/browser_fetch.py` helper for
+configured `fetch_strategy: chrome_scrape` sources, and the helper must emit the
+same JSON-shaped result described below while preserving the same eligibility
+rules.
 
 ## Eligibility
 

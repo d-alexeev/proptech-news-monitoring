@@ -1,8 +1,10 @@
 # Documentation Refresh Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Bring project documentation back in sync with the last 100 commits, especially the Codex scheduled weekday digest runner, staged scraping/enrichment pipeline, Russian Telegram digest contract, and benchmark updates.
+
+**Status:** Completed on 2026-05-05.
 
 **Architecture:** Treat docs as a layered operator map: root `README.md` explains the current system at a glance, `docs/` contains operational and architecture runbooks, and folder READMEs explain local tooling. Preserve historical plan docs as traceability, but do not make old plans the primary way to understand the current repo.
 
@@ -83,7 +85,7 @@ The last 100 commits changed the repo in these major groups:
 **Files:**
 - Modify: `PLANS.md`
 
-- [ ] **Step 1: Add active plan row**
+- [x] **Step 1: Add active plan row**
 
 Add this row under `## Active Plan`:
 
@@ -91,7 +93,7 @@ Add this row under `## Active Plan`:
 | Documentation Refresh After Runner Work | planned | `docs/superpowers/plans/2026-05-05-documentation-refresh.md` | Update root, operator, tool, onboarding, and benchmark docs after the last 100 commits introduced the staged Codex weekday runner, Playwright/browser prefetch, Stage B article prefetch, deterministic Stage C, Russian Telegram gates, compact template, and benchmark judge additions. |
 ```
 
-- [ ] **Step 2: Verify the row is present**
+- [x] **Step 2: Verify the row is present**
 
 Run:
 
@@ -101,7 +103,7 @@ rg -n "Documentation Refresh After Runner Work|2026-05-05-documentation-refresh"
 
 Expected output includes both strings.
 
-- [ ] **Step 3: Commit the index update**
+- [x] **Step 3: Commit the index update**
 
 Run:
 
@@ -117,7 +119,7 @@ Expected: one docs-only commit.
 **Files:**
 - Modify: `README.md`
 
-- [ ] **Step 1: Add a current operator path section**
+- [x] **Step 1: Add a current operator path section**
 
 After `## Current State`, add:
 
@@ -144,7 +146,7 @@ Current-run manifests are required under `.state/runs/YYYY-MM-DD/`; a date-level
 digest file alone is not enough to mark a scheduled run complete.
 ````
 
-- [ ] **Step 2: Add setup/test pointers**
+- [x] **Step 2: Add setup/test pointers**
 
 Add a short "Runbook quick links" block:
 
@@ -161,7 +163,7 @@ Add a short "Runbook quick links" block:
 | LLM benchmark suite | [`benchmark/README.md`](./benchmark/README.md) |
 ```
 
-- [ ] **Step 3: Mention compact Russian Telegram digest**
+- [x] **Step 3: Mention compact Russian Telegram digest**
 
 In `Runtime Overview`, update step 3 to:
 
@@ -170,7 +172,7 @@ In `Runtime Overview`, update step 3 to:
    markdown and `daily_brief` from compact artifacts only.
 ```
 
-- [ ] **Step 4: Verify README references current runner**
+- [x] **Step 4: Verify README references current runner**
 
 Run:
 
@@ -180,7 +182,7 @@ rg -n "Current Operator Path|run_schedule.sh weekday_digest|stage_c_finish|teleg
 
 Expected: all four terms appear.
 
-- [ ] **Step 5: Commit root README update**
+- [x] **Step 5: Commit root README update**
 
 Run:
 
@@ -194,7 +196,7 @@ git commit -m "Update root README for staged Codex runner"
 **Files:**
 - Modify: `docs/cowork-onboarding.md`
 
-- [ ] **Step 1: Replace Chrome MCP prerequisite wording**
+- [x] **Step 1: Replace Chrome MCP prerequisite wording**
 
 Replace this bullet:
 
@@ -208,7 +210,7 @@ with:
 - **Playwright Chromium** for scheduled `fetch_strategy: chrome_scrape` sources. Browser Use / Chrome-style inspection is useful for manual debugging, but scheduled runs use the Playwright-backed `tools/browser_fetch.py` helper.
 ```
 
-- [ ] **Step 2: Add Playwright install command**
+- [x] **Step 2: Add Playwright install command**
 
 In setup commands after `pip install -r tools/requirements.txt`, add:
 
@@ -216,7 +218,7 @@ In setup commands after `pip install -r tools/requirements.txt`, add:
 python3 -m playwright install chromium
 ```
 
-- [ ] **Step 3: Quote `.env` sample values**
+- [x] **Step 3: Quote `.env` sample values**
 
 Change the sample fetch value to:
 
@@ -230,7 +232,7 @@ If Telegram thread is empty, show:
 TELEGRAM_MESSAGE_THREAD_ID=''
 ```
 
-- [ ] **Step 4: Add scheduled wrapper smoke check**
+- [x] **Step 4: Add scheduled wrapper smoke check**
 
 Under smoke tests, add:
 
@@ -240,7 +242,7 @@ CODEX_RUN_SCHEDULE_SELF_TEST=1 ops/codex-cli/run_schedule.sh weekday_digest
 
 Expected result: wrapper self-test prints paths for source prefetch, Stage A prompt, Stage B helper, Stage C prompt, and Stage C materializer.
 
-- [ ] **Step 5: Update repo tour tool list**
+- [x] **Step 5: Update repo tour tool list**
 
 In the `tools/` tree, include:
 
@@ -251,7 +253,7 @@ In the `tools/` tree, include:
 │   ├── stage_c_finish.py               ← deterministic Stage C materializer
 ```
 
-- [ ] **Step 6: Verify stale wording is gone**
+- [x] **Step 6: Verify stale wording is gone**
 
 Run:
 
@@ -261,7 +263,7 @@ rg -n "Claude in Chrome|chrome_scrape.*change_request|playwright install chromiu
 
 Expected: no stale Chrome MCP prerequisite remains; Playwright and wrapper references are present.
 
-- [ ] **Step 7: Commit onboarding update**
+- [x] **Step 7: Commit onboarding update**
 
 Run:
 
@@ -276,7 +278,7 @@ git commit -m "Refresh onboarding for staged runner setup"
 - Modify: `ops/codex-cli/README.md`
 - Modify: `docs/codex-cli-server-launch.md`
 
-- [ ] **Step 1: Expand `ops/codex-cli/README.md` file table**
+- [x] **Step 1: Expand `ops/codex-cli/README.md` file table**
 
 Change the file table to include:
 
@@ -285,7 +287,7 @@ Change the file table to include:
 | `prompts/weekday_digest_finish.md` | Stage C prompt for strict finish draft generation. |
 ```
 
-- [ ] **Step 2: Add verification checklist to `ops/codex-cli/README.md`**
+- [x] **Step 2: Add verification checklist to `ops/codex-cli/README.md`**
 
 Add under `Victory Digest Production-Like Run`:
 
@@ -304,7 +306,7 @@ A production-like weekday run should have current-run `scrape_and_enrich` and
 text, no runtime path leakage, and Telegram dry-run `parts_sent = 1`.
 ```
 
-- [ ] **Step 3: Replace server launch architecture diagram**
+- [x] **Step 3: Replace server launch architecture diagram**
 
 In `docs/codex-cli-server-launch.md`, replace the simple diagram with:
 
@@ -320,7 +322,7 @@ systemd timer or cron
       -> telegram_send.py when delivery env is configured
 ```
 
-- [ ] **Step 4: Add Playwright install to server setup**
+- [x] **Step 4: Add Playwright install to server setup**
 
 After `pip install -r tools/requirements.txt`, add:
 
@@ -328,7 +330,7 @@ After `pip install -r tools/requirements.txt`, add:
 python3 -m playwright install chromium
 ```
 
-- [ ] **Step 5: Add self-test and dry-run commands**
+- [x] **Step 5: Add self-test and dry-run commands**
 
 Ensure `docs/codex-cli-server-launch.md` includes:
 
@@ -337,7 +339,7 @@ CODEX_RUN_SCHEDULE_SELF_TEST=1 ops/codex-cli/run_schedule.sh weekday_digest
 python3 tools/telegram_send.py --profile telegram_digest --date YYYY-MM-DD --dry-run < digests/YYYY-MM-DD-daily-digest.md
 ```
 
-- [ ] **Step 6: Verify runner docs agree**
+- [x] **Step 6: Verify runner docs agree**
 
 Run:
 
@@ -347,7 +349,7 @@ rg -n "weekday_digest_discovery|weekday_digest_finish|shortlist_article_prefetch
 
 Expected: both docs include staged runner and Playwright references.
 
-- [ ] **Step 7: Commit runner docs update**
+- [x] **Step 7: Commit runner docs update**
 
 Run:
 
@@ -361,7 +363,7 @@ git commit -m "Update Codex runner documentation"
 **Files:**
 - Modify: `tools/README.md`
 
-- [ ] **Step 1: Fix stale browser runner sentence**
+- [x] **Step 1: Fix stale browser runner sentence**
 
 Replace:
 
@@ -378,7 +380,7 @@ unavailable, the result is classified as `browser_runtime_unavailable` and the
 scheduled run continues with partial source evidence.
 ```
 
-- [ ] **Step 2: Add Stage B and Stage C sections**
+- [x] **Step 2: Add Stage B and Stage C sections**
 
 Add concise sections:
 
@@ -405,7 +407,7 @@ text, compact template markers, raw markdown length, `lead_image`, and
 Offline contract coverage lives in `tools/test_stage_c_finish.py`.
 ```
 
-- [ ] **Step 3: Mention Telegram preview support**
+- [x] **Step 3: Mention Telegram preview support**
 
 In `telegram_send.py` section, add:
 
@@ -415,7 +417,7 @@ possible and uses Telegram `link_preview_options` from the first markdown source
 link to request a large preview above the text.
 ```
 
-- [ ] **Step 4: Verify tool docs**
+- [x] **Step 4: Verify tool docs**
 
 Run:
 
@@ -425,7 +427,7 @@ rg -n "browser_runtime_unavailable|shortlist_article_prefetch.py|stage_c_finish.
 
 Expected: all terms appear.
 
-- [ ] **Step 5: Commit tools README update**
+- [x] **Step 5: Commit tools README update**
 
 Run:
 
@@ -439,7 +441,7 @@ git commit -m "Refresh tool documentation for staged weekday pipeline"
 **Files:**
 - Modify: `benchmark/README.md`
 
-- [ ] **Step 1: Add current datasets to structure**
+- [x] **Step 1: Add current datasets to structure**
 
 Update the dataset tree to include:
 
@@ -459,7 +461,7 @@ Update the dataset tree to include:
     └── agent_qa_review_notes.json
 ```
 
-- [ ] **Step 2: Add runner command**
+- [x] **Step 2: Add runner command**
 
 Add:
 
@@ -475,7 +477,7 @@ Use this runner for request-level benchmark flows. LLM judge datasets include
 they remain expert-review pending unless the dataset metadata says otherwise.
 ```
 
-- [ ] **Step 3: Update metrics table**
+- [x] **Step 3: Update metrics table**
 
 Add rows:
 
@@ -484,7 +486,7 @@ Add rows:
 | Request Article Synthesis | LLM-as-Judge + QA notes | Judge score / grounding failures | expert calibrated |
 ```
 
-- [ ] **Step 4: Verify benchmark README matches folders**
+- [x] **Step 4: Verify benchmark README matches folders**
 
 Run:
 
@@ -495,7 +497,7 @@ rg -n "request-synthesis|request-article-synthesis|run_request_benchmarks|judge_
 
 Expected: README mentions both dataset folders and runner.
 
-- [ ] **Step 5: Commit benchmark README update**
+- [x] **Step 5: Commit benchmark README update**
 
 Run:
 
@@ -513,7 +515,7 @@ git commit -m "Update benchmark README for judge datasets"
   - `docs/mode-catalog.md`
   - `PLANS.md`
 
-- [ ] **Step 1: Search for stale terms**
+- [x] **Step 1: Search for stale terms**
 
 Run:
 
@@ -523,7 +525,7 @@ rg -n "Claude in Chrome|non-interactive browser runner exists|not_attempted unti
 
 Expected: any remaining matches are either historical/legacy context explicitly labeled as such or should be fixed in this task.
 
-- [ ] **Step 2: Search for current operator terms**
+- [x] **Step 2: Search for current operator terms**
 
 Run:
 
@@ -533,7 +535,7 @@ rg -n "run_schedule.sh weekday_digest|source_discovery_prefetch|shortlist_articl
 
 Expected: key current concepts are visible from root/operator/tool docs.
 
-- [ ] **Step 3: Run markdown whitespace check**
+- [x] **Step 3: Run markdown whitespace check**
 
 Run:
 
@@ -543,7 +545,7 @@ git diff --check
 
 Expected: no trailing whitespace or conflict markers.
 
-- [ ] **Step 4: Run runtime artifact validator**
+- [x] **Step 4: Run runtime artifact validator**
 
 Run:
 
@@ -553,7 +555,7 @@ python3 tools/validate_runtime_artifacts.py --check all
 
 Expected: `PASS  all`. This confirms documentation edits did not accidentally break YAML fixtures or runtime contract references.
 
-- [ ] **Step 5: Mark plan complete in `PLANS.md`**
+- [x] **Step 5: Mark plan complete in `PLANS.md`**
 
 Change the active plan row status from `planned` to `completed`:
 
@@ -561,7 +563,7 @@ Change the active plan row status from `planned` to `completed`:
 | Documentation Refresh After Runner Work | completed | `docs/superpowers/plans/2026-05-05-documentation-refresh.md` | Updated root, operator, tool, onboarding, and benchmark docs after the last 100 commits introduced the staged Codex weekday runner, Playwright/browser prefetch, Stage B article prefetch, deterministic Stage C, Russian Telegram gates, compact template, and benchmark judge additions. |
 ```
 
-- [ ] **Step 6: Commit final consistency pass**
+- [x] **Step 6: Commit final consistency pass**
 
 Run:
 
