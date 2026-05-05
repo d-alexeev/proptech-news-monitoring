@@ -51,9 +51,29 @@ The spec touches config, prompts, source adapters, runner orchestration, helper 
 - `samples/weekday-digest.md`: curated weekday example copied from a recent successful digest and scrubbed if needed.
 - `samples/weekly-digest.md`: curated weekly example copied from an existing weekly digest and scrubbed if needed.
 - `samples/run-report.json`: compact sample run report for validation.
-- `docs/operations.md`: setup, `.env`, cron/systemd, manual runs, validation, troubleshooting.
+- `docs/operations.md`: setup, `.env`, cron/systemd, manual runs, validation, full-text boundary, troubleshooting, and server recovery notes.
 - `docs/design.md`: concise human-facing rebuild design copied from the approved spec.
+- `README.md`: compact repository entry point for operators.
+- `AGENTS.md`: compact contributor/runtime safety rules for future Codex work.
 - `COMPLETION_AUDIT.md`: final comparison after legacy removal.
+
+## Documentation Requirements
+
+Documentation is a required deliverable, not cleanup after implementation. The
+rebuild is not complete until these docs exist and pass validation:
+
+- `README.md` explains the repository purpose, the two supported jobs, and the
+  canonical runtime entry points.
+- `docs/operations.md` explains setup, `.env`, dependency installation,
+  self-tests, manual runs, cron/systemd, Telegram delivery states, full-text
+  boundaries, and troubleshooting.
+- `docs/design.md` preserves the approved design in the new compact docs set.
+- `AGENTS.md` explains the new repo rules, behavior-change policy, validation
+  expectations, and full-text safety boundary.
+- `COMPLETION_AUDIT.md` compares original requirements, implemented behavior,
+  partial items, missing items, and compatibility caveats.
+- `runner/tools/validate_runtime.py --check all` must verify that the required
+  docs exist and do not reference removed runtime paths.
 
 ### Legacy Files Removed Only After New Checks Pass
 
@@ -1260,9 +1280,32 @@ def check_samples(root: pathlib.Path) -> dict[str, Any]:
     return {"samples": sample_paths}
 
 
+def check_docs(root: pathlib.Path) -> dict[str, Any]:
+    doc_paths = [
+        "README.md",
+        "AGENTS.md",
+        "docs/operations.md",
+        "docs/design.md",
+        "COMPLETION_AUDIT.md",
+    ]
+    existing = []
+    for relative_path in doc_paths:
+        path = root / relative_path
+        if path.exists():
+            text = path.read_text(encoding="utf-8")
+            for marker in OLD_PATH_MARKERS:
+                if marker in text:
+                    fail(f"old runtime path reference in {relative_path}: {marker}")
+            existing.append(relative_path)
+    required_before_cleanup = ["docs/operations.md", "docs/design.md"]
+    for relative_path in required_before_cleanup:
+        require_file(root, relative_path)
+    return {"docs_checked": existing}
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--check", choices=["config", "prompts", "adapters", "schemas", "samples", "all"], required=True)
+    parser.add_argument("--check", choices=["config", "prompts", "adapters", "schemas", "samples", "docs", "all"], required=True)
     parser.add_argument("--repo-root")
     args = parser.parse_args()
     root = repo_root_from(args.repo_root)
@@ -1277,6 +1320,8 @@ def main() -> int:
         results.update(check_schemas(root))
     if args.check in ("samples", "all"):
         results.update(check_samples(root))
+    if args.check in ("docs", "all"):
+        results.update(check_docs(root))
     print(json.dumps({"status": "passed", "check": args.check, **results}, ensure_ascii=False))
     return 0
 
@@ -2052,7 +2097,7 @@ Expected: commit succeeds.
 
 ---
 
-### Task 8: Add Samples, Operations Docs, and Weekly Path
+### Task 8: Add Samples, Documentation, and Weekly Path
 
 **Files:**
 - Create: `samples/weekday-digest.md`
@@ -2097,7 +2142,8 @@ Create `samples/run-report.json`:
 
 - [ ] **Step 3: Create operations doc**
 
-Create `docs/operations.md`:
+Create `docs/operations.md` with setup, server launch, validation, delivery,
+full-text safety, and troubleshooting sections:
 
 ````md
 # Operations
@@ -2141,6 +2187,26 @@ runner/run.sh weekly
 Full article text is fetched only by `runner/tools/fetch_articles.py`, only
 after discovery writes a current-run shortlist. Discovery and weekly synthesis
 must not read broad `.state/articles/` content.
+
+## Delivery States
+
+- `dry_run`: Telegram path was validated without sending.
+- `not_configured`: required Telegram environment variables are missing.
+- `delivered`: Telegram API accepted the message.
+- `delivery_failed_http`: Telegram endpoint returned an HTTP transport error.
+- `delivery_failed_api`: Telegram API returned an application-level error.
+- `delivery_failed_unknown`: delivery failed outside known classes.
+
+## Troubleshooting
+
+1. Run `runner/run.sh --self-test weekday` and
+   `runner/run.sh --self-test weekly`.
+2. Run `python3 runner/tools/validate_runtime.py --check all`.
+3. Check `.state/codex-runs/` for the latest run summaries.
+4. If source fetching is partial, inspect the source summary before rerunning
+   article fetch.
+5. If Telegram delivery fails, rerun only delivery using the materialized digest
+   path from the run report.
 ````
 
 - [ ] **Step 4: Create design doc copy**
@@ -2184,6 +2250,7 @@ Run:
 
 ```bash
 python3 runner/tools/validate_runtime.py --check samples
+python3 runner/tools/validate_runtime.py --check docs
 python3 runner/tools/validate_runtime.py --check all
 python3 -m pytest runner/tests -q
 runner/run.sh --self-test weekday
@@ -2258,7 +2325,7 @@ Expected: old human-history docs are staged for deletion. Keep `docs/design.md`,
 
 - [ ] **Step 4: Replace README**
 
-Replace `README.md` with:
+Replace `README.md` with the compact operator entry point:
 
 ````md
 # PropTech Monitor
@@ -2294,7 +2361,7 @@ See `docs/operations.md`.
 
 - [ ] **Step 5: Replace AGENTS.md with compact repo rules**
 
-Replace `AGENTS.md` with:
+Replace `AGENTS.md` with compact repo rules for future Codex work:
 
 ```md
 # AGENTS.md
@@ -2391,7 +2458,7 @@ Expected: commit succeeds with large deletion diff and passing checks recorded i
 
 ---
 
-### Task 10: Completion Audit and Final Verification
+### Task 10: Completion Audit, Documentation Audit, and Final Verification
 
 **Files:**
 - Create/Replace: `COMPLETION_AUDIT.md`
@@ -2466,6 +2533,7 @@ Edit the row in `PLANS.md`:
 Run:
 
 ```bash
+python3 runner/tools/validate_runtime.py --check docs
 python3 runner/tools/validate_runtime.py --check all
 python3 -m pytest runner/tests -q
 runner/run.sh --self-test weekday
@@ -2476,6 +2544,7 @@ git status --short
 Expected:
 
 - validation passes;
+- documentation validation passes;
 - tests pass;
 - both self-tests pass;
 - `git status --short` shows only `COMPLETION_AUDIT.md` and `PLANS.md` modified.
@@ -2495,7 +2564,7 @@ Expected: commit succeeds.
 
 ## Self-Review Checklist
 
-- Spec coverage: Tasks 2-10 cover target structure, server launch, judgment layer, full-text boundary, error handling, validation, samples, legacy removal, and completion audit.
+- Spec coverage: Tasks 2-10 cover target structure, server launch, judgment layer, full-text boundary, error handling, validation, samples, required documentation, legacy removal, and completion audit.
 - Red-flag scan: the plan contains no open markers or unspecified file names.
 - Type consistency: planned artifact names are stable: `weekday`, `weekly`, `industry_filter`, `discovery_rules`, `scoring_profile`, `article_prefetch`, `finish_draft`, `daily_brief`, `weekly_brief`, and `run_report`.
 - Remaining implementation risk: Tasks 6 and 7 intentionally migrate existing helper code before reducing it. This keeps behavior reviewable while the path layout changes.
