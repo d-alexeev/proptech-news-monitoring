@@ -659,6 +659,104 @@ Coverage matrix for WLH-M4:
 | Live failures produce vague notes instead of actionable next changes. | RT-R10, RT-R13 | Live report must classify transient vs persistent failures and emit proposed plan updates or `change_request` artifacts for persistent gaps. | RT-M7 |
 | Old tasks in `PLANS.md` inflate runner context and hide the active plan. | RT-R14 | Plan hygiene milestone must make the active scraping tooling plan loadable independently from old/completed plan bodies while preserving archive traceability. | RT-M8 |
 
+## PropTech Weekly Digest Escalated Automation Fix Plan
+
+### Original Requirements
+
+- Make the next automatic `proptech-weekly-digest` run pass the same way as the
+  successful escalated weekday run on 2026-05-06.
+- Preserve the wrapper path: `ops/codex-cli/run_schedule.sh weekly_digest`.
+- Avoid sandbox-related `.codex` state, DNS/network, Playwright, and Telegram
+  delivery failures.
+- Commit the repo-tracked planning trace for this behavior/config change.
+- Do not broaden runtime context or change digest selection/output behavior.
+
+### Root Cause
+
+The weekly automation prompt already asked for escalated execution, but it did
+not explicitly carry the exact successful command-tool shape now used for the
+weekday digest. The persistent Codex allow rules also only covered
+`weekday_digest`, so a future weekly run could still require approval or be
+blocked before the wrapper starts.
+
+### Milestone WEEKLY-E1. Persist Escalated Weekly Wrapper Invocation
+
+- Goal: make the next automatic weekly run use the same escalated command
+  invocation pattern as the successful weekday run.
+- Scope:
+  - update the local weekly automation prompt to include the exact command-tool
+    parameters required for escalation, including `justification` and
+    `prefix_rule`;
+  - add a persistent Codex allow rule for the weekly digest wrapper prefix;
+  - commit the repo planning trace for this change.
+- Likely files/artifacts to change:
+  - `/Users/user/.codex/automations/proptech-weekly-digest/automation.toml`
+  - `/Users/user/.codex/rules/default.rules`
+  - `/Users/user/.codex/automations/proptech-weekly-digest/memory.md`
+  - `PLANS.md`
+- Dependencies:
+  - current automation remains `execution_environment = "local"`;
+  - Codex auto-review continues to honor persistent prefix rules.
+- Risks:
+  - if a future automation session has higher-priority instructions that forbid
+    escalation, no prompt/config change can override that constraint;
+  - persistent allow rule must stay narrow to this wrapper command only;
+  - repo has unrelated dirty files, so the commit must avoid staging unrelated
+    benchmark or digest artifacts.
+- Acceptance criteria:
+  - weekly automation prompt contains `sandbox_permissions="require_escalated"`,
+    an explicit approval `justification`, and
+    `prefix_rule=["ops/codex-cli/run_schedule.sh","weekly_digest"]`;
+  - persistent rules contain a narrow allow rule for
+    `["ops/codex-cli/run_schedule.sh", "weekly_digest"]`;
+  - `automation.toml` parses as TOML after the edit;
+  - wrapper self-test passes without sending Telegram;
+  - memory records the change;
+  - a git commit is created without staging unrelated dirty work.
+- Tests or verification steps:
+  - parse `/Users/user/.codex/automations/proptech-weekly-digest/automation.toml`
+    with Python `tomllib`;
+  - `rg -n "ops/codex-cli/run_schedule.sh|weekly_digest|require_escalated|prefix_rule" \
+    /Users/user/.codex/automations/proptech-weekly-digest/automation.toml \
+    /Users/user/.codex/rules/default.rules`;
+  - run `env CODEX_RUN_SCHEDULE_SELF_TEST=1
+    ops/codex-cli/run_schedule.sh weekly_digest`;
+  - verify staged files before commit.
+- Explicit non-goals:
+  - no source adapter, selection, scoring, digest format, or Telegram payload
+    changes;
+  - no automatic retry logic inside `ops/codex-cli/run_schedule.sh`;
+  - no duplicate full weekly digest run during validation.
+
+### Coverage Matrix
+
+| Requirement | Covered by |
+| --- | --- |
+| Next weekly run follows successful escalated path | WEEKLY-E1 |
+| Wrapper path preserved | WEEKLY-E1 |
+| Sandbox-related failures avoided | WEEKLY-E1 |
+| Repo-tracked trace committed | WEEKLY-E1 |
+| No digest behavior change | WEEKLY-E1 non-goals |
+
+### WEEKLY-E1 Implementation Status
+
+- Status: completed on 2026-05-06.
+- Implemented:
+  - updated the local weekly automation prompt to specify the exact successful
+    escalated command-tool invocation shape;
+  - added a narrow persistent Codex allow rule for
+    `["ops/codex-cli/run_schedule.sh", "weekly_digest"]`.
+- Validation:
+  - parsed `/Users/user/.codex/automations/proptech-weekly-digest/automation.toml`
+    with Python `tomllib`;
+  - verified prompt fields and allow-rule with `rg`;
+  - ran `env CODEX_RUN_SCHEDULE_SELF_TEST=1
+    ops/codex-cli/run_schedule.sh weekly_digest`.
+- Incomplete items: no full weekly schedule run was performed after the config
+  fix to avoid duplicate Telegram delivery.
+- Residual risk: a future session with higher-priority developer instructions
+  that forbid escalation can still block execution before the wrapper starts.
+
 ### Current Implementation Status
 
 | Milestone | Status |
