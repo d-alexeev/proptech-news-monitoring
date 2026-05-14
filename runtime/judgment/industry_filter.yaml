@@ -1,0 +1,17 @@
+schema_version: 1
+profile: real_estate_marketplaces
+include_when:
+  - real_estate_marketplace
+  - property_portal
+  - rental_marketplace
+  - listing_supply
+  - real_estate_ai_search
+exclude_when_only:
+  - automotive_marketplace
+  - jobs_marketplace
+  - travel_marketplace
+  - ecommerce
+  - retail_media
+decision_labels:
+  accept: accept_industry
+  reject: reject_not_industry

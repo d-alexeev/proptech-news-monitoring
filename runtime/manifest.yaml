@@ -1,0 +1,27 @@
+schema_version: 1
+supported_jobs: [weekday, weekly]
+jobs:
+  weekday:
+    schedule: runtime/schedules.yaml
+    source_profile: runtime/sources/weekday.yaml
+    shared_prompt: runtime/prompts/shared.md
+    prompt: runtime/prompts/weekday_discovery.md
+    finish_prompt: runtime/prompts/weekday_finish.md
+    legacy_wrapper: ops/codex-cli/run_schedule.sh
+    legacy_schedule_id: weekday_digest
+  weekly:
+    schedule: runtime/schedules.yaml
+    source_profile: runtime/sources/weekly.yaml
+    shared_prompt: runtime/prompts/shared.md
+    prompt: runtime/prompts/weekly_digest.md
+    legacy_wrapper: ops/codex-cli/run_schedule.sh
+    legacy_schedule_id: weekly_digest
+judgment:
+  industry_filter: runtime/judgment/industry_filter.yaml
+  discovery_rules: runtime/judgment/discovery_rules.yaml
+  scoring_profile: runtime/judgment/scoring_profile.yaml
+schemas:
+  artifacts: runtime/schemas/artifacts.yaml
+  state_layout: runtime/schemas/state_layout.yaml
+validation:
+  required_checks: [config, prompts, schemas]

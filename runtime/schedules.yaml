@@ -1,0 +1,24 @@
+jobs:
+  weekday:
+    enabled: true
+    legacy_schedule_id: weekday_digest
+    days: [MON, TUE, WED, THU, FRI]
+    time: "09:00"
+    source_profile: runtime/sources/weekday.yaml
+    delivery_profile: telegram_digest
+    dry_run_report_dir: .state/refactor-dry-runs
+  weekly:
+    enabled: true
+    legacy_schedule_id: weekly_digest
+    days: [FRI]
+    time: "17:00"
+    source_profile: runtime/sources/weekly.yaml
+    delivery_profile: telegram_weekly_digest
+    dry_run_report_dir: .state/refactor-dry-runs
+delivery_profiles:
+  telegram_digest:
+    mode: dry_run_safe
+    legacy_profile: telegram_digest
+  telegram_weekly_digest:
+    mode: dry_run_safe
+    legacy_profile: telegram_weekly_digest

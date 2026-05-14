@@ -1,0 +1,16 @@
+schema_version: 1
+score_range: [0, 100]
+dimensions:
+  strategic_relevance: 40
+  market_impact: 20
+  novelty: 15
+  evidence_quality: 15
+  urgency: 10
+selection_bands:
+  must_cover: [90, 100]
+  strong_daily_candidate: [75, 89]
+  weekly_context_candidate: [60, 74]
+  reject_or_log_only: [0, 59]
+evidence_caps:
+  snippet_fallback_max_score: 74
+  paywall_stub_max_score: 60

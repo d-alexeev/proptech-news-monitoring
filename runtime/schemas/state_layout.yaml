@@ -1,0 +1,8 @@
+schema_version: 1
+paths:
+  dry_run_reports: .state/refactor-dry-runs
+  legacy_codex_runs: .state/codex-runs
+  legacy_shortlists: .state/shortlists
+compatibility:
+  old_state_readers_preserved: true
+  new_dry_run_reports_are_additive: true

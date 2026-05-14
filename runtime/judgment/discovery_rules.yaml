@@ -1,0 +1,19 @@
+schema_version: 1
+shortlist_bounds:
+  weekday_max_items: 12
+  weekly_max_items: 20
+decisions: [shortlist, reject, maybe_weekly]
+priority_labels: [high, medium, low]
+shortlist_topics:
+  - portal_competition
+  - monetization
+  - seller_or_landlord_supply
+  - renter_or_buyer_journey
+  - ai_search_or_matching
+  - lead_quality
+required_output_fields:
+  - triage_decision
+  - provisional_priority
+  - industry_filter
+  - matched_topics
+  - shortlist_reason
