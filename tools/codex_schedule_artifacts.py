@@ -176,6 +176,7 @@ def validate_finish_artifacts(
         repo_root / ".state" / "runs" / run_date / f"scrape_and_enrich__{timestamp}__{source_group}.json",
         repo_root / ".state" / "runs" / run_date / f"build_daily_digest__{timestamp}__{delivery_profile}.json",
         repo_root / ".state" / "briefs" / "daily" / f"{run_date}__{delivery_profile}.json",
+        repo_root / "digests" / f"{run_date}-daily-digest.md",
     ]
     if require_finish_summary:
         required_paths.append(repo_root / ".state" / "codex-runs" / f"{run_id}-finish-summary.json")

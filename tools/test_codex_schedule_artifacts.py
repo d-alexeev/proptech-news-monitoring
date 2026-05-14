@@ -142,6 +142,22 @@ def test_validate_finish_artifacts_requires_current_run_manifests() -> None:
             {"brief_id": "2026-05-04__telegram_digest"},
         )
 
+        try:
+            codex_schedule_artifacts.validate_finish_artifacts(
+                repo_root=root,
+                run_id=run_id,
+                run_date="2026-05-04",
+                source_group="daily_core",
+                delivery_profile="telegram_digest",
+            )
+        except FileNotFoundError as exc:
+            assert "digests/2026-05-04-daily-digest.md" in str(exc)
+        else:
+            raise AssertionError("missing digest markdown should fail validation")
+
+        (root / "digests").mkdir()
+        (root / "digests/2026-05-04-daily-digest.md").write_text("digest\n", encoding="utf-8")
+
         validation = codex_schedule_artifacts.validate_finish_artifacts(
             repo_root=root,
             run_id=run_id,
@@ -174,6 +190,8 @@ def test_validate_finish_artifacts_requires_finish_summary_when_requested() -> N
             root / ".state/briefs/daily/2026-05-04__telegram_digest.json",
             {"brief_id": "2026-05-04__telegram_digest"},
         )
+        (root / "digests").mkdir()
+        (root / "digests/2026-05-04-daily-digest.md").write_text("digest\n", encoding="utf-8")
 
         try:
             codex_schedule_artifacts.validate_finish_artifacts(

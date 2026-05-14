@@ -13,6 +13,7 @@
 # Python cache, if helper scripts appear later
 __pycache__/
 *.pyc
+.venv/
 
 # Editor / OS noise
 .idea/

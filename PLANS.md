@@ -23,6 +23,7 @@ they are not required runtime context for implementing RT-M2 through RT-M7.
 | Documentation Refresh After Runner Work | completed | `docs/superpowers/plans/2026-05-05-documentation-refresh.md` | Updated root, operator, tool, onboarding, and benchmark docs after the last 100 commits introduced the staged Codex weekday runner, Playwright/browser prefetch, Stage B article prefetch, deterministic Stage C, Russian Telegram gates, compact template, and benchmark judge additions. |
 | Weekday Weekly Runtime Rebuild | planned | `docs/superpowers/plans/2026-05-05-weekday-weekly-runtime-rebuild.md` | Hard rebuild of the repository into a compact `runtime/` + `runner/` package that supports only weekday and weekly digest server jobs. |
 | Minimum Refactor Dry-Run Readiness | completed minimum; full rebuild still planned | `docs/superpowers/plans/2026-05-14-minimum-refactor-dry-run-readiness.md` | Minimal `runtime/` + `runner/run.sh` facade proves weekday/weekly self-tests and offline dry-run readiness without completing the full hard rebuild. |
+| Weekday Digest Launch Readiness Fix | completed | `## Addendum: Weekday Digest Launch Readiness Fix` | Narrow fix for `weekday_digest` launch readiness: repaired local Python env, required materialized digest markdown during finish-artifact validation, and restored the missing current-day digest artifact from the existing finish draft. |
 
 ## Archived and Inactive Plans
 
@@ -40,6 +41,50 @@ they are not required runtime context for implementing RT-M2 through RT-M7.
   `Claude Cowork` runtime dependencies.
 - Historical requirement traceability is preserved in the archive files by keeping
   the moved plan bodies intact with their original headings and tables.
+
+## Addendum: Weekday Digest Launch Readiness Fix
+
+### Goal
+
+Make `weekday_digest` safe to launch from the current checkout by removing the
+observed local blockers: broken `.venv` Python resolution and a finish-artifact
+validation gap that allowed a run manifest to reference a missing digest markdown
+file.
+
+### Scope
+
+Likely files/artifacts to change:
+
+- `.venv/` local environment, if needed for launch readiness.
+- `tools/codex_schedule_artifacts.py`
+- `tools/test_codex_schedule_artifacts.py`
+- `.gitignore`
+- `PLANS.md`
+- local `.state/` and `digests/` artifacts for restoring the current-day digest.
+
+### Acceptance Criteria
+
+- `weekday_digest` wrapper self-test passes.
+- The local Python environment used by the wrapper resolves to an executable
+  Python with required helper imports available.
+- `validate-finish-artifacts` fails when the build digest manifest exists but
+  the referenced digest markdown file is missing.
+- `validate-finish-artifacts` passes when current-run manifests, brief, finish
+  summary, and digest markdown all exist.
+- The missing `digests/2026-05-14-daily-digest.md` artifact is restored from the
+  existing Stage C finish draft without rerunning discovery or delivery.
+- Relevant helper tests and runtime validators pass.
+
+### Non-Goals
+
+- No prompt, source-selection, scoring, Telegram template, or delivery behavior
+  changes.
+- No live `weekday_digest` rerun unless explicitly requested.
+- No cleanup or rewrite of unrelated historical `.state` or `digests/` files.
+
+### Status
+
+Completed on 2026-05-14.
 
 ## Addendum: Runner Telegram Delivery Retry
 
