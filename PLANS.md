@@ -22,7 +22,7 @@ they are not required runtime context for implementing RT-M2 through RT-M7.
 | Runner Telegram Delivery Retry | completed through TDR-M1 | `## Addendum: Runner Telegram Delivery Retry` | Final weekday Telegram delivery retry now runs in the schedule wrapper after deterministic materialization, so DNS/network delivery failures can be retried without rerunning discovery, enrichment, or digest generation. |
 | Documentation Refresh After Runner Work | completed | `docs/superpowers/plans/2026-05-05-documentation-refresh.md` | Updated root, operator, tool, onboarding, and benchmark docs after the last 100 commits introduced the staged Codex weekday runner, Playwright/browser prefetch, Stage B article prefetch, deterministic Stage C, Russian Telegram gates, compact template, and benchmark judge additions. |
 | Weekday Weekly Runtime Rebuild | planned | `docs/superpowers/plans/2026-05-05-weekday-weekly-runtime-rebuild.md` | Hard rebuild of the repository into a compact `runtime/` + `runner/` package that supports only weekday and weekly digest server jobs. |
-| Minimum Refactor Dry-Run Readiness | active; MDR-M1 next | `docs/superpowers/plans/2026-05-14-minimum-refactor-dry-run-readiness.md` | Minimal `runtime/` + `runner/run.sh` facade that proves weekday/weekly self-tests and offline dry-run readiness without completing the full hard rebuild. |
+| Minimum Refactor Dry-Run Readiness | completed minimum; full rebuild still planned | `docs/superpowers/plans/2026-05-14-minimum-refactor-dry-run-readiness.md` | Minimal `runtime/` + `runner/run.sh` facade proves weekday/weekly self-tests and offline dry-run readiness without completing the full hard rebuild. |
 
 ## Archived and Inactive Plans
 

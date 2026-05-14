@@ -1,5 +1,47 @@
 # COMPLETION_AUDIT.md
 
+## Current Audit: Minimum Refactor Dry-Run Readiness
+
+Audit date: 2026-05-14
+
+Scope: minimum offline readiness for the refactored weekday/weekly entrypoint.
+This audit does not claim full hard rebuild completion, production cutover, live
+source quality, or Telegram delivery.
+
+### Implemented
+
+- `runtime/` contains the minimum manifest, schedules, source profiles, judgment
+  files, prompts, and schemas.
+- `runner/run.sh` exposes only `weekday` and `weekly`.
+- `runner/run.sh --self-test weekday` and `runner/run.sh --self-test weekly`
+  pass offline.
+- `runner/run.sh --dry-run weekday` and `runner/run.sh --dry-run weekly` write
+  local `offline_wiring_ready` reports without invoking live Codex, live source
+  fetch, or Telegram.
+- `runner/tools/validate_runtime.py --check all` passes.
+- `runner/tests` pass.
+
+### Not Implemented
+
+- Full hard rebuild and legacy deletion.
+- Production cron cutover.
+- Live source/digest validation through the new runner.
+- Telegram delivery verification.
+- Consumption of new `runtime/prompts/` by live runner execution; live runs
+  still delegate to the legacy wrapper in this minimum.
+
+### Verification
+
+```bash
+python3 runner/tools/validate_runtime.py --check all
+python3 -m pytest runner/tests -q
+runner/run.sh --self-test weekday
+runner/run.sh --self-test weekly
+runner/run.sh --dry-run weekday
+runner/run.sh --dry-run weekly
+git diff --check
+```
+
 ## Current Audit: RT-M6 Minimal Codex Runner Scraping Tooling
 
 Audit date: 2026-05-04
