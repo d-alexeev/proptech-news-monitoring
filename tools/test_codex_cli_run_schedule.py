@@ -26,6 +26,7 @@ def make_wrapper_fixture(root: pathlib.Path) -> pathlib.Path:
     prompt_path.parent.mkdir(parents=True)
     shutil.copy2(WRAPPER, script_path)
     prompt_path.write_text("fixture prompt\n", encoding="utf-8")
+    (prompt_path.parent / "weekly_digest.md").write_text("fixture weekly prompt\n", encoding="utf-8")
     return script_path
 
 
@@ -230,6 +231,69 @@ def test_wrapper_validates_current_run_finish_artifacts() -> None:
     assert "scrape_and_enrich__<run timestamp>__daily_core" in finish_prompt
 
 
+def test_wrapper_uses_repo_venv_python_when_activate_has_stale_path() -> None:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        root = pathlib.Path(tmpdir)
+        script_path = make_wrapper_fixture(root)
+        run_root = root / ".state/codex-runs"
+        helper = root / "tools/source_discovery_prefetch.py"
+        helper.parent.mkdir(parents=True)
+        helper.write_text("raise SystemExit('fixture should be run by fake venv python')\n", encoding="utf-8")
+
+        venv_bin = root / ".venv/bin"
+        venv_bin.mkdir(parents=True)
+        (venv_bin / "activate").write_text(
+            f'VIRTUAL_ENV="{root}/stale-venv"\nPATH="$VIRTUAL_ENV/bin:$PATH"\nexport VIRTUAL_ENV PATH\n',
+            encoding="utf-8",
+        )
+        venv_python = venv_bin / "python3"
+        venv_python.write_text(
+            "#!/usr/bin/env bash\n"
+            "printf '{\"status\":\"prefetch-ok\",\"python\":\"repo-venv\"}\\n'\n",
+            encoding="utf-8",
+        )
+        venv_python.chmod(0o755)
+        (venv_bin / "python").symlink_to("python3")
+
+        outside_bin = root / "outside-bin"
+        outside_bin.mkdir()
+        outside_python = outside_bin / "python3"
+        outside_python.write_text(
+            "#!/usr/bin/env bash\n"
+            "echo wrong-python >&2\n"
+            "exit 42\n",
+            encoding="utf-8",
+        )
+        outside_python.chmod(0o755)
+
+        env = os.environ.copy()
+        env_file = root / ".env.good"
+        env_file.write_text("HTTP_USER_AGENT='fixture agent'\n", encoding="utf-8")
+        env.update(
+            {
+                "CODEX_BIN": "true",
+                "CODEX_ENV_FILE": str(env_file),
+                "PATH": f"{outside_bin}:{env.get('PATH', '')}",
+            }
+        )
+        result = subprocess.run(
+            ["bash", str(script_path), "weekly_digest"],
+            cwd=root,
+            env=env,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+
+        assert result.returncode == 0
+        assert "wrong-python" not in result.stderr
+        assert "Codex schedule run complete:" in result.stdout
+        prefetch_outputs = list(run_root.glob("*-weekly_digest-source-prefetch-stdout.json"))
+        assert len(prefetch_outputs) == 1
+        assert '"python":"repo-venv"' in prefetch_outputs[0].read_text(encoding="utf-8")
+
+
 def test_wrapper_invokes_stage_c_materializer_after_finish_agent() -> None:
     wrapper_text = WRAPPER.read_text(encoding="utf-8")
 
@@ -268,6 +332,7 @@ def main() -> None:
         test_wrapper_invokes_article_prefetch_helper_directly,
         test_wrapper_validates_article_prefetch_manifest_presence,
         test_wrapper_validates_current_run_finish_artifacts,
+        test_wrapper_uses_repo_venv_python_when_activate_has_stale_path,
         test_wrapper_invokes_stage_c_materializer_after_finish_agent,
         test_readme_documents_staged_victory_digest_runbook,
     ]

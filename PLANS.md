@@ -24,6 +24,7 @@ they are not required runtime context for implementing RT-M2 through RT-M7.
 | Weekday Weekly Runtime Rebuild | planned | `docs/superpowers/plans/2026-05-05-weekday-weekly-runtime-rebuild.md` | Hard rebuild of the repository into a compact `runtime/` + `runner/` package that supports only weekday and weekly digest server jobs. |
 | Minimum Refactor Dry-Run Readiness | completed minimum; full rebuild still planned | `docs/superpowers/plans/2026-05-14-minimum-refactor-dry-run-readiness.md` | Minimal `runtime/` + `runner/run.sh` facade proves weekday/weekly self-tests and offline dry-run readiness without completing the full hard rebuild. |
 | Weekday Digest Launch Readiness Fix | completed | `## Addendum: Weekday Digest Launch Readiness Fix` | Narrow fix for `weekday_digest` launch readiness: repaired local Python env, required materialized digest markdown during finish-artifact validation, and restored the missing current-day digest artifact from the existing finish draft. |
+| Launchd Python Environment Repair | completed | `## Addendum: Launchd Python Environment Repair` | Repaired relocated `.venv` handling so launchd weekday/weekly wrappers use the repo venv Python with PyYAML instead of falling back to Homebrew/system Python. |
 
 ## Archived and Inactive Plans
 
@@ -41,6 +42,56 @@ they are not required runtime context for implementing RT-M2 through RT-M7.
   `Claude Cowork` runtime dependencies.
 - Historical requirement traceability is preserved in the archive files by keeping
   the moved plan bodies intact with their original headings and tables.
+
+## Addendum: Launchd Python Environment Repair
+
+### Goal
+
+Restore weekday and weekly launchd schedule execution by making
+`ops/codex-cli/run_schedule.sh` use the current checkout's `.venv` Python for
+runner helper scripts even when `.venv/bin/activate` contains a stale absolute
+`VIRTUAL_ENV` path.
+
+### Scope
+
+Likely files/artifacts to change:
+
+- `ops/codex-cli/run_schedule.sh`
+- `tools/test_codex_cli_run_schedule.py`
+- `PLANS.md`
+
+### Acceptance Criteria
+
+- A wrapper regression test fails when a relocated `.venv` activation script
+  causes `python3` to resolve outside the repo venv.
+- The wrapper selects `.venv/bin/python3` or `.venv/bin/python` directly when
+  present, without trusting a stale activation script.
+- Both `weekday_digest` and `weekly_digest` helper invocations use the selected
+  Python interpreter consistently.
+- The selected interpreter can import `yaml` in the current checkout.
+- Wrapper self-tests for `weekday_digest` and `weekly_digest` pass without
+  running live schedules or Telegram delivery.
+
+### Non-Goals
+
+- No source, scoring, prompt, digest format, or Telegram delivery behavior
+  changes.
+- No live schedule rerun and no launchd kickstart.
+- No dependency installation or network access.
+
+### Validation
+
+- `python3 tools/test_codex_cli_run_schedule.py`
+- `bash -n ops/codex-cli/run_schedule.sh`
+- `.venv/bin/python3 -c "import sys, yaml; print(sys.executable); print(yaml.__version__)"`
+- `CODEX_RUN_SCHEDULE_SELF_TEST=1 ops/codex-cli/run_schedule.sh weekday_digest`
+- `CODEX_RUN_SCHEDULE_SELF_TEST=1 ops/codex-cli/run_schedule.sh weekly_digest`
+- `rg -n "python3 " ops/codex-cli/run_schedule.sh`
+
+### Status
+
+Completed on 2026-05-15. No live schedule rerun, Telegram delivery, dependency
+installation, launchd reload, or launchd kickstart was performed.
 
 ## Addendum: Weekday Digest Launch Readiness Fix
 

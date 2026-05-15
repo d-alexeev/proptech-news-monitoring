@@ -47,6 +47,7 @@ ARTICLE_PREFETCH_SUMMARY="$RUN_ROOT/$RUN_ID-article-prefetch-summary.json"
 FINISH_DRAFT="$RUN_ROOT/$RUN_ID-finish-draft.json"
 FINISH_SUMMARY="$RUN_ROOT/$RUN_ID-finish-summary.json"
 CODEX_BIN="${CODEX_BIN:-codex}"
+PYTHON_BIN="${CODEX_PYTHON_BIN:-}"
 ENV_FILE="${CODEX_ENV_FILE:-$REPO_ROOT/.env}"
 PREFETCH_HELPER="$REPO_ROOT/tools/source_discovery_prefetch.py"
 ARTIFACT_HELPER="$REPO_ROOT/tools/codex_schedule_artifacts.py"
@@ -118,6 +119,25 @@ load_env_file() {
   done < "$env_file"
 }
 
+configure_python() {
+  if [ -z "$PYTHON_BIN" ]; then
+    if [ -x "$REPO_ROOT/.venv/bin/python3" ]; then
+      PYTHON_BIN="$REPO_ROOT/.venv/bin/python3"
+    elif [ -x "$REPO_ROOT/.venv/bin/python" ]; then
+      PYTHON_BIN="$REPO_ROOT/.venv/bin/python"
+    else
+      PYTHON_BIN="python3"
+    fi
+  fi
+
+  if [ -d "$REPO_ROOT/.venv/bin" ]; then
+    VIRTUAL_ENV="$REPO_ROOT/.venv"
+    PATH="$REPO_ROOT/.venv/bin:$PATH"
+    export VIRTUAL_ENV PATH
+  fi
+  export PYTHON_BIN
+}
+
 if [ -n "${CODEX_ENV_FILE:-}" ] && [ ! -f "$ENV_FILE" ]; then
   printf 'Environment file not found: %s\n' "$ENV_FILE" >&2
   exit 2
@@ -128,10 +148,13 @@ if [ -f "$ENV_FILE" ]; then
   load_env_file "$ENV_FILE"
 fi
 
+configure_python
+
 if [ "${CODEX_RUN_SCHEDULE_SELF_TEST:-}" = "1" ]; then
   printf 'Wrapper self-test passed: %s\n' "$SCHEDULE_ID"
   printf 'Prompt: %s\n' "$PROMPT_FILE"
   printf 'Environment: %s\n' "$ENV_FILE"
+  printf 'Python: %s\n' "$PYTHON_BIN"
   printf 'Prefetch helper: %s\n' "$PREFETCH_HELPER"
   printf 'Stage A prompt: %s\n' "$DISCOVERY_PROMPT_FILE"
   printf 'Stage B helper: %s\n' "$ARTICLE_PREFETCH_HELPER"
@@ -156,11 +179,6 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 cd "$REPO_ROOT"
-
-if [ -f "$REPO_ROOT/.venv/bin/activate" ]; then
-  # shellcheck disable=SC1091
-  . "$REPO_ROOT/.venv/bin/activate"
-fi
 
 if [ ! -f "$PREFETCH_HELPER" ]; then
   printf 'Source discovery prefetch helper not found: %s\n' "$PREFETCH_HELPER" >&2
@@ -205,7 +223,7 @@ build_finish_prompt() {
 }
 
 run_source_prefetch() {
-  python3 "$PREFETCH_HELPER" \
+  "$PYTHON_BIN" "$PREFETCH_HELPER" \
     --schedule-id "$SCHEDULE_ID" \
     --run-id "$RUN_ID" \
     --repo-root "$REPO_ROOT" \
@@ -250,7 +268,7 @@ run_weekday_staged_schedule() {
     exit 2
   fi
 
-  SHORTLIST_BEFORE_JSON="$(python3 "$ARTIFACT_HELPER" snapshot-shortlists \
+  SHORTLIST_BEFORE_JSON="$("$PYTHON_BIN" "$ARTIFACT_HELPER" snapshot-shortlists \
     --repo-root "$REPO_ROOT" \
     --run-date "$RUN_DATE" \
     --source-group daily_core)"
@@ -263,18 +281,18 @@ run_weekday_staged_schedule() {
     --output-last-message "$DISCOVERY_LAST_MESSAGE" \
     - < "$DISCOVERY_PROMPT" > "$DISCOVERY_EVENT_LOG"
 
-  SHORTLIST_PATH="$(python3 "$ARTIFACT_HELPER" find-new-shortlist \
+  SHORTLIST_PATH="$("$PYTHON_BIN" "$ARTIFACT_HELPER" find-new-shortlist \
     --repo-root "$REPO_ROOT" \
     --run-date "$RUN_DATE" \
     --source-group daily_core \
     --before-json "$SHORTLIST_BEFORE_JSON")"
 
-  if ! python3 "$ARTICLE_PREFETCH_HELPER" \
+  if ! "$PYTHON_BIN" "$ARTICLE_PREFETCH_HELPER" \
     --repo-root "$REPO_ROOT" \
     --shortlist-path "$SHORTLIST_PATH" \
     --run-id "$RUN_ID" \
     --pretty > "$ARTICLE_PREFETCH_STDOUT"; then
-    python3 "$ARTIFACT_HELPER" synthetic-article-prefetch \
+    "$PYTHON_BIN" "$ARTIFACT_HELPER" synthetic-article-prefetch \
       --repo-root "$REPO_ROOT" \
       --run-id "$RUN_ID" \
       --shortlist-path "$SHORTLIST_PATH" \
@@ -282,7 +300,7 @@ run_weekday_staged_schedule() {
   fi
 
   if [ ! -f "$ARTICLE_PREFETCH_RESULT" ] || [ ! -f "$ARTICLE_PREFETCH_SUMMARY" ]; then
-    python3 "$ARTIFACT_HELPER" synthetic-article-prefetch \
+    "$PYTHON_BIN" "$ARTIFACT_HELPER" synthetic-article-prefetch \
       --repo-root "$REPO_ROOT" \
       --run-id "$RUN_ID" \
       --shortlist-path "$SHORTLIST_PATH" \
@@ -297,7 +315,7 @@ run_weekday_staged_schedule() {
     --output-last-message "$FINISH_LAST_MESSAGE" \
     - < "$FINISH_PROMPT" > "$FINISH_EVENT_LOG"
 
-  python3 "$STAGE_C_FINISH_HELPER" \
+  "$PYTHON_BIN" "$STAGE_C_FINISH_HELPER" \
     --repo-root "$REPO_ROOT" \
     --run-id "$RUN_ID" \
     --run-date "$RUN_DATE" \
@@ -308,7 +326,7 @@ run_weekday_staged_schedule() {
     --draft-path "$FINISH_DRAFT" \
     --pretty > "$FINISH_SUMMARY"
 
-  python3 "$DELIVERY_HELPER" \
+  "$PYTHON_BIN" "$DELIVERY_HELPER" \
     --repo-root "$REPO_ROOT" \
     --run-id "$RUN_ID" \
     --date "$RUN_DATE" \
@@ -318,7 +336,7 @@ run_weekday_staged_schedule() {
     --attempts "${CODEX_TELEGRAM_DELIVERY_ATTEMPTS:-3}" \
     --delay-seconds "${CODEX_TELEGRAM_DELIVERY_RETRY_DELAY_SECONDS:-20}" > "$RUN_ROOT/$RUN_ID-telegram-delivery-stdout.json"
 
-  python3 "$ARTIFACT_HELPER" validate-finish-artifacts \
+  "$PYTHON_BIN" "$ARTIFACT_HELPER" validate-finish-artifacts \
     --repo-root "$REPO_ROOT" \
     --run-id "$RUN_ID" \
     --run-date "$RUN_DATE" \
